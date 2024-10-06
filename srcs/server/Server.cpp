@@ -1,7 +1,23 @@
 
 #include "Server.hpp"
 
-int main() {
+
+bool    Server::isAllowedDirective(std::string direc)
+{
+    std::string arr[7] = {"listen", "host", "server_name", "error_page", "client_max_body_size", "root", "index"};
+
+    for (int i = 0; i < 7; i++)
+    {
+        if (arr[i] == direc)
+            return (1);
+    }
+    return (0);
+}
+
+
+
+void    server()
+{
     int server_fd;
     struct sockaddr_in address;
     int opt = 1;
@@ -9,12 +25,12 @@ int main() {
 
     if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) {
         std::cerr << "Socket failed" << std::endl;
-        return -1;
+        return ;
     }
 
     if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt))) {
         std::cerr << "setsockopt failed" << std::endl;
-        return -1;
+        return ;
     }
 
     address.sin_family = AF_INET;
@@ -23,12 +39,12 @@ int main() {
 
     if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0) {
         std::cerr << "Bind failed" << std::endl;
-        return -1;
+        return ;
     }
 
     if (listen(server_fd, 3) < 0) {
         std::cerr << "Listen failed" << std::endl;
-        return -1;
+        return ;
     }
 
     std::cout << "Server is running on port 8080" << std::endl;
@@ -37,7 +53,7 @@ int main() {
         int client_fd = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen);
         if (client_fd < 0) {
             std::cerr << "Accept failed" << std::endl;
-            return -1;
+            return ;
         }
         std::cout << "Connection accepted" << std::endl;
         std::cout << "Recived http request: \n" << std::endl;
@@ -71,5 +87,4 @@ int main() {
     }
 
     close(server_fd);
-    return 0;
 }
