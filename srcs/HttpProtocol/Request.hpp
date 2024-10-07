@@ -13,7 +13,6 @@ private:
     std::string accept; 
 
 public:
-    std::string methods[3] = {"GET", "POST", "DELETE"};
     void SetMethod(std::string method) { this->method = method; }
     void SetUri(std::string uri) { this->uri = uri; }
     void SetVersion(std::string version) { this->version = version; }
@@ -30,24 +29,20 @@ public:
     void PerformChecks(void);
     void ParseRequest(std::string request);
 
-    class Error400 : public std::exception{
+    class Error400 : public std::exception {
         public:
             const char* what() const throw(){
-                return "<html><body><h1>400 Bad Request</h1></body></html>\r\n";
+                return "HTTP/1.1 400\r\n"
+                    "Content-Type: text/html\r\n"
+                    "Connection: close\r\n" 
+                    "\r\n"
+                    "<html><head><title>400 Bad Request</title></head><body><center><h1>400 Bad Request</h1></center><hr></body></html>";
             }
     };
-
-    // class Error402 : public std::exception{
-    //     public:
-    //         const char* what() const throw(){
-    //             return "<html><body><h1>400 Bad Request</h1></body></html>\r\n";
-    //         }
-    // };
 
 };
 
 std::ostream& operator<<(std::ostream& os, HttpRequest& req);
-
 
 
 #endif

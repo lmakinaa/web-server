@@ -5,6 +5,7 @@ void HttpRequest::ParseRequest(std::string request)
 {
     std::string line;
     std::stringstream iss(request);
+    std::string methods[3] = {"GET", "POST", "DELETE"};
 
     while (std::getline(iss, line))
     {
@@ -34,7 +35,7 @@ void HttpRequest::ParseRequest(std::string request)
     this->PerformChecks();
 }
 void HttpRequest::PerformChecks(void){
-    if (this->method.empty() || this->uri[0] != '/' || this->version != "HTTP/1.1" || this->user_agent.empty() || this->accept.empty())
+    if (this->method.empty() || this->uri[0] != '/' || this->user_agent.empty() || this->accept.empty() ||  this->version != "HTTP/1.1\r")
         throw Error400();
 }
 

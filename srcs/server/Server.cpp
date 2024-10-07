@@ -48,27 +48,20 @@ int main() {
         try{
             read_bytes = read(client_fd, buf, 1024);
             req.ParseRequest(buf);
+            puts("here2");
+
+             const char *str =
+                    "HTTP/1.1 200 Not Found\r\n"
+                    "Content-Type: text/html\r\n"
+                    "Connection: close\r\n" 
+                    "\r\n"
+                    "<html><body><h1>Hello, World!</h1></body></html>";
+                    send(client_fd,str, strlen(str), 0);
         }
         catch(std::exception& e){
             send(client_fd, e.what(), strlen(e.what()), 0);
+            puts("here1");
         }
-
-        // if (read_bytes < 0)
-        // {
-        //     std::cerr << "Failed to get the request" << std::endl;
-        //     close(client_fd);
-        //     continue;
-        // }
-
-        // const char *str =
-        //             "HTTP/1.1 502 Not Found\r\n"
-        //             "Content-Type: text/html\r\n"
-        //             "Connection: close\r\n" 
-        //             // "Content-Length: 48\r\n"
-        //             "\r\n"
-        //             "<html><body><h1>Hello, World!</h1></body></html>";
-
-        // std::cout << "Response Sended" <<std::endl;
         close(client_fd);
     }
 
