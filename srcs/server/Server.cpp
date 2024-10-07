@@ -44,33 +44,31 @@ int main() {
         std::cout << "Recived http request: \n" << std::endl;
         char buf[1024] = {0};
         int read_bytes;
-        // while(read_bytes)
-        // {
+
+        try{
             read_bytes = read(client_fd, buf, 1024);
             req.ParseRequest(buf);
-            std::cout << req << std::endl;
-        // }
-
-        if (read_bytes < 0)
-        {
-            std::cerr << "Failed to get the request" << std::endl;
-            close(client_fd);
-            continue;
+        }
+        catch(std::exception& e){
+            send(client_fd, e.what(), strlen(e.what()), 0);
         }
 
-        // buf[read_bytes] = '\0';
-        // std::cout << buf << std::endl;
-        const char *str =
-                    "HTTP/1.1 502 Not Found\r\n"
-                    "Content-Type: text/html\r\n"
-                    "Connection: close\r\n" 
-                    // "Content-Length: 48\r\n"
-                    "\r\n"
-                    "<html><body><h1>Hello, World!</h1></body></html>";
+        // if (read_bytes < 0)
+        // {
+        //     std::cerr << "Failed to get the request" << std::endl;
+        //     close(client_fd);
+        //     continue;
+        // }
 
+        // const char *str =
+        //             "HTTP/1.1 502 Not Found\r\n"
+        //             "Content-Type: text/html\r\n"
+        //             "Connection: close\r\n" 
+        //             // "Content-Length: 48\r\n"
+        //             "\r\n"
+        //             "<html><body><h1>Hello, World!</h1></body></html>";
 
-        send(client_fd, str, strlen(str), 0);
-        std::cout << "Response Sended" <<std::endl;
+        // std::cout << "Response Sended" <<std::endl;
         close(client_fd);
     }
 

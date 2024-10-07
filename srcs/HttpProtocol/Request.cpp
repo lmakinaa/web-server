@@ -5,7 +5,7 @@ void HttpRequest::ParseRequest(std::string request)
 {
     std::string line;
     std::stringstream iss(request);
-    std::string methods[] = {"GET", "POST", "DELETE"};
+
     while (std::getline(iss, line))
     {
         for (int i = 0; i < 3; i++)
@@ -14,8 +14,8 @@ void HttpRequest::ParseRequest(std::string request)
             {
                 SetMethod(methods[i]);
                 SetUri(line.substr(4, line.find("HTTP") - 5));
-               SetVersion(line.substr(line.find("HTTP")));
-               continue ;
+                SetVersion(line.substr(line.find("HTTP")));
+                continue ;
             }
         }
         if (line.find("Host") != std::string::npos)
@@ -31,7 +31,11 @@ void HttpRequest::ParseRequest(std::string request)
             SetAccept(line.substr(8));
         }
     }
-
+    this->PerformChecks();
+}
+void HttpRequest::PerformChecks(void){
+    if (this->method.empty() || this->uri[0] != '/' || this->version != "HTTP/1.1" || this->user_agent.empty() || this->accept.empty())
+        throw Error400();
 }
 
 std::ostream& operator<<(std::ostream& os, HttpRequest& req)
