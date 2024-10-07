@@ -6,6 +6,7 @@ int main() {
     struct sockaddr_in address;
     int opt = 1;
     int addrlen = sizeof(address);
+    HttpRequest req;
 
     if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) {
         std::cerr << "Socket failed" << std::endl;
@@ -43,7 +44,12 @@ int main() {
         std::cout << "Recived http request: \n" << std::endl;
         char buf[1024] = {0};
         int read_bytes;
-        read_bytes = read(client_fd, buf, 1024);
+        // while(read_bytes)
+        // {
+            read_bytes = read(client_fd, buf, 1024);
+            req.ParseRequest(buf);
+            std::cout << req << std::endl;
+        // }
 
         if (read_bytes < 0)
         {
@@ -52,15 +58,13 @@ int main() {
             continue;
         }
 
-        buf[read_bytes] = '\0';
-        std::cout << buf << std::endl;
-
-
+        // buf[read_bytes] = '\0';
+        // std::cout << buf << std::endl;
         const char *str =
-                    "HTTP/1.1 200 OK\r\n"
+                    "HTTP/1.1 502 Not Found\r\n"
                     "Content-Type: text/html\r\n"
                     "Connection: close\r\n" 
-                    "Content-Length: 48\r\n"
+                    // "Content-Length: 48\r\n"
                     "\r\n"
                     "<html><body><h1>Hello, World!</h1></body></html>";
 

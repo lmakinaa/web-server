@@ -5,19 +5,17 @@ CC = c++
 
 FLAGS = -Wall -Wextra -Werror -std=c++98
 
-C_FILES = srcs/server/Server.cpp
+C_FILES = srcs/server/Server.cpp srcs/HttpProtocol/Request.cpp  srcs/HttpProtocol/Response
 
 O_FILES = $(C_FILES:.cpp=.o)
 
-HEADERS = srcs/server/Server.hpp
+HEADERS = srcs/server/Server.hpp srcs/HttpProtocol/Request.hpp srcs/HttpProtocol/Response.hpp
 
 all : $(NAME)
 
 $(NAME) : $(O_FILES)
 	$(CC) $(FLAGS) -o $@ $(O_FILES)
 
-srcs/server/%.o : srcs/server/%.cpp $(HEADERS)
-	$(CC) $(FLAGS) -c $< -o $@
 
 clean :
 	rm -f $(O_FILES)
