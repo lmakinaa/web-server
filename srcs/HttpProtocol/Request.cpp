@@ -4,16 +4,21 @@
 void HttpRequest::ParseRequest(std::string request)
 {
     std::string line;
-    std::sstream iss(request);
+    std::stringstream iss(request);
+    std::string methods[] = {"GET", "POST", "DELETE"};
     while (std::getline(iss, line))
     {
-        if (line.find("GET") != std::string::npos)
+        for (int i = 0; i < 3; i++)
         {
-            SetMethod("GET");
-            SetUri(line.substr(4, line.find("HTTP") - 5));
-           SetVersion(line.substr(line.find("HTTP")));
+            if (line.find(methods[i]) != std::string::npos)
+            {
+                SetMethod(methods[i]);
+                SetUri(line.substr(4, line.find("HTTP") - 5));
+               SetVersion(line.substr(line.find("HTTP")));
+               continue ;
+            }
         }
-        else if (line.find("Host") != std::string::npos)
+        if (line.find("Host") != std::string::npos)
         {
             SetHost(line.substr(6));
         }

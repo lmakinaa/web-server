@@ -5,7 +5,7 @@ CC = c++
 
 FLAGS = -Wall -Wextra -Werror -std=c++98
 
-C_FILES = srcs/server/Server.cpp srcs/HttpProtocol/Request.cpp  srcs/HttpProtocol/Response
+C_FILES = srcs/server/Server.cpp srcs/HttpProtocol/Request.cpp  srcs/HttpProtocol/Response.cpp
 
 O_FILES = $(C_FILES:.cpp=.o)
 
