@@ -1,5 +1,6 @@
 
 #include "Server.hpp"
+#include <fstream>
 
 int main() {
     int server_fd;
@@ -40,27 +41,39 @@ int main() {
             std::cerr << "Accept failed" << std::endl;
             return -1;
         }
-        std::cout << "Connection accepted" << std::endl;
-        std::cout << "Recived http request: \n" << std::endl;
+        // std::cout << "Connection accepted" << std::endl;
+        // std::cout << "Recived http request: \n" << std::endl;
         char buf[1024] = {0};
         int read_bytes;
 
         try{
             read_bytes = read(client_fd, buf, 1024);
             req.ParseRequest(buf);
-            puts("here2");
+            HttpResponse res;
+            {
+            res.SetVersion("HTTP/1.1");
+            res.SetResponseCode("200 OK");
+            res.SetContentType("text/html");
+            res.SetConnection("close");
 
-             const char *str =
-                    "HTTP/1.1 200 Not Found\r\n"
-                    "Content-Type: text/html\r\n"
-                    "Connection: close\r\n" 
-                    "\r\n"
-                    "<html><body><h1>Hello, World!</h1></body></html>";
-                    send(client_fd,str, strlen(str), 0);
+            std::ifstream file (req.GetUri().substr(1));
+            if (file.is_open()){
+            puts (req.GetUri().substr(1).c_str());
+                std::string line;
+                while (getline(file, line)){
+                    res.SetResponse("\n" + line );
+                }
+                file.close();
+            }
+            else{
+                res.SetResponse("<html><head><title>404 Not Found</title></head><body><center><h1>404 Not Found</h1></center><hr></body></html>");
+            }
+            std::string str = res.BuildResponse();
+            send(client_fd,str.c_str(), strlen(str.c_str()), 0);
+        }
         }
         catch(std::exception& e){
             send(client_fd, e.what(), strlen(e.what()), 0);
-            puts("here1");
         }
         close(client_fd);
     }

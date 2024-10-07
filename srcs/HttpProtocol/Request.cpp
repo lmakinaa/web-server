@@ -20,17 +20,13 @@ void HttpRequest::ParseRequest(std::string request)
             }
         }
         if (line.find("Host") != std::string::npos)
-        {
             SetHost(line.substr(6));
-        }
         else if (line.find("User-Agent") != std::string::npos)
-        {
             SetUserAgent(line.substr(12));
-        }
         else if (line.find("Accept") != std::string::npos)
-        {
             SetAccept(line.substr(8));
-        }
+        else if (line.find("Body") != std::string::npos)
+            SetBody(line.substr(6));
     }
     this->PerformChecks();
 }
@@ -47,5 +43,6 @@ std::ostream& operator<<(std::ostream& os, HttpRequest& req)
     os << "Host: " << req.GetHost() << std::endl;
     os << "User-Agent: " << req.GetUserAgent() << std::endl;
     os << "Accept: " << req.GetAccept() << std::endl;
+    os << "Body:" << req.GetBody() << std::endl;
     return os;
 }

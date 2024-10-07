@@ -11,6 +11,7 @@ private:
     std::string host;
     std::string user_agent;
     std::string accept; 
+    std::string body;
 
 public:
     void SetMethod(std::string method) { this->method = method; }
@@ -19,6 +20,7 @@ public:
     void SetHost(std::string host) { this->host = host; }
     void SetUserAgent(std::string user_agent) { this->user_agent = user_agent; }
     void SetAccept(std::string accept) { this->accept = accept; }
+    void SetBody(std::string body){this->body = body;}
 
     std::string GetMethod() { return this->method; }
     std::string GetUri() { return this->uri; }
@@ -26,6 +28,7 @@ public:
     std::string GetHost() { return this->host; }
     std::string GetUserAgent() { return this->user_agent; }
     std::string GetAccept() { return this->accept; }
+    std::string GetBody(){return body;}
     void PerformChecks(void);
     void ParseRequest(std::string request);
 
