@@ -5,7 +5,7 @@ void HttpResponse::SetVersion(std::string value){
 }
 
 void HttpResponse::SetResponseCode(std::string value){
-    this->ResponseCode = value + "\r\n";
+    this->ResponseCode = value;
 }
 
 void HttpResponse::SetContentType(std::string value){
@@ -18,6 +18,10 @@ void HttpResponse::SetConnection(std::string value){
 
 void HttpResponse::SetResponse(std::string value){
     this->Response += value;
+}
+
+std::string HttpResponse::BuildResponse() {
+    return Version + " " + ResponseCode + "\r\n" + ContentType + Connection + "\r\n" + Response;
 }
 
 std::string HttpResponse::GetVersion(){
@@ -40,6 +44,3 @@ std::string HttpResponse::GetResponse(){
     return this->Response;
 }
 
-std::string HttpResponse::BuildResponse(){
-    return this->Version + this->ResponseCode + this->ContentType + this->Connection + "\r\n" + this->Response;
-}
