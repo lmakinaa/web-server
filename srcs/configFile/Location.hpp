@@ -2,7 +2,7 @@
 
 #include <iostream>
 #include <map>
-#include "../directive/Directive.hpp"
+#include "Directive.hpp"
 
 class   Location
 {

@@ -7,8 +7,8 @@
 #include <unistd.h>
 #include <map>
 #include <vector>
-#include "../directive/Directive.hpp"
-#include "../location/Location.hpp"
+#include "../configFile/Directive.hpp"
+#include "../configFile/Location.hpp"
 
 
 class   Server

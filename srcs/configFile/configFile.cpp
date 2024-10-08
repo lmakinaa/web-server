@@ -83,6 +83,10 @@ int checkLocation(std::vector<std::string> &conf, size_t i, Location &loc)
 
     for ( ; i < conf.size(); i++)
     {
+
+        if (isEmpty(conf[i]))
+            continue ;
+
         directive = split(conf[i], ' ');
         if (directive.size() == 1 && directive[0] == "}")
         {
@@ -126,6 +130,10 @@ int checkDirectives(std::vector<std::string> &conf, size_t i, Server &serv)
 
     for ( ; i < conf.size(); i++)
     {
+
+        if (isEmpty(conf[i]))
+            continue ;
+
         directive = split(conf[i], ' ');
         if (directive.size() > 0 && directive[0] == "location")
         {
@@ -182,6 +190,10 @@ int checkServerBlock(std::vector<std::string> &conf, Main &main)
 
     for (size_t i = 0; i < conf.size(); i++)
     {
+
+        if (isEmpty(conf[i]))
+            continue ;
+
         block = split(conf[i], ' ');
         if (block.size() != 2 || block[0] != "server" || block[1] != "{")
         {
@@ -211,8 +223,6 @@ int parseConfigFile(std::string config, Main &main)
     std::string line;
     while (std::getline(file, line))
     {
-        if (isEmpty(line))
-            continue ;
         confLines.push_back(trimStr(line));
     }
 
