@@ -1,7 +1,7 @@
 NAME=webserv
 CFLAGS=-Wall -Wextra -Werror -std=c++98
 CC=c++
-SRCS=$(wildcard srcs/*/*.cpp)
+SRCS=$(wildcard srcs/*/*.cpp) srcs/main.cpp
 INC=$(wildcard srcs/*/*.hpp)
 OBJ=$(SRCS:.cpp=.o)
 
