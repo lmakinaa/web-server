@@ -11,21 +11,17 @@ SERVER_PATH = srcs/server/
 
 CONFIG_FILE_PATH = srcs/configFile/
 
-LOCATION_PATH = srcs/location/
-
 MAIN_PATH = srcs/main/
-
-DIRECTIVE_PATH = srcs/directive/
 
 INCLUDE_PATH = includes/
 
 # ============= Files path variable ============ #
 
-C_FILES = main.cpp $(SERVER_PATH)Server.cpp $(CONFIG_FILE_PATH)configFile.cpp $(LOCATION_PATH)Location.cpp
+C_FILES = main.cpp $(SERVER_PATH)Server.cpp $(CONFIG_FILE_PATH)configFile.cpp $(CONFIG_FILE_PATH)Location.cpp
 
 O_FILES = $(C_FILES:.cpp=.o)
 
-HEADERS = $(INCLUDE_PATH)webserv.h  $(SERVER_PATH)Server.hpp $(CONFIG_FILE_PATH)configFile.hpp $(LOCATION_PATH)Location.hpp $(MAIN_PATH)main.hpp $(DIRECTIVE_PATH)Directive.hpp
+HEADERS = $(INCLUDE_PATH)webserv.h  $(SERVER_PATH)Server.hpp $(CONFIG_FILE_PATH)configFile.hpp $(CONFIG_FILE_PATH)Location.hpp $(MAIN_PATH)main.hpp $(CONFIG_FILE_PATH)Directive.hpp
 
 all : $(NAME)
 
