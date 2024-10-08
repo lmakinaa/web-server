@@ -5,6 +5,10 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <sys/types.h>
+#include <sys/event.h>
+#include <sys/time.h>
+#include <climits>
 
 #define PORT 1234
 #define BUFFER_SIZE 4096
@@ -22,82 +26,58 @@ int main()
 	x.sin_port = htons(8080);
 	x.sin_family = AF_INET;
 	x.sin_addr.s_addr = INADDR_ANY;
+	
+	int yes = 1;
+	if (setsockopt(serverSock, SOL_SOCKET,SO_REUSEADDR, &yes, sizeof(yes)) == -1) {
+		perror("setsockopt");
+		exit(1);
+	} 
 
 	int s = bind(serverSock, (sockaddr*) &x, sizeof(x));
 	if (s < 0) {
 		std::cerr << "error while using bind(2)\n";
 		std::exit(1);
 	}
-	
-	if (setsockopt(listener,SOL_SOCKET,SO_REUSEADDR,&yes,sizeof yes) == -1) {
-		perror("setsockopt");
-		exit(1);
-	} 
+
+	if (listen(serverSock, 20) == -1) {
+		std::cerr << "error while using bind(2)\n";
+		std::exit(1);
+	}
+	socklen_t slen;
+	slen = sizeof(x);
+	int kq;
+	if ((kq = kqueue()) == -1) {
+		std::cerr << "error while using kqueue(2)\n";
+		std::exit(1);
+	}
+	struct kevent event;
+	EV_SET(&event, serverSock, EVFILT_READ, EV_ADD, 0, 0, NULL);
+	kevent(kq, &event, 1, NULL, 0, 0);
+	int i = 0;
+	while (true) {
+		i++;
+		std::cout<<i<<'\n';
+		struct kevent event_list[32];
+		int n_events = kevent(kq, NULL, 0, event_list, 32, NULL);
+
+		for (int i = 0; i < n_events; i++) {
+			if (static_cast<int>(event_list[i].ident) == serverSock) {
+				int cfd;
+				if ((cfd = accept(serverSock, (sockaddr*) &x, &slen)) == -1) {
+					std::cerr << "error while using bind(2)\n";
+					std::exit(1);
+				}
+				char buf[1024] = {0};
+				recv(cfd, buf, 1024, 0);
+				std::cout << buf << std::endl;
+				std::string content = "<h1>Hi!</h1>\n";
+				std::string response = "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: " + std::to_string(content.length()) + "\n\n" + content;
+				send(cfd, response.c_str(), response.size(), 0);
+				close(cfd);
+			}
+		}
+
+	}
 
 	return 0;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// int server()
-// {
-
-// 	int fdSocket = socket(AF_INET, SOCK_STREAM, 0);
-
-// 	sockaddr_in address;
-// 	address.sin_family = AF_INET;
-// 	address.sin_port = htons(PORT);
-// 	address.sin_addr.s_addr = htonl(INADDR_ANY);
-
-// 	bind(fdSocket, (const sockaddr *)(&address), sizeof(address));
-
-// 	listen(fdSocket, 10);
-
-// 	bool active = true;
-// 	int connection;
-// 	while (active)
-// 	{
-// 		unsigned long resultLen = sizeof(sockaddr);
-// 		std::cout << "Listening on Port: " << PORT << std::endl;
-// 		connection = accept(fdSocket, (struct sockaddr *)(&address), (socklen_t *)&resultLen);
-
-// 		char buffer[BUFFER_SIZE];
-// 		ssize_t bytesRead = read(connection, buffer, BUFFER_SIZE);
-// 		std::cout << "Le message fait: " << bytesRead << " characteres" << std::endl;
-// 		std::cout << buffer << std::endl;
-
-// 		std::string content = "<h1>Bonjour, je suis un serveur HTTP tout simple!</h1>";
-// 		std::string response = "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: " + std::to_string(content.length()) + "\n\n" + content;
-// 		send(connection, response.c_str(), response.size(), 0);
-// 		close(connection);
-// 	}
-
-// 	close(fdSocket);
-
-// 	return (EXIT_SUCCESS);
-// }
