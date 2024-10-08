@@ -1,5 +1,6 @@
 
 #include "Server.hpp"
+#include <fstream>
 
 int main() {
     int server_fd;
@@ -33,40 +34,50 @@ int main() {
 
     std::cout << "Server is running on port 8080" << std::endl;
 
-    while (true) {
+    while (true) 
+    {
         int client_fd = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen);
         if (client_fd < 0) {
             std::cerr << "Accept failed" << std::endl;
             return -1;
         }
-        std::cout << "Connection accepted" << std::endl;
-        std::cout << "Recived http request: \n" << std::endl;
-        char buf[1024] = {0};
         int read_bytes;
-        read_bytes = read(client_fd, buf, 1024);
 
-        if (read_bytes < 0)
-        {
-            std::cerr << "Failed to get the request" << std::endl;
-            close(client_fd);
-            continue;
+        try{
+            char buf[1024] = {0};
+            HttpRequest req;
+            read_bytes = read(client_fd, buf, 1024);
+            req.ParseRequest(buf);
+            HttpResponse *res = new HttpResponse();
+
+            res->SetVersion("HTTP/1.1");
+            res->SetContentType("text/html");
+            res->SetConnection("close");
+            
+    
+            std::ifstream file (req.GetUri().substr(1));
+            if (file.is_open())
+            {
+                std::string line;
+                while (getline(file, line))
+                    res->SetResponse("\n" + line );
+                res->SetResponseCode("200 OK");
+                file.close();
+            }
+            else
+            {
+                res->SetResponseCode("404 Not Found");
+                res->SetResponse("<html><head><title>404 Not Found</title></head><body><center><h1>404 Not Found</h1></center><hr></body></html>");
+            }
+            std::string str = res->BuildResponse();
+            send(client_fd,str.c_str(), strlen(str.c_str()), 0);
+            delete res;
+
         }
-
-        buf[read_bytes] = '\0';
-        std::cout << buf << std::endl;
-
-
-        const char *str =
-                    "HTTP/1.1 200 OK\r\n"
-                    "Content-Type: text/html\r\n"
-                    "Connection: close\r\n" 
-                    "Content-Length: 48\r\n"
-                    "\r\n"
-                    "<html><body><h1>Hello, World!</h1></body></html>";
-
-
-        send(client_fd, str, strlen(str), 0);
-        std::cout << "Response Sended" <<std::endl;
+        catch(std::exception& e){
+            send(client_fd, e.what(), strlen(e.what()), 0);
+            puts(e.what());
+        }
         close(client_fd);
     }
 
