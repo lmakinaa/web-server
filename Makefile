@@ -1,28 +1,24 @@
+NAME=webserv
+CFLAGS=-Wall -Wextra -Werror -std=c++98
+CC=c++
+SRCS=$(wildcard srcs/*/*.cpp)
+INC=$(wildcard srcs/*/*.hpp)
+OBJ=$(SRCS:.cpp=.o)
 
-NAME = webserv
+all: $(NAME)
 
-CC = c++
+$(NAME): $(OBJ)
+	$(CC) $(CFLAGS) $^ -o $@
 
-FLAGS = -Wall -Wextra -Werror -std=c++98
+%.o: %.cpp $(INC)
+	$(CC) $(CFLAGS) -c $< -o $@
 
-C_FILES = srcs/server/Server.cpp
+clean:
+	rm -f $(OBJ)
 
-O_FILES = $(C_FILES:.cpp=.o)
-
-HEADERS = srcs/server/Server.hpp
-
-all : $(NAME)
-
-$(NAME) : $(O_FILES)
-	$(CC) $(FLAGS) -o $@ $(O_FILES)
-
-srcs/server/%.o : srcs/server/%.cpp $(HEADERS)
-	$(CC) $(FLAGS) -c $< -o $@
-
-clean :
-	rm -f $(O_FILES)
-
-fclean : clean
+fclean: clean
 	rm -f $(NAME)
 
-re : fclean all
+re: fclean all
+
+.PHONY: clean
