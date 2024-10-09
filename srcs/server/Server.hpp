@@ -7,20 +7,28 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 
+// For kqueue
+#include <sys/types.h>
+#include <sys/event.h>
+#include <sys/time.h>
+
 class Server
 {
 
 public:
-    Server(char* const ipAddr, int port);
+    Server();
     void init();
-    void run();
     ~Server();
+    int getSocket() const {return m_socket;}
+
+    sockaddr_in m_sockAddress;
+    socklen_t m_sockLen;
 
 
 private:
-    char* const m_ipAddr;
-    unsigned short m_port;
-    int m_serverSocket;
+    int m_socket;
+    // std::map<std::string, Directive> directives;
+    // std::map<std::string, Location> locations;
 
 
 };
