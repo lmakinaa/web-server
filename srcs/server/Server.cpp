@@ -2,20 +2,6 @@
 #include "Server.hpp"
 
 
-bool    Server::isAllowedDirective(std::string direc)
-{
-    std::string arr[7] = {"listen", "host", "server_name", "error_page", "client_max_body_size", "root", "index"};
-
-    for (int i = 0; i < 7; i++)
-    {
-        if (arr[i] == direc)
-            return (1);
-    }
-    return (0);
-}
-
-
-
 void    server()
 {
     int server_fd;

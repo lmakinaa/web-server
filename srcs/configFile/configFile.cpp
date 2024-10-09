@@ -2,6 +2,32 @@
 
 #include "configFile.hpp"
 
+bool    isAllowedDirectiveServ(std::string direc)
+{
+    std::string arr[7] = {"listen", "host", "server_name", "error_page", "client_max_body_size", "root", "index"};
+
+    for (int i = 0; i < 7; i++)
+    {
+        if (arr[i] == direc)
+            return (1);
+    }
+    return (0);
+}
+
+
+bool    isAllowedDirectiveloc(std::string direc)
+{
+    std::string arr[8] = {"autoindex", "allow_methods", "return", "alias", "cgi_path", "root", "index", "cgi_ext"};
+
+    for (int i = 0; i < 8; i++)
+    {
+        if (arr[i] == direc)
+            return (1);
+    }
+    return (0);
+}
+
+
 bool    isEmpty(std::string str)
 {
     for (size_t i = 0; i < str.size(); i++)
@@ -76,6 +102,42 @@ std::vector<std::string>    split(std::string str, char delem)
     return (v);
 }
 
+int checkDirValue(std::vector<std::string> &directive)
+{
+    int nb;
+    std::string str;
+
+    for (size_t i = 1; i < directive.size(); i++)
+    {
+        str = directive[i];
+        if (i == directive.size() - 1)
+        {
+            if (str.back() == ';')
+                str.pop_back();
+        }
+
+        if (directive[0] == "listen" || directive[0] == "client_max_body_size" || directive[0] == "error_page")
+        {
+            std::stringstream ss(str);
+            ss >> nb;
+            if ((directive[0] != "error_page" || (directive[0] == "error_page" && i != directive.size() - 1)) && (ss.fail() || !ss.eof()))
+                return (-1);
+            if (directive[0] == "client_max_body_size" && directive.size() != 2)
+                return (-1);
+        }
+        else if (directive[0] == "autoindex")
+        {
+            if ((str != "on" && str != "off") || directive.size() != 2)
+                return (-1);
+        }
+        else if (directive[0] == "allow_methods")
+        {
+            if (str != "GET" && str != "POST" && str != "DELETE")
+                return (-1);
+        }
+    }
+    return (1);
+}
 
 int checkLocation(std::vector<std::string> &conf, size_t i, Location &loc)
 {
@@ -88,6 +150,13 @@ int checkLocation(std::vector<std::string> &conf, size_t i, Location &loc)
             continue ;
 
         directive = split(conf[i], ' ');
+
+        if (checkDirValue(directive) == -1)
+        {
+            std::cout << "Syntaxe error in line " << i + 1 << ": invalid directive" << std::endl;
+            return (-1);
+        }
+
         if (directive.size() == 1 && directive[0] == "}")
         {
             return (i);
@@ -101,13 +170,18 @@ int checkLocation(std::vector<std::string> &conf, size_t i, Location &loc)
             }
             else
             {
-                if (loc.isAllowedDirective(directive[0]))
+                if (isAllowedDirectiveloc(directive[0]))
                 {
-                    for (size_t i = 1; i < directive.size(); i++)
+                    for (size_t j = 1; j < directive.size(); j++)
                     {
-                        if (i == directive.size() - 1 && directive[i].back() == ';')
-                            directive[i].pop_back();
-                        loc.directives[directive[0]].values.push_back(directive[i]);
+                        if (j == directive.size() - 1 && directive[j].back() == ';')
+                            directive[j].pop_back();
+                        if (directive[j].empty())
+                        {
+                            std::cout << "Syntaxe error in line " << i + 1 << ": invalid directive" << std::endl;
+                            return (-1);
+                        }
+                        loc.directives[directive[0]].values.push_back(directive[j]);
                     }
                 }
                 else
@@ -135,6 +209,13 @@ int checkDirectives(std::vector<std::string> &conf, size_t i, Server &serv)
             continue ;
 
         directive = split(conf[i], ' ');
+
+        if (checkDirValue(directive) == -1)
+        {
+            std::cout << "Syntaxe error in line " << i + 1 << ": invalid directive" << std::endl;
+            return (-1);
+        }
+
         if (directive.size() > 0 && directive[0] == "location")
         {
             if (directive.size() != 3 || directive[0] != "location" || directive[2] != "{")
@@ -162,13 +243,18 @@ int checkDirectives(std::vector<std::string> &conf, size_t i, Server &serv)
             }
             else
             {
-                if (serv.isAllowedDirective(directive[0]))
+                if (isAllowedDirectiveServ(directive[0]))
                 {
-                    for (size_t i = 1; i < directive.size(); i++)
+                    for (size_t j = 1; j < directive.size(); j++)
                     {
-                        if (i == directive.size() - 1 && directive[i].back() == ';')
-                            directive[i].pop_back();
-                        serv.directives[directive[0]].values.push_back(directive[i]);
+                        if (j == directive.size() - 1 && directive[j].back() == ';')
+                            directive[j].pop_back();
+                        if (directive[j].empty())
+                        {
+                            std::cout << "Syntaxe error in line " << i + 1 << ": invalid directive" << std::endl;
+                            return (-1);
+                        }
+                        serv.directives[directive[0]].values.push_back(directive[j]);
                     }
                 }
                 else
@@ -195,6 +281,7 @@ int checkServerBlock(std::vector<std::string> &conf, Main &main)
             continue ;
 
         block = split(conf[i], ' ');
+
         if (block.size() != 2 || block[0] != "server" || block[1] != "{")
         {
             std::cout << "Syntaxe error in line " << i + 1 << ": invalid server block" << std::endl;
@@ -204,6 +291,19 @@ int checkServerBlock(std::vector<std::string> &conf, Main &main)
         int n = checkDirectives(conf, i + 1, serv);
         if (n == -1)
             return (-1);
+
+        if (serv.directives.find("listen") == serv.directives.end())
+        {
+            std::cout << "Syntaxe error : missing listen directive" << std::endl;
+            return (-1);
+        }
+
+        if (serv.directives.find("root") == serv.directives.end())
+        {
+            std::cout << "Syntaxe error : missing root directive" << std::endl;
+            return (-1);
+        }
+
         main.servers.push_back(serv);
         i = n;   
     }

@@ -10,5 +10,4 @@ class   Location
         std::map<std::string, Directive> directives;
 
 
-    bool    isAllowedDirective(std::string direc);
 };
