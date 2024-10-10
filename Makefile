@@ -1,24 +1,40 @@
-NAME=webserv
-CFLAGS=-Wall -Wextra -Werror -std=c++98
-CC=c++
-SRCS=$(wildcard srcs/*/*.cpp)
-INC=$(wildcard srcs/*/*.hpp)
-OBJ=$(SRCS:.cpp=.o)
 
-all: $(NAME)
+NAME = webserv
 
-$(NAME): $(OBJ)
-	$(CC) $(CFLAGS) $^ -o $@
+CC = c++
 
-%.o: %.cpp $(INC)
-	$(CC) $(CFLAGS) -c $< -o $@
+FLAGS = -Wall -Wextra -Werror -std=c++98 -fsanitize=address -g
 
-clean:
-	rm -f $(OBJ)
+# ============= Files path variable ============ #
 
-fclean: clean
+SERVER_PATH = srcs/server/
+
+CONFIG_FILE_PATH = srcs/configFile/
+
+MAIN_PATH = srcs/main/
+
+INCLUDE_PATH = includes/
+
+# ============= Files path variable ============ #
+
+C_FILES = main.cpp $(SERVER_PATH)Server.cpp $(CONFIG_FILE_PATH)configFile.cpp $(CONFIG_FILE_PATH)Location.cpp $(MAIN_PATH)WebServ.cpp
+
+O_FILES = $(C_FILES:.cpp=.o)
+
+HEADERS = $(INCLUDE_PATH)webserv.h  $(SERVER_PATH)Server.hpp $(CONFIG_FILE_PATH)configFile.hpp $(CONFIG_FILE_PATH)Location.hpp $(MAIN_PATH)WebServ.hpp $(CONFIG_FILE_PATH)Directive.hpp
+
+all : $(NAME)
+
+$(NAME) : $(O_FILES)
+	$(CC) $(FLAGS) -o $@ $(O_FILES)
+
+%.o : %.cpp $(HEADERS)
+	$(CC) $(FLAGS) -c $< -o $@
+
+clean :
+	rm -f $(O_FILES)
+
+fclean : clean
 	rm -f $(NAME)
 
-re: fclean all
-
-.PHONY: clean
+re : fclean all

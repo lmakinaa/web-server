@@ -1,83 +1,121 @@
-#include <iostream>
-#include <cstdlib>
-#include <cstring>
-#include <unistd.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <sys/types.h>
-#include <sys/event.h>
-#include <sys/time.h>
-#include <climits>
 
-#define PORT 1234
-#define BUFFER_SIZE 4096
+#include "Server.hpp"
 
-
-int main()
+Server::Server()
 {
-	int serverSock = socket(PF_INET, SOCK_STREAM, 0);
-	if (serverSock == -1) {
-		std::cerr << "error while using socket(2)\n";
-		std::exit(1);
-	}
-	sockaddr_in x;
-	std::memset(x.sin_zero, 0, 8 * sizeof(unsigned char));
-	x.sin_port = htons(8080);
-	x.sin_family = AF_INET;
-	x.sin_addr.s_addr = INADDR_ANY;
-	
-	int yes = 1;
-	if (setsockopt(serverSock, SOL_SOCKET,SO_REUSEADDR, &yes, sizeof(yes)) == -1) {
-		perror("setsockopt");
-		exit(1);
-	} 
-
-	int s = bind(serverSock, (sockaddr*) &x, sizeof(x));
-	if (s < 0) {
-		std::cerr << "error while using bind(2)\n";
-		std::exit(1);
-	}
-
-	if (listen(serverSock, 20) == -1) {
-		std::cerr << "error while using bind(2)\n";
-		std::exit(1);
-	}
-	socklen_t slen;
-	slen = sizeof(x);
-	int kq;
-	if ((kq = kqueue()) == -1) {
-		std::cerr << "error while using kqueue(2)\n";
-		std::exit(1);
-	}
-	struct kevent event;
-	EV_SET(&event, serverSock, EVFILT_READ, EV_ADD, 0, 0, NULL);
-	kevent(kq, &event, 1, NULL, 0, 0);
-	int i = 0;
-	while (true) {
-		i++;
-		std::cout<<i<<'\n';
-		struct kevent event_list[32];
-		int n_events = kevent(kq, NULL, 0, event_list, 32, NULL);
-
-		for (int i = 0; i < n_events; i++) {
-			if (static_cast<int>(event_list[i].ident) == serverSock) {
-				int cfd;
-				if ((cfd = accept(serverSock, (sockaddr*) &x, &slen)) == -1) {
-					std::cerr << "error while using bind(2)\n";
-					std::exit(1);
-				}
-				char buf[1024] = {0};
-				recv(cfd, buf, 1024, 0);
-				std::cout << buf << std::endl;
-				std::string content = "<h1>Hi!</h1>\n";
-				std::string response = "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: " + std::to_string(content.length()) + "\n\n" + content;
-				send(cfd, response.c_str(), response.size(), 0);
-				close(cfd);
-			}
-		}
-
-	}
-
-	return 0;
 }
+
+Server::~Server()
+{
+}
+
+void Server::init()
+{
+
+	if ((m_socket = socket(PF_INET, SOCK_STREAM, 0)) == -1)
+		throw std::runtime_error((std::string("socket(2): ") + strerror(errno)));
+
+	int opt = 1;
+	std::memset(m_sockAddress.sin_zero, 0, 8 * sizeof(unsigned char));
+	// m_sockAddress.sin_port = htons(std::stoi(directives["listen"].values[0]));
+	m_sockAddress.sin_port = htons(stoi(directives["listen"].values[0]));
+	m_sockAddress.sin_family = AF_INET;
+
+	m_sockLen = sizeof(m_sockAddress);
+
+	// if (inet_pton(AF_INET, directives["host"].values[0].c_str(), &m_sockAddress.sin_addr.s_addr) == 0) 
+	if (inet_pton(AF_INET, directives["host"].values[0].c_str(), &m_sockAddress.sin_addr.s_addr) == 0) 
+		throw std::runtime_error("invalide Ip address");
+
+
+	if (setsockopt(m_socket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1)
+		throw std::runtime_error((std::string("setsockopt(2): ") + strerror(errno)));
+
+	int f = fcntl(m_socket, F_GETFL);
+	fcntl(m_socket, F_SETFL, f | O_NONBLOCK);
+
+	if (bind(m_socket, (sockaddr*) &m_sockAddress, m_sockLen) == -1)
+		throw std::runtime_error((std::string("bind(2): ") + strerror(errno)));
+
+	if (listen(m_socket, SOMAXCONN) == -1)
+		throw std::runtime_error((std::string("listen(2): ") + strerror(errno)));
+
+}
+
+
+
+
+
+
+// void    server()
+// {
+//     int server_fd;
+//     struct sockaddr_in address;
+//     int opt = 1;
+//     int addrlen = sizeof(address);
+
+//     if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) {
+//         std::cerr << "Socket failed" << std::endl;
+//         return ;
+//     }
+
+//     if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt))) {
+//         std::cerr << "setsockopt failed" << std::endl;
+//         return ;
+//     }
+
+//     address.sin_family = AF_INET;
+//     address.sin_addr.s_addr = INADDR_ANY;
+//     address.sin_port = htons(8080);
+
+//     if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0) {
+//         std::cerr << "Bind failed" << std::endl;
+//         return ;
+//     }
+
+//     if (listen(server_fd, 3) < 0) {
+//         std::cerr << "Listen failed" << std::endl;
+//         return ;
+//     }
+
+//     std::cout << "Server is running on port 8080" << std::endl;
+
+//     while (true) {
+//         int client_fd = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen);
+//         if (client_fd < 0) {
+//             std::cerr << "Accept failed" << std::endl;
+//             return ;
+//         }
+//         std::cout << "Connection accepted" << std::endl;
+//         std::cout << "Recived http request: \n" << std::endl;
+//         char buf[1024] = {0};
+//         int read_bytes;
+//         read_bytes = read(client_fd, buf, 1024);
+
+//         if (read_bytes < 0)
+//         {
+//             std::cerr << "Failed to get the request" << std::endl;
+//             close(client_fd);
+//             continue;
+//         }
+
+//         buf[read_bytes] = '\0';
+//         std::cout << buf << std::endl;
+
+
+//         const char *str =
+//                     "HTTP/1.1 200 OK\r\n"
+//                     "Content-Type: text/html\r\n"
+//                     "Connection: close\r\n" 
+//                     "Content-Length: 48\r\n"
+//                     "\r\n"
+//                     "<html><body><h1>Hello, World!</h1></body></html>";
+
+
+//         send(client_fd, str, strlen(str), 0);
+//         std::cout << "Response Sended" <<std::endl;
+//         close(client_fd);
+//     }
+
+//     close(server_fd);
+// }
