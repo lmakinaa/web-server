@@ -1,9 +1,14 @@
 #include "WebServ.hpp"
 
-// returns -1 if kevent failed
-int WebServ::handleNewConnection(Server& server, struct kevent* current)
+WebServ::WebServ()
+    : m_openedSockets (0)
 {
-	int clientSock = accept(current->ident, (sockaddr*)&server.m_sockAddress, &server.m_sockLen);
+}
+
+// returns -1 if kevent failed
+int WebServ::handleNewConnection(Server* server, struct kevent* current)
+{
+	int clientSock = accept(current->ident, (sockaddr*)&server->m_sockAddress, &server->m_sockLen);
 	m_openedSockets++;
 
 	int flags = fcntl(clientSock, F_GETFL);
@@ -39,38 +44,41 @@ int WebServ::handleOldConnection(struct kevent* current)
 	return 0;
 }
 
-
+static Server* isAServerSocket(std::vector<Server>& servers, int ident)
+{
+    for (size_t i = 0; i < servers.size(); i++) {
+        if (servers[i].getSocket() == ident)
+            return &servers[i];
+    }
+    return NULL;
+}
 
 void WebServ::run()
 {
-	Server& s = servers[0];
-	s.init();
+    KQueue::createKq();
 
-	KQueue::createKq();
+    for (size_t i = 0; i < servers.size(); i++) {
+        servers[i].init();
+        if (KQueue::watchSocket(servers[i].getSocket()) == -1)
+		    throw std::runtime_error("There was an error while adding server socket to kqueue");
+        m_openedSockets++;
+    }
 
-	if (KQueue::watchSocket(s.getSocket()) == -1)
-		throw std::runtime_error("There was an error while adding server socket to kqueue");
+    while (true)
+    {
+        struct kevent events[m_openedSockets];
+        int nevents = KQueue::getEvents(events, m_openedSockets);
 
-	m_openedSockets = 1;
-	while (true)
-	{
-		struct kevent events[m_openedSockets];
+        for (int i = 0; i < nevents; i++) {
 
-		int nevents = KQueue::getEvents(events, m_openedSockets);
-
-		for (int i = 0; i < nevents; i++) {
-
-			if (events[i].ident == (uintptr_t)s.getSocket()) {
-
-				handleNewConnection(s, &events[i]);
+            Server* tmp = isAServerSocket(servers, events[i].ident);
+            if (tmp) {
+                handleNewConnection(tmp, &events[i]);
 				(M_DEBUG) && std::cout << "Connection accepted" << std::endl ;
-				
-			} else {
+            } else {
 				handleOldConnection(&events[i]);
-			}
+            }
 
-		}
-	}
-
-	KQueue::closeKq();
+        }
+    }
 }

@@ -21,8 +21,9 @@ class   WebServ
 {
 
 public:
+    WebServ();
     void run();
-    int handleNewConnection(Server& s, struct kevent* current);
+    int handleNewConnection(Server* s, struct kevent* current);
     int handleOldConnection(struct kevent* current);
 
 public:
