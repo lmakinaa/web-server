@@ -1,86 +1,77 @@
 #include "WebServ.hpp"
 
+// returns -1 if kevent failed
+int WebServ::handleNewConnection(Server& server, struct kevent* current)
+{
+	int clientSock = accept(current->ident, (sockaddr*)&server.m_sockAddress, &server.m_sockLen);
+	m_openedSockets++;
+
+	int flags = fcntl(clientSock, F_GETFL);
+	fcntl(clientSock, F_SETFL, flags | O_NONBLOCK);
+
+	KQueue::watchSocket(clientSock);
+	return 0;
+}
+
+int WebServ::handleOldConnection(struct kevent* current)
+{
+	char buf[1024];
+	int r = recv(current->ident, buf, 1023, 0);
+
+	if (r <= 0) {
+		KQueue::removeSocket(current->ident);
+		return -1;
+	}
+
+	buf[r] = '\0';
+	std::cout << buf << std::endl;
+
+	std::string content = "<h1>Hi!</h1>\n";
+	std::string response = "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: " + std::to_string(content.length()) + "\n\n" + content;
+
+	if (send(current->ident, response.c_str(), response.size(), 0) == -1) {
+		std::cerr << "error while sending response\n";
+	}
+
+	KQueue::removeSocket(current->ident);
+	m_openedSockets--;
+
+	return 0;
+}
+
+
 
 void WebServ::run()
 {
 	Server& s = servers[0];
 	s.init();
 
+	KQueue::createKq();
 
-	int kq = kqueue();
-	if (kq == -1) {
-		std::cerr << "Kqueue(2) failed\n";
-	}
-
-	struct kevent event_change;
-	EV_SET(&event_change, s.getSocket(), EVFILT_READ, EV_ADD, 0, 0, 0);
-	kevent(kq, &event_change, 1, 0, 0, 0);
-
+	if (KQueue::watchSocket(s.getSocket()) == -1)
+		throw std::runtime_error("There was an error while adding server socket to kqueue");
 	
-	
-	int toWait = 1;
+	m_openedSockets = 1;
 	while (true)
 	{
-		struct kevent events[toWait];
-		// (nevents < 1) && (nevents = 1);
-		int nevents = kevent(kq, nullptr, 0, events, toWait, nullptr);
-        if (nevents == -1) {
-            std::cerr << "Kevent failed: " << strerror(errno) << std::endl;
-            break;
-        }
+		struct kevent events[m_openedSockets];
+
+		int nevents = KQueue::getEvents(events, m_openedSockets);
 
 		for (int i = 0; i < nevents; i++) {
-			struct kevent* curr = &events[i];
 
-			if (curr->ident == (uintptr_t)s.getSocket()) {
-				
-				// Handling new Connection
-				int cSock = accept(curr->ident, (sockaddr*)&s.m_sockAddress, &s.m_sockLen);
-				toWait++;
+			if (events[i].ident == (uintptr_t)s.getSocket()) {
 
-				int flags = fcntl(cSock, F_GETFL);
-				fcntl(cSock, F_SETFL, flags | O_NONBLOCK);
+				handleNewConnection(s, &events[i]);
+				(M_DEBUG) && std::cout << "Connection accepted" << std::endl ;
 				
-				EV_SET(&event_change, cSock, EVFILT_READ, EV_ADD, 0, 0, 0);
-				if (kevent(kq, &event_change, 1, nullptr, 0, nullptr) == -1) {
-                    std::cerr << "Kevent failed for new connection: " << strerror(errno) << std::endl;
-                    close(cSock);
-                    continue;
-                }
-				
-				std::cout << "Connection accepted" << std::endl ;
 			} else {
-
-				// Handling existing connection
-				char buf[1024];
-				int r = recv(curr->ident, buf, 1023, 0);
-
-				if (r <= 0) {
-					EV_SET(&event_change, curr->ident, EVFILT_READ, EV_DELETE, 0, 0, NULL);
-					kevent(kq, &event_change, 1, NULL, 0, NULL);
-					close(curr->ident);
-					continue;
-				}
-
-				buf[r] = '\0';
-				std::cout << buf << std::endl;
-
-				std::string content = "<h1>Hi!</h1>\n";
-				std::string response = "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: " + std::to_string(content.length()) + "\n\n" + content;
-
-				if (send(curr->ident, response.c_str(), response.size(), 0) == -1) {
-					std::cerr << "error while sending response\n";
-				}
-
-				EV_SET(&event_change, curr->ident, EVFILT_READ, EV_DELETE, 0, 0, NULL);
-				kevent(kq, &event_change, 1, NULL, 0, NULL);
-				close(curr->ident);
-				toWait--;
+				handleOldConnection(&events[i]);
 			}
 
 		}
 	}
 
 	close(s.getSocket());
-	close(kq);
+	KQueue::closeKq();
 }
