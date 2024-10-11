@@ -7,6 +7,7 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <map>
+#include <unistd.h>
 
 #include "../configFile/Directive.hpp"
 #include "../configFile/Location.hpp"
