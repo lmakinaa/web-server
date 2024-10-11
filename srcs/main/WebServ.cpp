@@ -50,7 +50,7 @@ void WebServ::run()
 
 	if (KQueue::watchSocket(s.getSocket()) == -1)
 		throw std::runtime_error("There was an error while adding server socket to kqueue");
-	
+
 	m_openedSockets = 1;
 	while (true)
 	{
@@ -72,6 +72,5 @@ void WebServ::run()
 		}
 	}
 
-	close(s.getSocket());
 	KQueue::closeKq();
 }

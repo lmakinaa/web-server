@@ -1,5 +1,8 @@
 #include "KQueue.hpp"
 
+int KQueue::m_fd = -1;
+struct kevent KQueue::m_keventBuff;
+
 int KQueue::createKq()
 {
     m_fd = kqueue();
@@ -17,8 +20,8 @@ void KQueue::closeKq()
 // Check the return only when using for the server socket, otherwise you can ignore it
 int KQueue::watchSocket(int fd)
 {
-    EV_SET(&m_keventBuff, fd, EVFILT_READ, EV_ADD, 0, 0, 0);
-	if (kevent(m_fd, &m_keventBuff, 1, 0, 0, 0) == -1) {
+    EV_SET(&KQueue::m_keventBuff, fd, EVFILT_READ, EV_ADD, 0, 0, 0);
+	if (kevent(m_fd, &KQueue::m_keventBuff, 1, 0, 0, 0) == -1) {
         if (M_DEBUG)
             perror("kevent(2)");
         close(fd);

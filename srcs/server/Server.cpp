@@ -7,6 +7,7 @@ Server::Server()
 
 Server::~Server()
 {
+    close(m_socket);
 }
 
 void Server::init()

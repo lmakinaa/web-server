@@ -23,13 +23,12 @@ class   WebServ
 public:
     void run();
     int handleNewConnection(Server& s, struct kevent* current);
-    int WebServ::handleOldConnection(struct kevent* current);
+    int handleOldConnection(struct kevent* current);
 
 public:
     std::vector<Server> servers;
 
 private:
-    int m_openedSockets = 0;
-    struct kevent event_change;
+    int m_openedSockets;
 
 };
