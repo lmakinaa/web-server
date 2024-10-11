@@ -35,7 +35,7 @@ int WebServ::handleOldConnection(struct kevent* current)
 	std::string response = "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: " + std::to_string(content.length()) + "\n\n" + content;
 
 	if (send(current->ident, response.c_str(), response.size(), 0) == -1) {
-		std::cerr << "error while sending response\n";
+		(M_DEBUG) && std::cerr << "error while sending response\n";
 	}
 
 	KQueue::removeSocket(current->ident);
