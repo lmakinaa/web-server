@@ -73,11 +73,37 @@ void CGI::scriptToHtml(const char* cgiPath, const char* argv[], std::string& buf
     }
 }
 
+//python test
+// print ("Content-type:text/html\r\n\r\n")
+// print ('<html>')
+// print ('<head>')
+// print ('<title>Hello Word - First CGI Program</title>')
+// print ('</head>')
+// print ('<body>')
+// print ('<h2>Hello Word! This is my first CGI program</h2>')
+// print ('</body>')
+// print ('</html>')
+
+//-----------
+
+//php test
+// echo "Content-type:text/html\r\n\r\n";
+// echo '<html>';
+// echo '<head>';
+// echo '<title>Hello Word - First CGI Program</title>';
+// echo '</head>';
+// echo '<body>';
+// echo '<h2>Hello Word! This is my first CGI program</h2>';
+// echo '</body>';
+// echo '</html>';
+
+//--------------
+
 // int main()
 // {
-//     const char* cgiPath = "/usr/bin/php";
-//     const char* cgi = "php";
-//     const char* file = "/Users/ijaija/web-server/srcs/CGI/test.php";
+//     const char* cgiPath = "/usr/bin/python";
+//     const char* cgi = "python";
+//     const char* file = "/Users/ijaija/web-server/srcs/CGI/tt.py";
 //     const char* argv[3];
 //     argv[0] = cgi;
     
