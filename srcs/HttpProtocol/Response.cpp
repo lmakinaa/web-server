@@ -44,3 +44,37 @@ std::string HttpResponse::GetResponse(){
     return this->Response;
 }
 
+
+std::string WhatContentType(std::string uri){
+
+    if (uri.substr(uri.rfind(".")) == ".html")
+        return "text/html";
+    else if (uri.substr(uri.rfind(".")) == ".css")
+        return "text/css";
+    else if (uri.substr(uri.rfind(".")) == ".js")
+        return "text/javascript";
+    else if (uri.substr(uri.rfind(".")) == ".jpg")
+        return "image/jpeg";
+    else if (uri.substr(uri.rfind(".")) == ".jpeg")
+        return "image/jpeg";
+    else if (uri.substr(uri.rfind(".")) == ".png")
+        return "image/png";
+    else if (uri.substr(uri.rfind(".")) == ".gif")
+        return "image/gif";
+    else if (uri.substr(uri.rfind(".")) == ".bmp")
+        return "image/bmp";
+    else if (uri.substr(uri.rfind(".")) == ".ico")
+        return "image/x-icon";
+    else if (uri.substr(uri.rfind(".")) == ".svg")
+        return "image/svg+xml";
+    else if (uri.substr(uri.rfind(".")) == ".mp3")
+        return "audio/mpeg";
+    else if (uri.substr(uri.rfind(".")) == ".wav")
+        return "audio/wav";
+    else if (uri.substr(uri.rfind(".")) == ".mp4")
+        return "video/mp4";
+    else if (uri.substr(uri.rfind(".")) == ".avi")
+        return "video/x-msvideo";
+    else
+        return "application/octet-stream";
+}

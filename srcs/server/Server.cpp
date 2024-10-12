@@ -44,10 +44,11 @@ int main() {
         int read_bytes;
 
         try{
-            char buf[1024] = {0};
             HttpRequest req;
-            read_bytes = read(client_fd, buf, 1024);
-            req.ParseRequest(buf);
+            // read_bytes = read(client_fd, buf, 100024);
+            std::cout << "<---------------------Request---------------------->" << std::endl;
+            
+            req.ParseRequest(client_fd);
             HttpResponse *res = new HttpResponse();
 
             res->SetVersion("HTTP/1.1");
@@ -62,12 +63,15 @@ int main() {
                 while (getline(file, line))
                     res->SetResponse("\n" + line );
                 res->SetResponseCode("200 OK");
+                res->SetContentType(WhatContentType(req.GetUri().substr(1)));
                 file.close();
             }
             else
             {
+                puts("<---------------------Response404---------------------->");
                 res->SetResponseCode("404 Not Found");
                 res->SetResponse("<html><head><title>404 Not Found</title></head><body><center><h1>404 Not Found</h1></center><hr></body></html>");
+                std::cout << res->GetResponse() << std::endl;
             }
             std::string str = res->BuildResponse();
             send(client_fd,str.c_str(), strlen(str.c_str()), 0);
@@ -76,11 +80,13 @@ int main() {
         }
         catch(std::exception& e){
             send(client_fd, e.what(), strlen(e.what()), 0);
+            puts("<---------------------Response400---------------------->");
             puts(e.what());
+
         }
-        close(client_fd);
+        // close(client_fd);
     }
 
-    close(server_fd);
+    // close(server_fd);
     return 0;
 }
