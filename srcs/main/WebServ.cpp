@@ -18,7 +18,7 @@ int WebServ::handleNewConnection(Server* server, struct kevent* current)
 	return 0;
 }
 
-int WebServ::handleOldConnection(struct kevent* current)
+int WebServ::handleExistedConnection(struct kevent* current)
 {
 	char buf[1024];
 	int r = recv(current->ident, buf, 1023, 0);
@@ -76,7 +76,7 @@ void WebServ::run()
                 handleNewConnection(tmp, &events[i]);
 				(M_DEBUG) && std::cout << "Connection accepted" << std::endl ;
             } else {
-				handleOldConnection(&events[i]);
+				handleExistedConnection(&events[i]);
             }
 
         }

@@ -24,7 +24,7 @@ public:
     WebServ();
     void run();
     int handleNewConnection(Server* s, struct kevent* current);
-    int handleOldConnection(struct kevent* current);
+    int handleExistedConnection(struct kevent* current);
 
 public:
     std::vector<Server> servers;
