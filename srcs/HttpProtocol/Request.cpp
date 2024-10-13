@@ -128,10 +128,15 @@ void HttpRequest::ParseRequest(int client_fd)
 
             if(LINE_WITH_NO_CRLF)
                 throw HttpRequest::Error400;
-            if (line == "\r")
+            if (line == "\r" && state == Headers)
             {
-                state = Body;
-                generateUniqueFile();
+                if (method == "POST" || method == "DELETE")
+                {
+                    state = Body;
+                    generateUniqueFile();
+                }
+                else
+                    break;
             }
 
             switch (state)
