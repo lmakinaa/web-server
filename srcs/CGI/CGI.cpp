@@ -97,9 +97,9 @@ void CGI::scriptToHtml(t_method reqMethod, const char* cgiPath, const char* argv
 
 // int main()
 // {
-//     const char* cgiPath = "/Users/ijaija/web-server/www/server-cgis/php-cgi";
+//     const char* cgiPath = "/Users/ijaija/web-server/www/server-cgis/python-cgi";
 //     const char* cgi = "php";
-//     const char* file = "/Users/ijaija/web-server/srcs/CGI/test.php";
+//     const char* file = "/Users/ijaija/web-server/srcs/CGI/test.py";
 //     const char* argv[3];
 //     argv[0] = cgi;
     
