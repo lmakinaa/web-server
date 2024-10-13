@@ -2,7 +2,9 @@
 
 extern char **environ;
 
-static void readOutput(int fd, std::string& buff)
+t_eventData CGI::m_cgiEventData("cgi response", NULL);
+
+void CGI::readOutput(int fd, std::string& buff)
 {
     char* cbuff; 
     try {cbuff = new char[BUFF_SIZE]();} catch(std::exception&e) {return ;} // No response if fail
@@ -12,7 +14,7 @@ static void readOutput(int fd, std::string& buff)
 
         if (r <= 0) {
             if (r == -1 && M_DEBUG)
-                perror("execve(2)");
+                perror("read(2)");
             break ; // No response
         }
 
@@ -26,6 +28,8 @@ static void readOutput(int fd, std::string& buff)
             break ;
     }
     delete[] cbuff;
+    KQueue::removeFd(fd);
+    close(fd);
 }
 
 static void closePipe(int fds[2])
@@ -34,7 +38,7 @@ static void closePipe(int fds[2])
     close(fds[1]);
 }
 
-void CGI::scriptToHtml(t_method reqMethod, const char* cgiPath, const char* argv[], std::string& buff, std::string& postData)
+void CGI::runScript(t_method reqMethod, const char* cgiPath, const char* argv[], std::string& postData, long fd)
 {
     int fds[2];
     int input_pipe[2];
@@ -67,6 +71,7 @@ void CGI::scriptToHtml(t_method reqMethod, const char* cgiPath, const char* argv
                 perror("execve(2)");
             exit(1);
         }
+        exit(0);
     }
     else
     {
@@ -79,19 +84,19 @@ void CGI::scriptToHtml(t_method reqMethod, const char* cgiPath, const char* argv
 
         write(input_pipe[1], postData.c_str(), postData.length());
         closePipe(input_pipe);
-     
-        if (waitpid(pid, NULL, 0) == -1)
-        {
-            if (M_DEBUG)
-                std::perror("waitpid(2)");
-            return (closePipe(fds)); // No response
-        }
-        else
-        {
-            close(fds[1]);
-            readOutput(fds[0], buff);
-            close(fds[0]);
-        }
+
+        // if (waitpid(pid, NULL, 0) == -1)
+        // {
+        //     if (M_DEBUG)
+        //         std::perror("waitpid(2)");
+        //     return (closePipe(fds)); // No response
+        // }
+
+        
+        close(fds[1]);
+        KQueue::watchFd(fds[0], (t_eventData*)fd);
+        // fds[0] will be closed by KQueue::removeFd()
+        
     }
 }
 
@@ -111,7 +116,7 @@ void CGI::scriptToHtml(t_method reqMethod, const char* cgiPath, const char* argv
 
 // std::string postData = "var1=5454&var2=test&path=sds";
 
-//     CGI::scriptToHtml(POST, cgiPath, argv, buff, postData);
+//     CGI::runScript(POST, cgiPath, argv, postData);
 
 //     std::cout << buff << std::endl;
 //     return 0;

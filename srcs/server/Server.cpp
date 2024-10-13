@@ -2,6 +2,9 @@
 #include "Server.hpp"
 
 Server::Server()
+    : m_sockAddress ()
+    , m_sockLen ()
+    , m_sEventData ("server socket", NULL)
 {
 }
 
@@ -41,4 +44,8 @@ void Server::init()
 	if (listen(m_socket, SOMAXCONN) == -1)
 		throw std::runtime_error((std::string("listen(2): ") + strerror(errno)));
 
+    m_sockData.sockAddress = &m_sockAddress;
+    m_sockData.sockLen = &m_sockLen;
+
+    m_sEventData.data = &m_sockData;
 }

@@ -1,20 +1,27 @@
 #include "WebServ.hpp"
 
 WebServ::WebServ()
-    : m_openedSockets (0)
+    : m_cEventData("client socket", NULL)
+    , m_openedSockets (0)
 {
 }
 
 // returns -1 if kevent failed
-int WebServ::handleNewConnection(Server* server, struct kevent* current)
+int WebServ::handleNewConnection(struct kevent* current)
 {
-	int clientSock = accept(current->ident, (sockaddr*)&server->m_sockAddress, &server->m_sockLen);
-	m_openedSockets++;
+    t_eventData *evData = (t_eventData*)current->udata;
+    t_sockData* tmp = (t_sockData*)evData->data;
+
+	int clientSock = accept(current->ident, (sockaddr*)(tmp->sockAddress), tmp->sockLen);
+    if (clientSock == -1)
+        perror("accept(2)");
+
+    m_openedSockets++;
 
 	int flags = fcntl(clientSock, F_GETFL);
 	fcntl(clientSock, F_SETFL, flags | O_NONBLOCK);
 
-	KQueue::watchSocket(clientSock);
+	KQueue::watchFd(clientSock, &m_cEventData);
 	return 0;
 }
 
@@ -24,33 +31,49 @@ int WebServ::handleExistedConnection(struct kevent* current)
 	int r = recv(current->ident, buf, 1023, 0);
 
 	if (r <= 0) {
-		KQueue::removeSocket(current->ident);
+		KQueue::removeFd(current->ident);
+        close(current->ident);
+        m_openedSockets--;
 		return -1;
 	}
 
 	buf[r] = '\0';
-	std::cout << buf << std::endl;
+	std::cout << buf << std::flush;
 
-	std::string content = "<h1>Hi!</h1>\n";
-	std::string response = "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: " + std::to_string(content.length()) + "\n\n" + content;
+	
+    // Parse Request
+    // ...
+    KQueue::removeFd(current->ident);
+    // close(current->ident); // dont close we need to send data to it
+	// m_openedSockets--;
 
-	if (send(current->ident, response.c_str(), response.size(), 0) == -1) {
-		(M_DEBUG) && std::cerr << "error while sending response\n";
-	}
-
-	KQueue::removeSocket(current->ident);
-	m_openedSockets--;
+    // Pass to CGI
+    const char* argv[3] = {"php-cgi", "/Users/ijaija/web-server/srcs/CGI/test.php", NULL};
+    std::string postBody ("var1=5454&var2=test&path=sds");
+    CGI::runScript(
+        POST,
+        "/Users/ijaija/web-server/www/server-cgis/php-cgi",
+        argv,
+        postBody, current->ident);
+    // m_openedSockets++;
 
 	return 0;
 }
 
-static Server* isAServerSocket(std::vector<Server>& servers, int ident)
+void WebServ::sendResponse(struct kevent* current)
 {
-    for (size_t i = 0; i < servers.size(); i++) {
-        if (servers[i].getSocket() == ident)
-            return &servers[i];
-    }
-    return NULL;
+    std::string content;
+
+    CGI::readOutput(current->ident, content);
+    m_openedSockets--;
+
+	std::string response = "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: " + std::to_string(content.length()) + "\n\n" + content;
+
+    if (send((long)current->udata, response.c_str(), response.size(), 0) == -1) {
+		(M_DEBUG) && std::cerr << "error while sending response: " << strerror(errno) << '\n' ;
+	}
+
+    close((long)current->udata);
 }
 
 void WebServ::run()
@@ -59,8 +82,14 @@ void WebServ::run()
 
     for (size_t i = 0; i < servers.size(); i++) {
         servers[i].init();
-        if (KQueue::watchSocket(servers[i].getSocket()) == -1)
-		    throw std::runtime_error("There was an error while adding server socket to kqueue");
+
+        EV_SET(&KQueue::m_keventBuff, servers[i].getSocket(), EVFILT_READ, EV_ADD, 0, 0, (void*)&(servers[i].m_sEventData));
+        if (kevent(KQueue::getFd(), &KQueue::m_keventBuff, 1, 0, 0, 0) == -1) {
+            if (M_DEBUG)
+                perror("kevent(2)");
+            close(servers[i].getSocket());
+            throw std::runtime_error("There was an error while adding server socket to kqueue");
+        }
         m_openedSockets++;
     }
 
@@ -71,12 +100,18 @@ void WebServ::run()
 
         for (int i = 0; i < nevents; i++) {
 
-            Server* tmp = isAServerSocket(servers, events[i].ident);
-            if (tmp) {
-                handleNewConnection(tmp, &events[i]);
-				(M_DEBUG) && std::cout << "Connection accepted" << std::endl ;
-            } else {
+            if ((long)events[i].udata > OPEN_MAX && !std::strcmp((static_cast<t_eventData*>(events[i].udata))->type, "server socket")) {
+
+                handleNewConnection(&events[i]);
+				std::cout << "Connection accepted" << std::endl ;
+            }
+            else if ((long)events[i].udata > OPEN_MAX && !std::strcmp(static_cast<t_eventData*>(events[i].udata)->type, "client socket")) {
 				handleExistedConnection(&events[i]);
+				std::cout << "Request parsed" << std::endl ;
+            }
+            else {
+                sendResponse(&events[i]);
+				std::cout << "Response sent" << std::endl ;
             }
 
         }
