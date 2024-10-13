@@ -1,5 +1,7 @@
 #include "CGI.hpp"
 
+extern char **environ;
+
 static void readOutput(int fd, std::string& buff)
 {
     char* cbuff; 
@@ -32,20 +34,35 @@ static void closePipe(int fds[2])
     close(fds[1]);
 }
 
-void CGI::scriptToHtml(const char* cgiPath, const char* argv[], std::string& buff)
+void CGI::scriptToHtml(t_method reqMethod, const char* cgiPath, const char* argv[], std::string& buff, std::string& postData)
 {
     int fds[2];
-    if (pipe(fds) == -1) {
+    int input_pipe[2];
+    if (pipe(fds) == -1 || pipe(input_pipe) == -1) {
         if (M_DEBUG)
             perror("pipe(2)");
-        return ; // No reponse
+        return ; // No response
     }
 
     int pid = fork();
     if (!pid)
     {
         dup2(fds[1], 1);
-        if (execve(cgiPath, const_cast<char* const*>(argv), NULL) == -1) {
+        dup2(input_pipe[0], 0);
+        
+        closePipe(input_pipe);
+        closePipe(fds);
+
+        setenv("SCRIPT_FILENAME", argv[1], 1);
+        setenv("REDIRECT_STATUS", "200", 1);
+        setenv("CONTENT_TYPE", "application/x-www-form-urlencoded", 1);
+        setenv("REQUEST_METHOD", reqMethod == POST ? "POST":(reqMethod == GET ? "GET":"DELETE"), 1);
+
+        (reqMethod == POST) && setenv("CONTENT_LENGTH", std::to_string(postData.length()).c_str(), 1);
+        (reqMethod == GET) && setenv("QUERY_STRING", postData.c_str(), 1);
+        
+
+        if (execve(cgiPath, const_cast<char* const*>(argv), environ) == -1) {
             if (M_DEBUG)
                 perror("execve(2)");
             exit(1);
@@ -53,15 +70,20 @@ void CGI::scriptToHtml(const char* cgiPath, const char* argv[], std::string& buf
     }
     else
     {
+
         if (pid == -1) {
             if (M_DEBUG)
                 perror("fork(2)");
             return (closePipe(fds)); // No response
         }
+
+        write(input_pipe[1], postData.c_str(), postData.length());
+        closePipe(input_pipe);
+     
         if (waitpid(pid, NULL, 0) == -1)
         {
             if (M_DEBUG)
-                perror("waitpid(2)");
+                std::perror("waitpid(2)");
             return (closePipe(fds)); // No response
         }
         else
@@ -73,37 +95,11 @@ void CGI::scriptToHtml(const char* cgiPath, const char* argv[], std::string& buf
     }
 }
 
-//python test
-// print ("Content-type:text/html\r\n\r\n")
-// print ('<html>')
-// print ('<head>')
-// print ('<title>Hello Word - First CGI Program</title>')
-// print ('</head>')
-// print ('<body>')
-// print ('<h2>Hello Word! This is my first CGI program</h2>')
-// print ('</body>')
-// print ('</html>')
-
-//-----------
-
-//php test
-// echo "Content-type:text/html\r\n\r\n";
-// echo '<html>';
-// echo '<head>';
-// echo '<title>Hello Word - First CGI Program</title>';
-// echo '</head>';
-// echo '<body>';
-// echo '<h2>Hello Word! This is my first CGI program</h2>';
-// echo '</body>';
-// echo '</html>';
-
-//--------------
-
 // int main()
 // {
-//     const char* cgiPath = "/usr/bin/python";
-//     const char* cgi = "python";
-//     const char* file = "/Users/ijaija/web-server/srcs/CGI/tt.py";
+//     const char* cgiPath = "/Users/ijaija/web-server/www/server-cgis/python-cgi";
+//     const char* cgi = "php";
+//     const char* file = "/Users/ijaija/web-server/srcs/CGI/test.py";
 //     const char* argv[3];
 //     argv[0] = cgi;
     
@@ -113,9 +109,12 @@ void CGI::scriptToHtml(const char* cgiPath, const char* argv[], std::string& buf
 
 //     std::string buff;
 
-//     CGI::scriptToHtml(cgiPath, argv, buff);
+// std::string postData = "var1=5454&var2=test&path=sds";
+
+//     CGI::scriptToHtml(POST, cgiPath, argv, buff, postData);
 
 //     std::cout << buff << std::endl;
 //     return 0;
 
 // }
+
