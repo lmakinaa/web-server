@@ -11,11 +11,17 @@
 # define BUFF_SIZE 64000
 #endif
 
+typedef enum request_method {
+    POST,
+    GET,
+    DELETE
+} t_method;
+
 class CGI
 {
 
 public:
-    static void scriptToHtml(const char* cgiPath, const char* argv[], std::string& buff);
+    static void scriptToHtml(t_method reqMethod, const char* cgiPath, const char* argv[], std::string& buff, std::string& postData);
 
 
 
