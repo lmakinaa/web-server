@@ -60,7 +60,7 @@ int main(int ac, char *av[])
         return (EXIT_FAILURE);
     // server();
 
-
-    affiche(main);
+    Response(main);
+    // affiche(main);
     return (0);
 }

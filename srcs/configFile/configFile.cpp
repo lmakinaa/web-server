@@ -124,6 +124,8 @@ int checkDirValue(std::vector<std::string> &directive)
                 return (-1);
             if (directive[0] == "client_max_body_size" && directive.size() != 2)
                 return (-1);
+            if (directive[0] == "listen" && directive.size() != 2)
+                return (-1);
         }
         else if (directive[0] == "autoindex")
         {
