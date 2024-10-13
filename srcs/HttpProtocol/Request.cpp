@@ -46,11 +46,11 @@ void HttpRequest::ParseHeaders(std::string line)
 
     bool FALSE_HEADER_FORMAT = (line.find(": ") == std::string::npos);
 
-    // if (FALSE_HEADER_FORMAT)
-    // {
-    //     std::cout << "\033[1;31m"<< line <<"\033[0m\n";
-    //     throw HttpRequest::Error400;
-    // }
+    if (FALSE_HEADER_FORMAT)
+    {
+        std::cout << "\033[1;31m"<< line <<"\033[0m\n";
+        throw HttpRequest::Error400;
+    }
 
     key     = line.substr(0, line.find(": "));
     value   = line.substr(line.find(": ") + 1, line.size() - 1);
@@ -66,9 +66,44 @@ void HttpRequest::ParseHeaders(std::string line)
         SetHeader(key, value);
 }
 
+void HttpRequest::generateUniqueFile(void)
+{
+    static int i = 0;
+    if (i == INT_MAX)
+        i = 0;
+    std::string file_name = "temp_" + std::to_string(i) + ".txt";
+    std::ofstream file(file_name);
+    if (file.is_open())
+    {
+        file.close();
+        bodyFile = file_name;
+        i++;
+    }
+    else
+        throw HttpRequest::Error500;
+}
+
 void HttpRequest::ParseBody(std::string line)
 {
-
+    if (line != boundary + "--" && content_length > 0)
+    {
+        std::ofstream file(bodyFile, std::ios::app);
+        if (file.is_open())
+        {
+            file << line;
+        }
+        else
+            throw HttpRequest::Error500;
+    }
+    else if (line != "0\r")
+    {
+        line = line.substr(0, line.size() - 1);
+        std::ofstream file(bodyFile, std::ios::app);
+        if (file.is_open())
+            file << line;
+        else
+            throw HttpRequest::Error500;
+    }
 }
 
 enum ParseState{
@@ -81,12 +116,12 @@ void HttpRequest::ParseRequest(int client_fd)
 {
     char request[10024] = {0};
     std::string line;
-    ParseState state = ParseState::FirstLine;
+    ParseState state = FirstLine;
 
        read(client_fd, request, 10024);
-    
+
         std::stringstream tokensStream(request);
-    
+
         while (std::getline(tokensStream, line))
         {
             bool LINE_WITH_NO_CRLF = (line.size() < 1 || line.substr(line.size() - 1) != "\r");
@@ -94,18 +129,21 @@ void HttpRequest::ParseRequest(int client_fd)
             if(LINE_WITH_NO_CRLF)
                 throw HttpRequest::Error400;
             if (line == "\r")
-                state = ParseState::Body;
+            {
+                state = Body;
+                generateUniqueFile();
+            }
 
             switch (state)
             {
-                case ParseState::FirstLine:
+                case FirstLine:
                     ParseFirstLine(line);
-                    state = ParseState::Headers;
+                    state = Headers;
                     break;
-                case ParseState::Headers:
+                case Headers:
                     ParseHeaders(line);
                     break;
-                case ParseState::Body:
+                case Body:
                     ParseBody(line);
             }
             std::cout << line << std::endl;
@@ -141,7 +179,7 @@ std::ostream& operator<<(std::ostream& os, HttpRequest& req)
     os << "Headers: " << std::endl;
     std::map<std::string, std::string> print = req.GetHeaders();
 
-    for (auto it = print.begin(); it != print.end(); it++)
+    for (std::map<std::string, std::string>::iterator it = print.begin(); it != print.end(); it++)
         os << it->first << ": " << it->second << std::endl;
     return os;
 }
