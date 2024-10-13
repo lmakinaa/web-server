@@ -45,6 +45,7 @@ public:
     void ParseBody(std::string line);
 
 public:
+    HttpRequest() : content_length(0), chunk_size(0), bodyRead(0) {}
     void SetMethod(std::string method) { this->method = method; }
     void SetUri(std::string uri) { this->uri = uri; }
     void SetVersion(std::string version) { this->version = version; }
@@ -62,8 +63,7 @@ public:
     double GetContentLength() { return this->content_length; }
     double GetChunkSize() { return this->chunk_size; }
     double GetBodyRead() { return this->bodyRead; }
-   
-
+    std::map<std::string, std::string> GetHeaders() { return this->headers; }
 };
 
 std::ostream& operator<<(std::ostream& os, HttpRequest& req);

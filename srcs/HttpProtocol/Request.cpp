@@ -5,24 +5,35 @@
 #include "../server/Server.hpp"
 #include <fstream>
 
+std::string strtrim(std::string str)
+{
+    int x,y = 0;
+    for (; x < str.size(); x++)
+        if (str[x] != ' ' && str[x] != '\r' && str[x] != '\t')
+            break;
+   for (y = str.size() - 1; y >= 0; y--)
+        if (str[y] != ' ' && str[y] != '\r' && str[y] != '\t')
+            break;
+    return str.substr(x, y - x + 1);
+}
+
 void HttpRequest::ParseFirstLine(std::string line)
 {
     
     for (int i = 0; i < 3; i++)
     {
-        if (line.find(" ") == std::string::npos && i != 2)
-            throw HttpRequest::Error400;
-        else
+        
+        std::string token = line.substr(0, line.find(" "));
+        if (i == 0)
+            SetMethod(token);
+        else if (i == 1)
+            SetUri(token);
+        else if (i == 2)
         {
-            std::string token = line.substr(0, line.find(" "));
-            if (i == 0)
-                SetMethod(token);
-            else if (i == 1)
-                SetUri(token);
-            else if (i == 2)
-                SetVersion(token);
-            line = line.substr(line.find(" ") + 1);
+            token = strtrim(token);
+            SetVersion(token);
         }
+        line = line.substr(line.find(" ") + 1);
     }
 
     
@@ -35,21 +46,29 @@ void HttpRequest::ParseHeaders(std::string line)
 
     bool FALSE_HEADER_FORMAT = (line.find(": ") == std::string::npos);
 
-    if (FALSE_HEADER_FORMAT)
-        throw HttpRequest::Error400;
+    // if (FALSE_HEADER_FORMAT)
+    // {
+    //     std::cout << "\033[1;31m"<< line <<"\033[0m\n";
+    //     throw HttpRequest::Error400;
+    // }
 
     key     = line.substr(0, line.find(": "));
     value   = line.substr(line.find(": ") + 1, line.size() - 1);
 
+    key = strtrim(key);
+    value = strtrim(value);
+
     if (key == "Content-Length")
         SetContentLength(value);
+    else if (value.find("boundary=") != std::string::npos)
+        SetBoundary(value.substr(value.find("boundary=") + 9, value.size() - 1));
     else
         SetHeader(key, value);
 }
 
 void HttpRequest::ParseBody(std::string line)
 {
-    
+
 }
 
 enum ParseState{
@@ -60,12 +79,12 @@ enum ParseState{
 
 void HttpRequest::ParseRequest(int client_fd)
 {
-    char request[1024];
+    char request[10024] = {0};
     std::string line;
     ParseState state = ParseState::FirstLine;
 
-    while (read(client_fd, request, 1024))
-    {
+       read(client_fd, request, 10024);
+    
         std::stringstream tokensStream(request);
     
         while (std::getline(tokensStream, line))
@@ -89,9 +108,11 @@ void HttpRequest::ParseRequest(int client_fd)
                 case ParseState::Body:
                     ParseBody(line);
             }
+            std::cout << line << std::endl;
         }
-    }
 
+    std::cout << "<_______-Parsed Request__________>" << std::endl;
+    std::cout << *this << std::endl;
     PerformChecks();
 }
 
@@ -99,12 +120,14 @@ void HttpRequest::PerformChecks(void){
 
     bool ValidMethod = false;
     std::string methods[3] = {"POST", "GET", "DELETE"};
+
     for (int i = 0; i < 3; i++)
         if (this->GetMethod() == methods[i])
             ValidMethod = true;
     if (!ValidMethod)
         throw HttpRequest::Error400;
-    if (this->GetUri()[0] != '/' || this->GetVersion() != "HTTP/1.1\r" )
+    
+    if (this->GetUri()[0] != '/' || this->GetVersion() != "HTTP/1.1" )
         throw HttpRequest::Error400;
 }
 
@@ -113,11 +136,12 @@ std::ostream& operator<<(std::ostream& os, HttpRequest& req)
     os << "Method: " << req.GetMethod() << std::endl;
     os << "Uri: " << req.GetUri() << std::endl;
     os << "Version: " << req.GetVersion() << std::endl;
-    os << "Host: " << req.GetHost() << std::endl;
-    os << "HostPort: " << req.GetHostPort() << std::endl;
-    os << "User-Agent: " << req.GetUserAgent() << std::endl;
-    os << "Accept: " << req.GetAccept() << std::endl;
     os << "Content-Length: " << req.GetContentLength() << std::endl;
-    os << "--------------------------------" << std::endl;
+    os << "Boundary: " << req.GetBoundary() << std::endl;
+    os << "Headers: " << std::endl;
+    std::map<std::string, std::string> print = req.GetHeaders();
+
+    for (auto it = print.begin(); it != print.end(); it++)
+        os << it->first << ": " << it->second << std::endl;
     return os;
 }

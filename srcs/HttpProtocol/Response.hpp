@@ -10,6 +10,7 @@ class HttpResponse{
         std::string Connection;
         std::string Response;
     public :
+        HttpResponse() : Version("HTTP/1.1"), ResponseCode("200 OK"), ContentType("text/html"), Connection("close"), Response("") {}
         void SetVersion(std::string value);
         void SetResponseCode(std::string value);
         void SetContentType(std::string value);

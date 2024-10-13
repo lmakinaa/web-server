@@ -9,11 +9,11 @@ void HttpResponse::SetResponseCode(std::string value){
 }
 
 void HttpResponse::SetContentType(std::string value){
-    this->ContentType = "Content-Type: " + value + "\r\n";
+    this->ContentType = value;
 }
 
 void HttpResponse::SetConnection(std::string value){
-    this->Connection = "Connection: " + value + "\r\n";
+    this->Connection = value;
 }
 
 void HttpResponse::SetResponse(std::string value){
@@ -21,7 +21,7 @@ void HttpResponse::SetResponse(std::string value){
 }
 
 std::string HttpResponse::BuildResponse() {
-    return Version + " " + ResponseCode + "\r\n" + ContentType + Connection + "\r\n" + Response;
+    return this->Version + " " + this->ResponseCode + "\r\n" + "Content-Type: " + this->ContentType + "\r\n" + "Connection: " + this->Connection + "\r\n" + "\r\n" + this->Response;
 }
 
 std::string HttpResponse::GetVersion(){
@@ -47,7 +47,7 @@ std::string HttpResponse::GetResponse(){
 
 std::string WhatContentType(std::string uri){
 
-    if (uri.substr(uri.rfind(".")) == ".html")
+    if ( uri.rfind(".") == std::string::npos|| uri.substr(uri.rfind(".")) == ".html" || uri == "/")
         return "text/html";
     else if (uri.substr(uri.rfind(".")) == ".css")
         return "text/css";
