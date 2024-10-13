@@ -5,7 +5,7 @@
 int checkValidLocation(std::map<std::string, Location>::iterator it, std::string requestPath)
 {
 
-    
+
 
     return (1);
 }
@@ -32,7 +32,7 @@ void    Response(Main &main)
         /* ======= check the existance of the index ======= */
         if (checkValidLocation(it, requestPath) == -1)
         {
-            if ((*it).second.directives["autoindex"].values[0] == "on")
+            if (isDirectory(requestPath) &&  (*it).second.directives["autoindex"].values[0] == "on")
             {
                 // listAllCurrentDirectories();
             }
