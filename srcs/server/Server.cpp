@@ -44,16 +44,10 @@ int main() {
         int read_bytes;
 
         try{
-            char buf[1024] = {0};
             HttpRequest req;
-            read_bytes = read(client_fd, buf, 1024);
-            req.ParseRequest(buf);
+           
+            req.ParseRequest(client_fd);
             HttpResponse *res = new HttpResponse();
-
-            res->SetVersion("HTTP/1.1");
-            res->SetContentType("text/html");
-            res->SetConnection("close");
-            
     
             std::ifstream file (req.GetUri().substr(1));
             if (file.is_open())
@@ -62,21 +56,26 @@ int main() {
                 while (getline(file, line))
                     res->SetResponse("\n" + line );
                 res->SetResponseCode("200 OK");
+                res->SetContentType(WhatContentType(req.GetUri().substr(1)));
                 file.close();
             }
             else
             {
+                puts("<---------------------Response404---------------------->");
                 res->SetResponseCode("404 Not Found");
+                res->SetContentType("text/html");
                 res->SetResponse("<html><head><title>404 Not Found</title></head><body><center><h1>404 Not Found</h1></center><hr></body></html>");
             }
             std::string str = res->BuildResponse();
             send(client_fd,str.c_str(), strlen(str.c_str()), 0);
+            std::cout << res->GetResponse() << std::endl;
             delete res;
-
         }
         catch(std::exception& e){
             send(client_fd, e.what(), strlen(e.what()), 0);
+            puts("<---------------------Response400---------------------->");
             puts(e.what());
+
         }
         close(client_fd);
     }
