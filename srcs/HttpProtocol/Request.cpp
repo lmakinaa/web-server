@@ -19,24 +19,30 @@ std::string strtrim(std::string str)
 
 void HttpRequest::ParseFirstLine(std::string line)
 {
-    
-    for (int i = 0; i < 3; i++)
-    {
-        
-        std::string token = line.substr(0, line.find(" "));
-        if (i == 0)
-            SetMethod(token);
-        else if (i == 1)
-            SetUri(token);
-        else if (i == 2)
-        {
-            token = strtrim(token);
-            SetVersion(token);
-        }
-        line = line.substr(line.find(" ") + 1);
+    std::vector<std::string> validMethods;
+
+    validMethods.push_back("POST");
+    validMethods.push_back("GET");
+    validMethods.push_back("DELETE");
+    std::vector<std::string> tokens;
+    std::istringstream iss(line);
+    std::string token;
+
+    while (std::getline(iss, token, ' ')) {
+        tokens.push_back(strtrim(token));
     }
 
-    
+    // if (tokens.size() != 3) {
+    //     throw HttpRequest::Error400;
+    // }
+
+    // if (std::find(validMethods.begin(), validMethods.end(), tokens[0]) == validMethods.end()) {
+    //     throw HttpRequest::Error400;
+    // }
+
+    SetMethod(tokens[0]);
+    SetUri(tokens[1]);
+    SetVersion(tokens[2]);
 }
 
 void HttpRequest::ParseHeaders(std::string line)
@@ -46,11 +52,11 @@ void HttpRequest::ParseHeaders(std::string line)
 
     bool FALSE_HEADER_FORMAT = (line.find(": ") == std::string::npos);
 
-    if (FALSE_HEADER_FORMAT)
-    {
-        std::cout << "\033[1;31m"<< line <<"\033[0m\n";
-        throw HttpRequest::Error400;
-    }
+    // if (FALSE_HEADER_FORMAT)
+    // {
+    //     std::cout << "\033[1;31m"<< line <<"\033[0m\n";
+    //     throw HttpRequest::Error400;
+    // }
 
     key     = line.substr(0, line.find(": "));
     value   = line.substr(line.find(": ") + 1, line.size() - 1);
@@ -85,25 +91,25 @@ void HttpRequest::generateUniqueFile(void)
 
 void HttpRequest::ParseBody(std::string line)
 {
-    if (line != boundary + "--" && content_length > 0)
+    // if (line != boundary + "--" && content_length > 0)
+    // {
+    std::ofstream file(bodyFile, std::ios::app);
+    if (file.is_open())
     {
-        std::ofstream file(bodyFile, std::ios::app);
-        if (file.is_open())
-        {
-            file.write(line.c_str(), line.size());
-        }
-        else
-            throw HttpRequest::Error500;
+        file.write(line.c_str(), line.size());
     }
-    else if (line != "0\r")
-    {
-        line = line.substr(0, line.size() - 1);
-        std::ofstream file(bodyFile, std::ios::app);
-        if (file.is_open())
-            file.write(line.c_str(), line.size());
-        else
-            throw HttpRequest::Error500;
-    }
+    else
+        throw HttpRequest::Error500;
+    // }
+    // else if (line != "0\r")
+    // {
+    //     line = line.substr(0, line.size() - 1);
+    //     std::ofstream file(bodyFile, std::ios::app);
+    //     if (file.is_open())
+    //         file.write(line.c_str(), line.size());
+    //     else
+    //         throw HttpRequest::Error500;
+    // }
 }
 
 enum ParseState{
@@ -112,16 +118,14 @@ enum ParseState{
     Body
 };
 
-void HttpRequest::ParseRequest(int client_fd)
+void HttpRequest::ParseRequest(char *request)
 {
-    char request[1000000] = {0};
     std::string line;
     ParseState state = FirstLine;
-
-    read(client_fd, request, 2000000);
     
     std::stringstream tokensStream(request);
-    while (std::getline(tokensStream, line))
+
+    while (std::getline(tokensStream, line, '\n'))
     {
         bool LINE_WITH_NO_CRLF = (line.size() < 1 || line.substr(line.size() - 1) != "\r");
         // if(LINE_WITH_NO_CRLF)
@@ -148,12 +152,9 @@ void HttpRequest::ParseRequest(int client_fd)
             case Body:
                 ParseBody(line);
         }
-        std::cout << line << std::endl;
+        // std::cout << line << std::endl;
     }
     
-    std::cout << "<_______-Parsed Request__________>" << std::endl;
-    std::cout << *this << std::endl;
-    PerformChecks();
 }
 
 void HttpRequest::PerformChecks(void){
@@ -184,4 +185,18 @@ std::ostream& operator<<(std::ostream& os, HttpRequest& req)
     for (std::map<std::string, std::string>::iterator it = print.begin(); it != print.end(); it++)
         os << it->first << ": " << it->second << std::endl;
     return os;
+}
+
+void HttpRequest::ReadRequest(int fd){
+    size_t read_bytes = 0;
+    char buffer[1000000] = {0};
+    do{
+        read_bytes += read(fd, buffer, 1000000);
+        std::cout << "\033[1;31m"<< read_bytes <<"\033[0m\n";
+        ParseRequest(buffer);
+    } 
+    while (read_bytes < content_length);
+    std::cout << "<_________________Parsed Request__________>" << std::endl;
+    std::cout << *this << std::endl;
+    PerformChecks();
 }

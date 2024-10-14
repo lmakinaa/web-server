@@ -52,7 +52,7 @@ public:
     Succes201 Created201;
     ErrorClass500 Error500;
     void PerformChecks(void);
-    void ParseRequest(int client_fd);
+    void ParseRequest(char *request);
     void ParseFirstLine(std::string line);
     void ParseHeaders(std::string line);
     void ParseBody(std::string line);
@@ -78,6 +78,7 @@ public:
     double GetBodyRead() { return this->bodyRead; }
     std::map<std::string, std::string> GetHeaders() { return this->headers; }
     void generateUniqueFile(void);
+    void ReadRequest(int fd);
 };
 
 std::ostream& operator<<(std::ostream& os, HttpRequest& req);

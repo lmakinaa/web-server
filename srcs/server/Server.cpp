@@ -46,7 +46,7 @@ int main() {
         try{
             HttpRequest req;
            
-            req.ParseRequest(client_fd);
+            req.ReadRequest(client_fd);
             HttpResponse *res = new HttpResponse();
     
             std::ifstream file (req.GetUri().substr(1));
