@@ -19,26 +19,15 @@ std::string strtrim(std::string str)
 
 void HttpRequest::ParseFirstLine(std::string line)
 {
-    std::vector<std::string> validMethods;
-
-    validMethods.push_back("POST");
-    validMethods.push_back("GET");
-    validMethods.push_back("DELETE");
     std::vector<std::string> tokens;
-    std::istringstream iss(line);
+    std::stringstream tokensStream(line);
     std::string token;
 
-    while (std::getline(iss, token, ' ')) {
-        tokens.push_back(strtrim(token));
-    }
+    while (std::getline(tokensStream, token, ' '))
+        tokens.push_back(token);
 
-    // if (tokens.size() != 3) {
-    //     throw HttpRequest::Error400;
-    // }
-
-    // if (std::find(validMethods.begin(), validMethods.end(), tokens[0]) == validMethods.end()) {
-    //     throw HttpRequest::Error400;
-    // }
+    if (tokens.size() != 3)
+        throw HttpRequest::Error400;
 
     SetMethod(tokens[0]);
     SetUri(tokens[1]);
@@ -91,25 +80,14 @@ void HttpRequest::generateUniqueFile(void)
 
 void HttpRequest::ParseBody(std::string line)
 {
-    // if (line != boundary + "--" && content_length > 0)
-    // {
+
     std::ofstream file(bodyFile, std::ios::app);
     if (file.is_open())
     {
-        file.write(line.c_str(), line.size());
+        file << line + "\n";
     }
     else
         throw HttpRequest::Error500;
-    // }
-    // else if (line != "0\r")
-    // {
-    //     line = line.substr(0, line.size() - 1);
-    //     std::ofstream file(bodyFile, std::ios::app);
-    //     if (file.is_open())
-    //         file.write(line.c_str(), line.size());
-    //     else
-    //         throw HttpRequest::Error500;
-    // }
 }
 
 enum ParseState{
@@ -152,7 +130,6 @@ void HttpRequest::ParseRequest(char *request)
             case Body:
                 ParseBody(line);
         }
-        // std::cout << line << std::endl;
     }
     
 }
@@ -168,7 +145,7 @@ void HttpRequest::PerformChecks(void){
     if (!ValidMethod)
         throw HttpRequest::Error400;
     
-    if (this->GetUri()[0] != '/' || this->GetVersion() != "HTTP/1.1" )
+    if (this->GetUri()[0] != '/' || this->GetVersion() != "HTTP/1.1\r" )
         throw HttpRequest::Error400;
 }
 
@@ -190,12 +167,9 @@ std::ostream& operator<<(std::ostream& os, HttpRequest& req)
 void HttpRequest::ReadRequest(int fd){
     size_t read_bytes = 0;
     char buffer[1000000] = {0};
-    do{
-        read_bytes += read(fd, buffer, 1000000);
-        std::cout << "\033[1;31m"<< read_bytes <<"\033[0m\n";
-        ParseRequest(buffer);
-    } 
-    while (read_bytes < content_length);
+    read_bytes += read(fd, buffer, 1000000);
+    std::cout << "\033[1;31m"<< read_bytes <<"\033[0m\n";
+    ParseRequest(buffer);
     std::cout << "<_________________Parsed Request__________>" << std::endl;
     std::cout << *this << std::endl;
     PerformChecks();
