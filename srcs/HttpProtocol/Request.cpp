@@ -90,7 +90,7 @@ void HttpRequest::ParseBody(std::string line)
         std::ofstream file(bodyFile, std::ios::app);
         if (file.is_open())
         {
-            file << line;
+            file.write(line.c_str(), line.size());
         }
         else
             throw HttpRequest::Error500;
@@ -100,7 +100,7 @@ void HttpRequest::ParseBody(std::string line)
         line = line.substr(0, line.size() - 1);
         std::ofstream file(bodyFile, std::ios::app);
         if (file.is_open())
-            file << line;
+            file.write(line.c_str(), line.size());
         else
             throw HttpRequest::Error500;
     }
@@ -114,46 +114,43 @@ enum ParseState{
 
 void HttpRequest::ParseRequest(int client_fd)
 {
-    char request[10024] = {0};
+    char request[1000000] = {0};
     std::string line;
     ParseState state = FirstLine;
 
-       read(client_fd, request, 10024);
-
-        std::stringstream tokensStream(request);
-
-        while (std::getline(tokensStream, line))
+    read(client_fd, request, 2000000);
+    
+    std::stringstream tokensStream(request);
+    while (std::getline(tokensStream, line))
+    {
+        bool LINE_WITH_NO_CRLF = (line.size() < 1 || line.substr(line.size() - 1) != "\r");
+        // if(LINE_WITH_NO_CRLF)
+        //     throw HttpRequest::Error400;
+        if (line == "\r" && state == Headers)
         {
-            bool LINE_WITH_NO_CRLF = (line.size() < 1 || line.substr(line.size() - 1) != "\r");
-
-            if(LINE_WITH_NO_CRLF)
-                throw HttpRequest::Error400;
-            if (line == "\r" && state == Headers)
+            if (method == "POST" || method == "DELETE")
             {
-                if (method == "POST" || method == "DELETE")
-                {
-                    state = Body;
-                    generateUniqueFile();
-                }
-                else
-                    break;
+                state = Body;
+                generateUniqueFile();
             }
-
-            switch (state)
-            {
-                case FirstLine:
-                    ParseFirstLine(line);
-                    state = Headers;
-                    break;
-                case Headers:
-                    ParseHeaders(line);
-                    break;
-                case Body:
-                    ParseBody(line);
-            }
-            std::cout << line << std::endl;
+            else
+                break;
         }
-
+        switch (state)
+        {
+            case FirstLine:
+                ParseFirstLine(line);
+                state = Headers;
+                break;
+            case Headers:
+                ParseHeaders(line);
+                break;
+            case Body:
+                ParseBody(line);
+        }
+        std::cout << line << std::endl;
+    }
+    
     std::cout << "<_______-Parsed Request__________>" << std::endl;
     std::cout << *this << std::endl;
     PerformChecks();
