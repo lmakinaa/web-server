@@ -9,12 +9,13 @@
 #include <sys/time.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include "../KQueue/KQueue.hpp"
 
+#include "../KQueue/KQueue.hpp"
 #include "../server/Server.hpp"
+#include "../CGI/CGI.hpp"
 
 #ifndef M_DEBUG
-# define M_DEBUG 0
+# define M_DEBUG 1
 #endif
 
 class   WebServ
@@ -23,11 +24,13 @@ class   WebServ
 public:
     WebServ();
     void run();
-    int handleNewConnection(Server* s, struct kevent* current);
+    int handleNewConnection(struct kevent* current);
     int handleExistedConnection(struct kevent* current);
+    void sendResponse(struct kevent* current);
 
 public:
     std::vector<Server> servers;
+    t_eventData m_cEventData;
 
 private:
     int m_openedSockets;
