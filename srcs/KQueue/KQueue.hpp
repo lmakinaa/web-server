@@ -8,6 +8,7 @@
 #include <errno.h>
 #include <unistd.h>
 #include <iostream>
+#include <fcntl.h>
 
 #ifndef M_DEBUG
 # define M_DEBUG 1
@@ -29,6 +30,7 @@ public:
     static int watchFd(int fd, t_eventData* evData);
     static void removeFd(int fd);
     static int getEvents(struct kevent* buffArray, int size);
+    static void setFdNonBlock(int fd);
     
     static struct kevent m_keventBuff;
 

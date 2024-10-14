@@ -3,6 +3,12 @@
 int KQueue::m_fd = -1;
 struct kevent KQueue::m_keventBuff;
 
+void KQueue::setFdNonBlock(int fd)
+{
+    int oldFlags = fcntl(fd, F_GETFL);
+    fcntl(fd, F_SETFL, oldFlags | O_NONBLOCK);
+}
+
 int KQueue::createKq()
 {
     m_fd = kqueue();

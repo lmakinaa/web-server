@@ -18,8 +18,9 @@ int WebServ::handleNewConnection(struct kevent* current)
 
     m_openedSockets++;
 
-	int flags = fcntl(clientSock, F_GETFL);
-	fcntl(clientSock, F_SETFL, flags | O_NONBLOCK);
+	// int flags = fcntl(clientSock, F_GETFL);
+	// fcntl(clientSock, F_SETFL, flags | O_NONBLOCK);
+    KQueue::setFdNonBlock(clientSock);
 
 	KQueue::watchFd(clientSock, &m_cEventData);
 	return 0;
@@ -113,7 +114,8 @@ void WebServ::run()
                 sendResponse(&events[i]);
 				std::cout << "Response sent" << std::endl ;
             }
-
         }
+        if (waitpid(-1, NULL, WNOHANG) == -1)
+            std::perror("waitpid(2)");
     }
 }

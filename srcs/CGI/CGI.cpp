@@ -41,8 +41,13 @@ static void closePipe(int fds[2])
 void CGI::runScript(t_method reqMethod, const char* cgiPath, const char* argv[], std::string& postData, long fd)
 {
     int fds[2];
+    if (pipe(fds) == -1) {
+        if (M_DEBUG)
+            perror("pipe(2)");
+        return ; // No response. Todo: send internal error response and close connection
+    }
     int input_pipe[2];
-    if (pipe(fds) == -1 || pipe(input_pipe) == -1) {
+    if (pipe(input_pipe) == -1) {
         if (M_DEBUG)
             perror("pipe(2)");
         return ; // No response
@@ -65,13 +70,11 @@ void CGI::runScript(t_method reqMethod, const char* cgiPath, const char* argv[],
         (reqMethod == POST) && setenv("CONTENT_LENGTH", std::to_string(postData.length()).c_str(), 1);
         (reqMethod == GET) && setenv("QUERY_STRING", postData.c_str(), 1);
         
-
         if (execve(cgiPath, const_cast<char* const*>(argv), environ) == -1) {
             if (M_DEBUG)
                 perror("execve(2)");
             exit(1);
         }
-        exit(0);
     }
     else
     {
@@ -94,6 +97,7 @@ void CGI::runScript(t_method reqMethod, const char* cgiPath, const char* argv[],
 
         
         close(fds[1]);
+        KQueue::setFdNonBlock(fds[0]);
         KQueue::watchFd(fds[0], (t_eventData*)fd);
         // fds[0] will be closed by KQueue::removeFd()
         
