@@ -35,8 +35,9 @@ void Server::init()
 	if (setsockopt(m_socket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1)
 		throw std::runtime_error((std::string("setsockopt(2): ") + strerror(errno)));
 
-	int f = fcntl(m_socket, F_GETFL);
-	fcntl(m_socket, F_SETFL, f | O_NONBLOCK);
+	// int f = fcntl(m_socket, F_GETFL);
+	// fcntl(m_socket, F_SETFL, f | O_NONBLOCK);
+    KQueue::setFdNonBlock(m_socket);
 
 	if (bind(m_socket, (sockaddr*) &m_sockAddress, m_sockLen) == -1)
 		throw std::runtime_error((std::string("bind(2): ") + strerror(errno)));
