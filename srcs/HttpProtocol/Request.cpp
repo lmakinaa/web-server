@@ -131,7 +131,7 @@ void HttpRequest::ParseRequest(char *request)
                 ParseBody(line);
         }
     }
-    
+
 }
 
 void HttpRequest::PerformChecks(void){
@@ -166,9 +166,10 @@ std::ostream& operator<<(std::ostream& os, HttpRequest& req)
 
 void HttpRequest::ReadRequest(int fd){
     size_t read_bytes = 0;
-    char buffer[1000000] = {0};
-    read_bytes += read(fd, buffer, 1000000);
-    std::cout << "\033[1;31m"<< read_bytes <<"\033[0m\n";
+    char buffer[5000000] = {0};
+    read_bytes += read(fd, buffer, 5000000);
+    // std::cout << "\033[1;31m"<< read_bytes <<"\033[0m\n";
+    // std::cout << "\033[1;31m"<< std::string(buffer) <<"\033[0m\n";
     ParseRequest(buffer);
     std::cout << "<_________________Parsed Request__________>" << std::endl;
     std::cout << *this << std::endl;
