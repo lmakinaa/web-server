@@ -27,7 +27,7 @@ void HttpRequest::ParseFirstLine(std::string line)
         tokens.push_back(token);
 
     if (tokens.size() != 3)
-        throw HttpRequest::Error400;
+        throw ErrorClass400();
 
     SetMethod(tokens[0]);
     SetUri(tokens[1]);
@@ -75,19 +75,22 @@ void HttpRequest::generateUniqueFile(void)
         i++;
     }
     else
-        throw HttpRequest::Error500;
+        throw ErrorClass500();
 }
 
-void HttpRequest::ParseBody(std::string line)
+void HttpRequest::ParseBody(char *line, size_t size)
 {
-
-    std::ofstream file(bodyFile, std::ios::app);
+    // std::cout << "\033[1;31m"<< "<-------Body : ------->" << line <<"\033[0m\n";
+    // for(int i = 0; line && line[i] ;i++)
+    //     write(1, &line[i], 1);
+    // std::cout << "\033[1;31m"<< "<-------Body : ------->" << line <<"\033[0m\n";
+    std::ofstream file(bodyFile, std::ios::app | std::ios::binary);
     if (file.is_open())
     {
-        file << line + "\n";
+        file.write(line,size);
     }
     else
-        throw HttpRequest::Error500;
+        throw ErrorClass500();
 }
 
 enum ParseState{
@@ -96,15 +99,19 @@ enum ParseState{
     Body
 };
 
-void HttpRequest::ParseRequest(char *request)
+void HttpRequest::ParseRequest(char *request, size_t size)
 {
     std::string line;
     ParseState state = FirstLine;
-    
+    int count = 0;
     std::stringstream tokensStream(request);
 
-    while (std::getline(tokensStream, line, '\n'))
+    // std::cout <<"\033[1;31m"<< strlen(request) <<"\033[0m\n";
+
+    while (count < size)
     {
+        getline(tokensStream, line);
+        count += line.size() + 1;
         bool LINE_WITH_NO_CRLF = (line.size() < 1 || line.substr(line.size() - 1) != "\r");
         // if(LINE_WITH_NO_CRLF)
         //     throw HttpRequest::Error400;
@@ -113,6 +120,7 @@ void HttpRequest::ParseRequest(char *request)
             if (method == "POST" || method == "DELETE")
             {
                 state = Body;
+                request += count;
                 generateUniqueFile();
             }
             else
@@ -128,7 +136,8 @@ void HttpRequest::ParseRequest(char *request)
                 ParseHeaders(line);
                 break;
             case Body:
-                ParseBody(line);
+                ParseBody(request, size - count);
+                count  = size;
         }
     }
 
@@ -143,10 +152,10 @@ void HttpRequest::PerformChecks(void){
         if (this->GetMethod() == methods[i])
             ValidMethod = true;
     if (!ValidMethod)
-        throw HttpRequest::Error400;
+        throw ErrorClass400();
     
     if (this->GetUri()[0] != '/' || this->GetVersion() != "HTTP/1.1\r" )
-        throw HttpRequest::Error400;
+        throw ErrorClass400();
 }
 
 std::ostream& operator<<(std::ostream& os, HttpRequest& req)
@@ -166,11 +175,29 @@ std::ostream& operator<<(std::ostream& os, HttpRequest& req)
 
 void HttpRequest::ReadRequest(int fd){
     size_t read_bytes = 0;
-    char buffer[5000000] = {0};
-    read_bytes += read(fd, buffer, 5000000);
-    // std::cout << "\033[1;31m"<< read_bytes <<"\033[0m\n";
+    char *buffer = (char *)calloc(5000000, sizeof(char));
+    size_t result;
+
+    do{
+        result = read(fd, buffer + read_bytes, 5000000 - read_bytes);
+        if (result < 0) {
+            std::cerr << "Error reading from socket: " << strerror(errno) << std::endl;
+            free(buffer);
+            return;
+        }
+        read_bytes += result;
+        // puts("Reading");
+        // std::cout << "\033[1;31m"<< "Initial readed : " << read_bytes <<"\033[0m\n";
+        // std::cout << "Result : " << result << std::endl;
+    }
+    while(result > 0 && result == 5000000 - read_bytes);
+
+
     // std::cout << "\033[1;31m"<< std::string(buffer) <<"\033[0m\n";
-    ParseRequest(buffer);
+    // puts("yoooooooooooo");
+    ParseRequest(buffer, read_bytes);
+    // free(buffer);
+    // buffer = NULL;
     std::cout << "<_________________Parsed Request__________>" << std::endl;
     std::cout << *this << std::endl;
     PerformChecks();

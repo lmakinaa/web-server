@@ -3,7 +3,7 @@ NAME = webserv
 
 CC = c++
 
-FLAGS = -Wall -Wextra -Werror -std=c++98
+FLAGS = -Wall -Wextra -Werror -std=c++98 -g
 
 C_FILES = srcs/server/Server.cpp srcs/HttpProtocol/Request.cpp  srcs/HttpProtocol/Response.cpp
 

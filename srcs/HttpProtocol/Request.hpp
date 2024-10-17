@@ -40,6 +40,17 @@ class ErrorClass500 : public std::exception {
         }
 };
 
+class ErrorClass404 : public std::exception {
+    public:
+        const char* what() const throw(){
+            return "HTTP/1.1 404\r\n"
+                "Content-Type: text/html\r\n"
+                "Connection: close\r\n" 
+                "\r\n"
+                "<html><head><title>404 Not Found</title></head><body><center><h1>404 Not Found</h1></center><hr></body></html>";
+        }
+};
+
 class HttpRequest {
 private:
 
@@ -48,14 +59,15 @@ private:
     std::map<std::string, std::string> headers;
 
 public:
-    ErrorClass400 Error400;
-    Succes201 Created201;
-    ErrorClass500 Error500;
+    // static ErrorClass400 Error400;
+    // static Succes201 Created201;
+    // static ErrorClass500 Error500;
+    // static ErrorClass404 NotFound404;
     void PerformChecks(void);
-    void ParseRequest(char *request);
+    void ParseRequest(char *request, size_t size);
     void ParseFirstLine(std::string line);
     void ParseHeaders(std::string line);
-    void ParseBody(std::string line);
+    void ParseBody(char *line, size_t size);
 
 
     HttpRequest() : content_length(0), chunk_size(0), bodyRead(0) {}
