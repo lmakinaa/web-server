@@ -1,7 +1,7 @@
 
 #include "Server.hpp"
 #include <fstream>
-
+#include <vector>
 int main() {
     int server_fd;
     struct sockaddr_in address;
@@ -47,29 +47,45 @@ int main() {
             HttpRequest req;
            
             req.ReadRequest(client_fd);
-            HttpResponse *res = new HttpResponse();
+            HttpResponse res = HttpResponse();
     
-            std::ifstream file (req.GetUri().substr(1));
-            if (file.is_open())
-            {
-                std::string line;
-                while (getline(file, line))
-                    res->SetResponse("\n" + line );
-                res->SetResponseCode("200 OK");
-                res->SetContentType(WhatContentType(req.GetUri().substr(1)));
-                file.close();
-            }
-            else
-            {
-                puts("<---------------------Response404---------------------->");
-                res->SetResponseCode("404 Not Found");
-                res->SetContentType("text/html");
-                res->SetResponse("<html><head><title>404 Not Found</title></head><body><center><h1>404 Not Found</h1></center><hr></body></html>");
-            }
-            std::string str = res->BuildResponse();
-            send(client_fd,str.c_str(), strlen(str.c_str()), 0);
-            std::cout << res->GetResponse() << std::endl;
-            delete res;
+            // std::ifstream file ();
+            std::ifstream file(req.GetUri().substr(1), std::ios::binary);
+            file.seekg(0, std::ios::end);
+            std::streamsize size = file.tellg();
+            file.seekg(0, std::ios::beg);
+
+            std::vector<char> buffer(size);
+            file.read(&buffer[0], size);
+    
+            std::cout << "\033[1;31m"<< buffer.size() <<"\033[0m\n";
+            res.SetBody(buffer);
+            res.SetResponseCode("200 OK");
+            res.SetContentType(WhatContentType(req.GetUri().substr(1)));
+
+            // if (file.is_open())
+            // {
+            //     std::string line;
+            //     while (getline(file, line))
+            //         res->SetResponse(line);
+
+            //     res->SetResponseCode("200 OK");
+            //     res->SetContentType(WhatContentType(req.GetUri().substr(1)));
+            //     res->SetConnection("close");
+            //     file.close();
+            // }
+            // else
+            // {
+            //     puts("<---------------------Response404---------------------->");
+            //     res->SetResponseCode("404 Not Found");
+            //     res->SetContentType("text/html");
+            //     res->SetResponse("<html><head><title>404 Not Found</title></head><body><center><h1>404 Not Found</h1></center><hr></body></html>");
+            // }
+            std::vector<char> str = res.BuildResponse();
+            send(client_fd,&str[0], str.size(), 0);
+            // std::cout << "<---------------------Response200---------------------->" << std::endl;
+            // std::cout << res->GetResponse() << std::endl;
+            // delete res;
         }
         catch(std::exception& e){
             send(client_fd, e.what(), strlen(e.what()), 0);
