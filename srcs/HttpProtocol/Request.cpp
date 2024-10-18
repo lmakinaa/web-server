@@ -80,10 +80,6 @@ void HttpRequest::generateUniqueFile(void)
 
 void HttpRequest::ParseBody(char *line, size_t size)
 {
-    // std::cout << "\033[1;31m"<< "<-------Body : ------->" << line <<"\033[0m\n";
-    // for(int i = 0; line && line[i] ;i++)
-    //     write(1, &line[i], 1);
-    // std::cout << "\033[1;31m"<< "<-------Body : ------->" << line <<"\033[0m\n";
     std::ofstream file(bodyFile, std::ios::app | std::ios::binary);
     if (file.is_open())
     {
@@ -102,11 +98,8 @@ enum ParseState{
 void HttpRequest::ParseRequest(char *request, size_t size)
 {
     std::string line;
-    ParseState state = FirstLine;
     int count = 0;
     std::stringstream tokensStream(request);
-
-    // std::cout <<"\033[1;31m"<< strlen(request) <<"\033[0m\n";
 
     while (count < size)
     {
@@ -186,18 +179,10 @@ void HttpRequest::ReadRequest(int fd){
             return;
         }
         read_bytes += result;
-        // puts("Reading");
-        // std::cout << "\033[1;31m"<< "Initial readed : " << read_bytes <<"\033[0m\n";
-        // std::cout << "Result : " << result << std::endl;
     }
     while(result > 0 && result == 5000000 - read_bytes);
 
-
-    // std::cout << "\033[1;31m"<< std::string(buffer) <<"\033[0m\n";
-    // puts("yoooooooooooo");
     ParseRequest(buffer, read_bytes);
-    // free(buffer);
-    // buffer = NULL;
     std::cout << "<_________________Parsed Request__________>" << std::endl;
     std::cout << *this << std::endl;
     PerformChecks();

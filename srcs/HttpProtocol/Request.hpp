@@ -57,12 +57,10 @@ private:
     std::string method ,uri, version, boundary, bodyFile;
     double content_length, chunk_size, bodyRead;
     std::map<std::string, std::string> headers;
+    ParseState state;
 
 public:
-    // static ErrorClass400 Error400;
-    // static Succes201 Created201;
-    // static ErrorClass500 Error500;
-    // static ErrorClass404 NotFound404;
+
     void PerformChecks(void);
     void ParseRequest(char *request, size_t size);
     void ParseFirstLine(std::string line);
@@ -70,7 +68,7 @@ public:
     void ParseBody(char *line, size_t size);
 
 
-    HttpRequest() : content_length(0), chunk_size(0), bodyRead(0) {}
+    HttpRequest() : content_length(0), chunk_size(0), bodyRead(0), state(FirstLine) {}
     void SetMethod(std::string method) { this->method = method; }
     void SetUri(std::string uri) { this->uri = uri; }
     void SetVersion(std::string version) { this->version = version; }
