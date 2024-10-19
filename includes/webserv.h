@@ -7,4 +7,4 @@
 #include "../srcs/main/main.hpp"
 #include "../srcs/configFile/Directive.hpp"
 #include "../srcs/configFile/Location.hpp"
-#include "../srcs/response/Response.hpp"
+#include "../srcs/getMethod/Get.hpp"

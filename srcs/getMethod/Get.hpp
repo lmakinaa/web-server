@@ -6,4 +6,4 @@
 #include "../main/main.hpp"
 
 
-void    Response(Main &main);
+void    _GET(Main &main);

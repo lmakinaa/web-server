@@ -1,5 +1,5 @@
 
-#include "Response.hpp"
+#include "Get.hpp"
 
 
 int isDirectory(const std::string& path) {
@@ -151,7 +151,7 @@ bool    stringMaching(std::string locat , std::string &requestPath)
     return (0);
 }
 
-void    Response(Main &main)
+void    _GET(Main &main)
 {
     Server serv = main.servers[0];
     std::string requestPath = "/includes";
