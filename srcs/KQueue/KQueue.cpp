@@ -40,7 +40,7 @@ void KQueue::removeFd(int fd)
 {
     EV_SET(&m_keventBuff, fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
     if (kevent(m_fd, &m_keventBuff, 1, NULL, 0, NULL) == -1 && M_DEBUG)
-        perror("kevent(2)");
+        perror("kevent(2) in removeFd");
     // close(fd);
 }
 
