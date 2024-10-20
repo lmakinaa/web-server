@@ -6,4 +6,4 @@
 #include "../main/main.hpp"
 
 
-void    _GET(Main &main);
+void    _GET_DELETE(Main &main);

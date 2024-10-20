@@ -1,5 +1,5 @@
 
-#include "Get.hpp"
+#include "Methods.hpp"
 
 
 int isDirectory(const std::string& path) {
@@ -28,6 +28,7 @@ std::string getFileFullPath(Server &serv, std::map<std::string, Location>::itera
 {
     std::string root = "";
     std::string path = "";
+    std::string _Method = "DELETE";
 
     /* ===== Location doesn't have a root directive ====*/
     if (it->second.directives.find("root") == it->second.directives.end())
@@ -47,6 +48,14 @@ std::string getFileFullPath(Server &serv, std::map<std::string, Location>::itera
         }
         else if (val == 1)
         {
+
+            if (_Method == "DELETE")
+            {
+                // throw 403 Forbidden
+                std::cout << "403 Forbidden" << std::endl;
+                return "";
+            }
+
             for (size_t i = 0; i < serv.directives["index"].values.size(); i++)
             {
                 path +=  "/" + serv.directives["index"].values[i];
@@ -101,6 +110,14 @@ std::string getFileFullPath(Server &serv, std::map<std::string, Location>::itera
         }
         else if (val == 1)
         {
+
+            if (_Method == "DELETE")
+            {
+                // throw 403 Forbidden
+                std::cout << "403 Forbidden" << std::endl;
+                return "";
+            }
+
             for (size_t i = 0; i < it->second.directives["index"].values.size(); i++)
             {
                 path += "/" +  it->second.directives["index"].values[i];
@@ -151,13 +168,14 @@ bool    stringMaching(std::string locat , std::string &requestPath)
     return (0);
 }
 
-void    _GET(Main &main)
+void    _GET_DELETE(Main &main)
 {
     Server serv = main.servers[0];
     std::string requestPath = "/includes";
     std::string resquestedFile = "";
     std::string line;
     std::string response = "";
+    std::string _Method = "DELETE";
 
     std::map<std::string, Location>::iterator it2 = serv.locations.begin();
     std::map<std::string, Location>::iterator it = serv.locations.end();
@@ -186,18 +204,13 @@ void    _GET(Main &main)
             return ;
         }
 
-        std::ifstream file(resquestedFile);
-
-        if (!file) {
-            std::cerr << "Error opening file for reading." << std::endl;
+        /* ===== Check Read Permession ===== */
+        if (access(resquestedFile.c_str(), R_OK) != 0)
+        {
+            // Throw 403 Forbidden
+            std::cout << "403 Forbidden" << std::endl;
             return ;
         }
-
-        while (std::getline(file, line)) {
-            response += line;
-        }
-
-        file.close();
     }
     else
     {
@@ -205,7 +218,12 @@ void    _GET(Main &main)
         std::cout << "404 NOt found" << std::endl;
     }
 
+    if (_Method == "DELETE")
+    {
+        // unlink(resquestedFile.c_str());
+        // throw 04 No Content
+    }
+
     // Send the file to the Client.
-    
     std::cout << "Result : " << resquestedFile << std::endl;
 }
