@@ -3,8 +3,13 @@
 
 #include <iostream>
 #include <map>
+#include <vector>
 
-
+enum ParseState{
+    FirstLine,
+    Headers,
+    Body
+};
 
 class ErrorClass400 : public std::exception {
     public:
@@ -58,6 +63,10 @@ private:
     double content_length, chunk_size, bodyRead;
     std::map<std::string, std::string> headers;
     ParseState state;
+    bool isDone;
+    std::vector<char> partial_data;
+    size_t total_read_bytes;
+    ssize_t read_bytes;
 
 public:
 
@@ -67,8 +76,11 @@ public:
     void ParseHeaders(std::string line);
     void ParseBody(char *line, size_t size);
 
+    void prepareRequest(char *request, size_t size);
 
-    HttpRequest() : content_length(0), chunk_size(0), bodyRead(0), state(FirstLine) {}
+    HttpRequest() : content_length(0), chunk_size(0), bodyRead(0), state(FirstLine), isDone(false) , total_read_bytes(0), read_bytes(0) {
+        partial_data.reserve(1);
+    }
     void SetMethod(std::string method) { this->method = method; }
     void SetUri(std::string uri) { this->uri = uri; }
     void SetVersion(std::string version) { this->version = version; }

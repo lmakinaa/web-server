@@ -41,7 +41,6 @@ int main() {
             std::cerr << "Accept failed" << std::endl;
             return -1;
         }
-        int read_bytes;
 
         try{
             HttpRequest req;

@@ -7,7 +7,10 @@
 
 std::string strtrim(std::string str)
 {
-    int x,y = 0;
+    unsigned long x;
+    unsigned long y;
+    y = 0;
+    x = 0;
     for (; x < str.size(); x++)
         if (str[x] != ' ' && str[x] != '\r' && str[x] != '\t')
             break;
@@ -39,7 +42,7 @@ void HttpRequest::ParseHeaders(std::string line)
     std::string key;
     std::string value;
 
-    bool FALSE_HEADER_FORMAT = (line.find(": ") == std::string::npos);
+    // bool FALSE_HEADER_FORMAT = (line.find(": ") == std::string::npos);
 
     // if (FALSE_HEADER_FORMAT)
     // {
@@ -89,49 +92,30 @@ void HttpRequest::ParseBody(char *line, size_t size)
         throw ErrorClass500();
 }
 
-enum ParseState{
-    FirstLine,
-    Headers,
-    Body
-};
-
 void HttpRequest::ParseRequest(char *request, size_t size)
 {
-    std::string line;
-    int count = 0;
-    std::stringstream tokensStream(request);
 
-    while (count < size)
+    std::string line(request);
+    if (line == "\r\n" && state == Headers)
     {
-        getline(tokensStream, line);
-        count += line.size() + 1;
-        bool LINE_WITH_NO_CRLF = (line.size() < 1 || line.substr(line.size() - 1) != "\r");
-        // if(LINE_WITH_NO_CRLF)
-        //     throw HttpRequest::Error400;
-        if (line == "\r" && state == Headers)
+        if (method == "POST" || method == "DELETE")
         {
-            if (method == "POST" || method == "DELETE")
-            {
-                state = Body;
-                request += count;
-                generateUniqueFile();
-            }
-            else
-                break;
+            state = Body;
+            generateUniqueFile();
         }
-        switch (state)
-        {
-            case FirstLine:
-                ParseFirstLine(line);
-                state = Headers;
-                break;
-            case Headers:
-                ParseHeaders(line);
-                break;
-            case Body:
-                ParseBody(request, size - count);
-                count  = size;
-        }
+  
+    }
+    switch (state)
+    {
+        case FirstLine:
+            ParseFirstLine(line);
+            state = Headers;
+            break;
+        case Headers:
+            ParseHeaders(line);
+            break;
+        case Body:
+            ParseBody(request, size);
     }
 
 }
@@ -147,7 +131,7 @@ void HttpRequest::PerformChecks(void){
     if (!ValidMethod)
         throw ErrorClass400();
     
-    if (this->GetUri()[0] != '/' || this->GetVersion() != "HTTP/1.1\r" )
+    if (this->GetUri()[0] != '/' || this->GetVersion() != "HTTP/1.1" )
         throw ErrorClass400();
 }
 
@@ -159,31 +143,91 @@ std::ostream& operator<<(std::ostream& os, HttpRequest& req)
     os << "Content-Length: " << req.GetContentLength() << std::endl;
     os << "Boundary: " << req.GetBoundary() << std::endl;
     os << "Headers: " << std::endl;
-    std::map<std::string, std::string> print = req.GetHeaders();
+    // std::map<std::string, std::string> print = req.GetHeaders();
 
-    for (std::map<std::string, std::string>::iterator it = print.begin(); it != print.end(); it++)
-        os << it->first << ": " << it->second << std::endl;
+    // for (std::map<std::string, std::string>::iterator it = print.begin(); it != print.end(); it++)
+    //     os << it->first << ": " << it->second << std::endl;
     return os;
 }
 
-void HttpRequest::ReadRequest(int fd){
-    size_t read_bytes = 0;
-    char *buffer = (char *)calloc(5000000, sizeof(char));
-    size_t result;
+void HttpRequest::ReadRequest(int fd) {
+    std::vector<char> crlf;
+    crlf.push_back('\r');
+    crlf.push_back('\n');
+    const size_t buffer_size = 10000;
+    char buffer[buffer_size];
 
-    do{
-        result = read(fd, buffer + read_bytes, 5000000 - read_bytes);
-        if (result < 0) {
+    while (true) {
+        read_bytes = recv(fd, buffer, buffer_size, 0);
+        if (read_bytes < 0) {
             std::cerr << "Error reading from socket: " << strerror(errno) << std::endl;
-            free(buffer);
             return;
         }
-        read_bytes += result;
-    }
-    while(result > 0 && result == 5000000 - read_bytes);
+        if (read_bytes == 0) 
+            break;
 
-    ParseRequest(buffer, read_bytes);
+        total_read_bytes += read_bytes;
+        partial_data.insert(partial_data.end(), buffer, buffer + read_bytes);
+
+        std::vector<char>::iterator pos;
+        while ((pos = std::search(partial_data.begin(), partial_data.end(), crlf.begin(), crlf.end())) != partial_data.end())
+        {
+            std::vector<char> line(partial_data.begin(), pos + 2);
+            ParseRequest(line.data(), line.size());
+            partial_data.erase(partial_data.begin(), pos + 2);
+        }
+
+        std::cout << "\033[1;32m" << total_read_bytes << "\033[0m" << std::endl;
+
+        if (total_read_bytes >= content_length)
+        {
+            isDone = true;
+            break;
+        }
+
+        memset(buffer, 0, buffer_size);
+    }
+    if (!partial_data.empty())
+        ParseRequest(partial_data.data(), partial_data.size());
+
     std::cout << "<_________________Parsed Request__________>" << std::endl;
     std::cout << *this << std::endl;
-    PerformChecks();
+    // PerformChecks();
 }
+
+// void HttpRequest::prepareRequest(char *request, size_t size)
+// {   
+//     if (isDone)
+//     {
+//         ParseRequest(partial_line, partial_line_size);
+//         return ;
+//     }
+//     char *temp = (char *)malloc(size + partial_line_size);
+//     size_t last_line = 0;
+//     memcpy(temp, partial_line, partial_line_size);
+//     memcpy(temp + partial_line_size, request, size);
+//     size_t i = 0;
+//     while(partial_line && i < partial_line_size - 1)
+//     {
+//         if (partial_line[i] == '\r' && partial_line[i + 1] == '\n')
+//         {
+//             i += 2;
+//             // ParseRequest(partial_line + last_line, i - last_line);
+//             last_line = i;
+//         }
+//         i++;
+//     }
+//     if (last_line < partial_line_size + size)
+//     {
+//         partial_line = (char *)malloc(partial_line_size + size - last_line);
+//         memcpy(partial_line, temp + last_line, partial_line_size + size - last_line);
+//         partial_line_size = partial_line_size + size - last_line;
+//     }
+//     else
+//     {
+//         partial_line = NULL;
+//         partial_line_size = 0;
+//     }
+//     free(temp);
+
+// }
