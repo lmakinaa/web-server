@@ -13,6 +13,7 @@
 #include "../KQueue/KQueue.hpp"
 #include "../server/Server.hpp"
 #include "../CGI/CGI.hpp"
+#include "../HttpProtocol/Request.hpp"
 
 #ifndef M_DEBUG
 # define M_DEBUG 1
