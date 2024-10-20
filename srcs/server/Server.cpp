@@ -44,8 +44,8 @@ int main() {
 
         try{
             HttpRequest req;
-           
-            req.ReadRequest(client_fd);
+           while (!req.getIsDone())
+                req.ReadRequest(client_fd);
             HttpResponse res = HttpResponse();
     
             std::ifstream file(req.GetUri().substr(1), std::ios::binary);

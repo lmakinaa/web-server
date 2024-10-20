@@ -102,8 +102,8 @@ void HttpRequest::ParseRequest(char *request, size_t size)
         {
             state = Body;
             generateUniqueFile();
+            return ;
         }
-  
     }
     switch (state)
     {
@@ -131,7 +131,7 @@ void HttpRequest::PerformChecks(void){
     if (!ValidMethod)
         throw ErrorClass400();
     
-    if (this->GetUri()[0] != '/' || this->GetVersion() != "HTTP/1.1" )
+    if (this->GetUri()[0] != '/' || this->GetVersion() != "HTTP/1.1\r\n" )
         throw ErrorClass400();
 }
 
@@ -143,10 +143,10 @@ std::ostream& operator<<(std::ostream& os, HttpRequest& req)
     os << "Content-Length: " << req.GetContentLength() << std::endl;
     os << "Boundary: " << req.GetBoundary() << std::endl;
     os << "Headers: " << std::endl;
-    // std::map<std::string, std::string> print = req.GetHeaders();
+    std::map<std::string, std::string> print = req.GetHeaders();
 
-    // for (std::map<std::string, std::string>::iterator it = print.begin(); it != print.end(); it++)
-    //     os << it->first << ": " << it->second << std::endl;
+    for (std::map<std::string, std::string>::iterator it = print.begin(); it != print.end(); it++)
+        os << it->first << ": " << it->second << std::endl;
     return os;
 }
 
@@ -154,80 +154,38 @@ void HttpRequest::ReadRequest(int fd) {
     std::vector<char> crlf;
     crlf.push_back('\r');
     crlf.push_back('\n');
-    const size_t buffer_size = 10000;
+    const size_t buffer_size = 100000;
     char buffer[buffer_size];
 
-    while (true) {
-        read_bytes = recv(fd, buffer, buffer_size, 0);
-        if (read_bytes < 0) {
-            std::cerr << "Error reading from socket: " << strerror(errno) << std::endl;
-            return;
-        }
-        if (read_bytes == 0) 
-            break;
+    read_bytes = recv(fd, buffer, buffer_size, 0);
 
-        total_read_bytes += read_bytes;
-        partial_data.insert(partial_data.end(), buffer, buffer + read_bytes);
-
-        std::vector<char>::iterator pos;
-        while ((pos = std::search(partial_data.begin(), partial_data.end(), crlf.begin(), crlf.end())) != partial_data.end())
-        {
-            std::vector<char> line(partial_data.begin(), pos + 2);
-            ParseRequest(line.data(), line.size());
-            partial_data.erase(partial_data.begin(), pos + 2);
-        }
-
-        std::cout << "\033[1;32m" << total_read_bytes << "\033[0m" << std::endl;
-
-        if (total_read_bytes >= content_length)
-        {
-            isDone = true;
-            break;
-        }
-
-        memset(buffer, 0, buffer_size);
+    if (read_bytes < 0) 
+    {
+        std::cerr << "Error reading from socket: " << strerror(errno) << std::endl;
+        return;
     }
-    if (!partial_data.empty())
+    if (read_bytes == 0)
+    {
+        isDone = true;
+        return;
+    }
+    total_read_bytes += read_bytes;
+    partial_data.insert(partial_data.end(), buffer, buffer + read_bytes);
+    std::vector<char>::iterator pos;
+    while ((pos = std::search(partial_data.begin(), partial_data.end(), crlf.begin(), crlf.end())) != partial_data.end())
+    {
+        std::vector<char> line(partial_data.begin(), pos + 2);
+        ParseRequest(line.data(), line.size());
+        partial_data.erase(partial_data.begin(), pos + 2);
+    }
+    std::cout << "\033[1;32m" << total_read_bytes << "\033[0m" << std::endl;
+    if (total_read_bytes >= content_length)
+        isDone = true;
+    memset(buffer, 0, buffer_size);
+    if (!partial_data.empty() && isDone)
         ParseRequest(partial_data.data(), partial_data.size());
 
     std::cout << "<_________________Parsed Request__________>" << std::endl;
     std::cout << *this << std::endl;
-    // PerformChecks();
+    PerformChecks();
 }
-
-// void HttpRequest::prepareRequest(char *request, size_t size)
-// {   
-//     if (isDone)
-//     {
-//         ParseRequest(partial_line, partial_line_size);
-//         return ;
-//     }
-//     char *temp = (char *)malloc(size + partial_line_size);
-//     size_t last_line = 0;
-//     memcpy(temp, partial_line, partial_line_size);
-//     memcpy(temp + partial_line_size, request, size);
-//     size_t i = 0;
-//     while(partial_line && i < partial_line_size - 1)
-//     {
-//         if (partial_line[i] == '\r' && partial_line[i + 1] == '\n')
-//         {
-//             i += 2;
-//             // ParseRequest(partial_line + last_line, i - last_line);
-//             last_line = i;
-//         }
-//         i++;
-//     }
-//     if (last_line < partial_line_size + size)
-//     {
-//         partial_line = (char *)malloc(partial_line_size + size - last_line);
-//         memcpy(partial_line, temp + last_line, partial_line_size + size - last_line);
-//         partial_line_size = partial_line_size + size - last_line;
-//     }
-//     else
-//     {
-//         partial_line = NULL;
-//         partial_line_size = 0;
-//     }
-//     free(temp);
-
-// }

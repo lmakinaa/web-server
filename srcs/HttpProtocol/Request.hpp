@@ -62,11 +62,11 @@ private:
     std::string method ,uri, version, boundary, bodyFile;
     double content_length, chunk_size, bodyRead;
     std::map<std::string, std::string> headers;
-    ParseState state;
-    bool isDone;
     std::vector<char> partial_data;
+    ParseState state;
     size_t total_read_bytes;
     ssize_t read_bytes;
+    bool isDone;
 
 public:
 
@@ -76,9 +76,8 @@ public:
     void ParseHeaders(std::string line);
     void ParseBody(char *line, size_t size);
 
-    void prepareRequest(char *request, size_t size);
 
-    HttpRequest() : content_length(0), chunk_size(0), bodyRead(0), state(FirstLine), isDone(false) , total_read_bytes(0), read_bytes(0) {
+    HttpRequest() : content_length(0), chunk_size(0), bodyRead(0), state(FirstLine) , total_read_bytes(0), read_bytes(0) , isDone(false) {
         partial_data.reserve(1);
     }
     void SetMethod(std::string method) { this->method = method; }
@@ -98,6 +97,7 @@ public:
     double GetContentLength() { return this->content_length; }
     double GetChunkSize() { return this->chunk_size; }
     double GetBodyRead() { return this->bodyRead; }
+    bool getIsDone() { return this->isDone; }
     std::map<std::string, std::string> GetHeaders() { return this->headers; }
     void generateUniqueFile(void);
     void ReadRequest(int fd);
