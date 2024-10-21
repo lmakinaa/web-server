@@ -16,7 +16,6 @@ int WebServ::handleNewConnection(struct kevent* current)
     if (clientSock == -1)
         perror("accept(2)");
 
-    m_openedSockets++;
 
 	// int flags = fcntl(clientSock, F_GETFL);
 	// fcntl(clientSock, F_SETFL, flags | O_NONBLOCK);
@@ -31,18 +30,27 @@ int WebServ::handleNewConnection(struct kevent* current)
 
 int WebServ::handleExistedConnection(struct kevent* current)
 {
-    // Parse Request
+    // Read and Parse Request
     HttpRequest* req = (HttpRequest*) ((t_eventData*)current->udata)->data;
     std::cout << "\033[1;32m"<< req->getTotalReadBytes() <<  "  isDone  " << req->getIsDone()<< "\033[0m" << std::endl;
 
-    // if(req->getIsDone()) {
-    //     delete req;
-    //     delete (t_eventData*)current->udata;
-    //     KQueue::removeFd(current->ident);
-    //     close(current->ident);
-    //     return 1;
-    // }
+    try {
     req->ReadRequest(current->ident);
+    } catch(SuccessStatus& e) {
+        std::cerr << e.what();
+    } catch(ErrorStatus& e) {
+        std::cerr << e.what();
+    }
+
+    if(req->getIsDone() == true) {
+        delete req;
+        delete (t_eventData*)current->udata;
+        KQueue::removeFd(current->ident);
+        std::cerr << "Closing connection..\n";
+        close(current->ident);
+        return 1;
+    }
+
     // Pass to CGI
     // const char* argv[3] = {"php-cgi", "/Users/ijaija/web-server/srcs/CGI/test.php", NULL};
     // std::string postBody ("var1=5454&var2=test&path=sds");
@@ -61,7 +69,7 @@ void WebServ::sendResponse(struct kevent* current)
     std::string content;
 
     CGI::readOutput(current->ident, content);
-    m_openedSockets--;
+
 
 	std::string response = "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: " + std::to_string(content.length()) + "\n\n" + content;
 
@@ -99,6 +107,7 @@ void WebServ::run()
             if ((long)events[i].udata > OPEN_MAX && !std::strcmp((static_cast<t_eventData*>(events[i].udata))->type, "server socket")) {
 
                 handleNewConnection(&events[i]);
+                m_openedSockets++;
 				std::cout << "Connection accepted" << std::endl ;
             }
             else if ((long)events[i].udata > OPEN_MAX && !std::strcmp(static_cast<t_eventData*>(events[i].udata)->type, "client socket")) {

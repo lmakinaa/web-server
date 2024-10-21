@@ -8,56 +8,12 @@
 #include <string>
 #include <fstream>
 #include <sys/socket.h>
+#include "Exceptions.hpp"
 
 enum ParseState{
     FirstLine,
     Headers,
     Body
-};
-
-class ErrorClass400 : public std::exception {
-    public:
-        const char* what() const throw(){
-            return "HTTP/1.1 400\r\n"
-                "Content-Type: text/html\r\n"
-                "Connection: close\r\n" 
-                "\r\n"
-                "<html><head><title>400 Bad Request</title></head><body><center><h1>400 Bad Request</h1></center><hr></body></html>";
-        }
-};
-
-
-class Succes201 : public std::exception {
-    public:
-        const char* what() const throw(){
-            return "HTTP/1.1 201\r\n"
-                "Content-Type: text/html\r\n"
-                "Connection: keep-alive\r\n"
-                "\r\n"
-                "<html><head><title>201 Created</title></head><body><center><h1>201 Created</h1></center><hr></body></html>";
-        }
-};
-
-class ErrorClass500 : public std::exception {
-    public:
-        const char* what() const throw(){
-            return "HTTP/1.1 500\r\n"
-                "Content-Type: text/html\r\n"
-                "Connection: close\r\n" 
-                "\r\n"
-                "<html><head><title>500 Internal Server Error</title></head><body><center><h1>500 Internal Server Error</h1></center><hr></body></html>";
-        }
-};
-
-class ErrorClass404 : public std::exception {
-    public:
-        const char* what() const throw(){
-            return "HTTP/1.1 404\r\n"
-                "Content-Type: text/html\r\n"
-                "Connection: close\r\n" 
-                "\r\n"
-                "<html><head><title>404 Not Found</title></head><body><center><h1>404 Not Found</h1></center><hr></body></html>";
-        }
 };
 
 class HttpRequest {
@@ -72,6 +28,7 @@ private:
     ssize_t read_bytes;
     size_t readed_body;
     bool isDone;
+    int iters;
 
 public:
 
@@ -82,7 +39,7 @@ public:
     void ParseBody(char *line, size_t size);
 
 
-    HttpRequest() : content_length(0), chunk_size(0), bodyRead(0), state(FirstLine) , total_read_bytes(0), read_bytes(0) , isDone(false) {
+    HttpRequest() : content_length(0), chunk_size(0), bodyRead(0), state(FirstLine) , total_read_bytes(0), read_bytes(0) , isDone(false), iters(0) {
         readed_body= 0;
         partial_data.reserve(1);
     }

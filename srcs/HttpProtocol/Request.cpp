@@ -25,7 +25,7 @@ void HttpRequest::ParseFirstLine(std::string line)
         tokens.push_back(token);
 
     if (tokens.size() != 3)
-        throw ErrorClass400();
+        throw ErrorStatus(400, "ParseFirstLine()");
 
     SetMethod(tokens[0]);
     SetUri(tokens[1]);
@@ -73,7 +73,7 @@ void HttpRequest::generateUniqueFile(void)
         i++;
     }
     else
-        throw ErrorClass500();
+        throw ErrorStatus(500, "generateUniqueFile()");
 }
 
 void HttpRequest::ParseBody(char *line, size_t size)
@@ -84,7 +84,7 @@ void HttpRequest::ParseBody(char *line, size_t size)
         file.write(line,size);
     }
     else
-        throw ErrorClass500();
+        throw ErrorStatus(500, "ParseBody()");
 }
 
 void HttpRequest::ParseRequest(char *request, size_t size)
@@ -124,10 +124,10 @@ void HttpRequest::PerformChecks(void){
         if (this->GetMethod() == methods[i])
             ValidMethod = true;
     if (!ValidMethod)
-        throw ErrorClass400();
+        throw ErrorStatus(400, "PerformChecks(1)");
     
     if (this->GetUri()[0] != '/' || this->GetVersion() != "HTTP/1.1\r\n" )
-        throw ErrorClass400();
+        throw ErrorStatus(400, "PerformChecks(2)");
 }
 
 std::ostream& operator<<(std::ostream& os, HttpRequest& req)
@@ -146,6 +146,11 @@ std::ostream& operator<<(std::ostream& os, HttpRequest& req)
 }
 
 void HttpRequest::ReadRequest(int fd) {
+    if (iters > 1 && total_read_bytes >= (size_t)content_length) {
+        isDone = true;
+        std::cerr << "hmm";
+        return ;
+    }
     std::vector<char> crlf;
     crlf.push_back('\r');
     crlf.push_back('\n');
@@ -161,6 +166,7 @@ void HttpRequest::ReadRequest(int fd) {
     }
     if (read_bytes == 0)
     {
+        std::cerr << "hmm";
         isDone = true;
         return;
     }
@@ -174,8 +180,7 @@ void HttpRequest::ReadRequest(int fd) {
         partial_data.erase(partial_data.begin(), pos + 2);
     }
     std::cout << "\033[1;32m" << total_read_bytes << "\033[0m" << std::endl;
-    // if (total_read_bytes >= content_length)
-    //     isDone = true;
+   
 
 
     memset(buffer, 0, buffer_size);
@@ -184,5 +189,6 @@ void HttpRequest::ReadRequest(int fd) {
 
     // std::cout << "<_________________Parsed Request__________>" << std::endl;
     // std::cout << *this << std::endl;
-    PerformChecks();
+    // PerformChecks();
+    iters++;
 }
