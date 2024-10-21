@@ -3,7 +3,7 @@ NAME = webserv
 
 CC = c++
 
-FLAGS = -Wall -Wextra -Werror -std=c++98
+FLAGS = -Wall -Wextra -Werror -std=c++98 -g
 
 C_FILES = srcs/server/Server.cpp srcs/HttpProtocol/Request.cpp  srcs/HttpProtocol/Response.cpp
 
@@ -13,7 +13,11 @@ HEADERS = srcs/server/Server.hpp srcs/HttpProtocol/Request.hpp srcs/HttpProtocol
 
 all : $(NAME)
 
+%.o : %.cpp
+	$(CC) $(FLAGS) -c $< -o $@
+
 $(NAME) : $(O_FILES)
+	rm -rf temp_*
 	$(CC) $(FLAGS) -o $@ $(O_FILES)
 
 

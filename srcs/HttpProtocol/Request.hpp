@@ -3,8 +3,13 @@
 
 #include <iostream>
 #include <map>
+#include <vector>
 
-
+enum ParseState{
+    FirstLine,
+    Headers,
+    Body
+};
 
 class ErrorClass400 : public std::exception {
     public:
@@ -40,25 +45,41 @@ class ErrorClass500 : public std::exception {
         }
 };
 
+class ErrorClass404 : public std::exception {
+    public:
+        const char* what() const throw(){
+            return "HTTP/1.1 404\r\n"
+                "Content-Type: text/html\r\n"
+                "Connection: close\r\n" 
+                "\r\n"
+                "<html><head><title>404 Not Found</title></head><body><center><h1>404 Not Found</h1></center><hr></body></html>";
+        }
+};
+
 class HttpRequest {
 private:
 
     std::string method ,uri, version, boundary, bodyFile;
     double content_length, chunk_size, bodyRead;
     std::map<std::string, std::string> headers;
+    std::vector<char> partial_data;
+    ParseState state;
+    size_t total_read_bytes;
+    ssize_t read_bytes;
+    bool isDone;
 
 public:
-    ErrorClass400 Error400;
-    Succes201 Created201;
-    ErrorClass500 Error500;
+
     void PerformChecks(void);
-    void ParseRequest(int client_fd);
+    void ParseRequest(char *request, size_t size);
     void ParseFirstLine(std::string line);
     void ParseHeaders(std::string line);
-    void ParseBody(std::string line);
+    void ParseBody(char *line, size_t size);
 
 
-    HttpRequest() : content_length(0), chunk_size(0), bodyRead(0) {}
+    HttpRequest() : content_length(0), chunk_size(0), bodyRead(0), state(FirstLine) , total_read_bytes(0), read_bytes(0) , isDone(false) {
+        partial_data.reserve(1);
+    }
     void SetMethod(std::string method) { this->method = method; }
     void SetUri(std::string uri) { this->uri = uri; }
     void SetVersion(std::string version) { this->version = version; }
@@ -76,8 +97,10 @@ public:
     double GetContentLength() { return this->content_length; }
     double GetChunkSize() { return this->chunk_size; }
     double GetBodyRead() { return this->bodyRead; }
+    bool getIsDone() { return this->isDone; }
     std::map<std::string, std::string> GetHeaders() { return this->headers; }
     void generateUniqueFile(void);
+    void ReadRequest(int fd);
 };
 
 std::ostream& operator<<(std::ostream& os, HttpRequest& req);

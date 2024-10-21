@@ -16,12 +16,15 @@ void HttpResponse::SetConnection(std::string value){
     this->Connection = value;
 }
 
-void HttpResponse::SetResponse(std::string value){
-    this->Response += value;
+void HttpResponse::SetBody(std::vector<char> value){
+    this->Body.insert(this->Body.end(), value.begin(), value.end());
 }
 
-std::string HttpResponse::BuildResponse() {
-    return this->Version + " " + this->ResponseCode + "\r\n" + "Content-Type: " + this->ContentType + "\r\n" + "Connection: " + this->Connection + "\r\n" + "\r\n" + this->Response;
+const std::vector<char> HttpResponse::BuildResponse() {
+    std::string temp = this->Version + " " + this->ResponseCode + "\r\n" + "Content-Type: " + this->ContentType + "\r\n" + "Connection: " + this->Connection + "\r\n" + "\r\n" ;
+    std::vector<char> response(temp.begin(), temp.end());
+    response.insert(response.end(), Body.begin(), Body.end());
+    return response;
 }
 
 std::string HttpResponse::GetVersion(){
@@ -40,8 +43,8 @@ std::string HttpResponse::GetConnection(){
     return this->Connection;
 }
 
-std::string HttpResponse::GetResponse(){
-    return this->Response;
+const std::vector<char>& HttpResponse::GetBody(){
+    return this->Body;
 }
 
 

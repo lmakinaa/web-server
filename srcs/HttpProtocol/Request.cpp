@@ -7,7 +7,10 @@
 
 std::string strtrim(std::string str)
 {
-    int x,y = 0;
+    unsigned long x;
+    unsigned long y;
+    y = 0;
+    x = 0;
     for (; x < str.size(); x++)
         if (str[x] != ' ' && str[x] != '\r' && str[x] != '\t')
             break;
@@ -19,24 +22,19 @@ std::string strtrim(std::string str)
 
 void HttpRequest::ParseFirstLine(std::string line)
 {
-    
-    for (int i = 0; i < 3; i++)
-    {
-        
-        std::string token = line.substr(0, line.find(" "));
-        if (i == 0)
-            SetMethod(token);
-        else if (i == 1)
-            SetUri(token);
-        else if (i == 2)
-        {
-            token = strtrim(token);
-            SetVersion(token);
-        }
-        line = line.substr(line.find(" ") + 1);
-    }
+    std::vector<std::string> tokens;
+    std::stringstream tokensStream(line);
+    std::string token;
 
-    
+    while (std::getline(tokensStream, token, ' '))
+        tokens.push_back(token);
+
+    if (tokens.size() != 3)
+        throw ErrorClass400();
+
+    SetMethod(tokens[0]);
+    SetUri(tokens[1]);
+    SetVersion(tokens[2]);
 }
 
 void HttpRequest::ParseHeaders(std::string line)
@@ -44,13 +42,13 @@ void HttpRequest::ParseHeaders(std::string line)
     std::string key;
     std::string value;
 
-    bool FALSE_HEADER_FORMAT = (line.find(": ") == std::string::npos);
+    // bool FALSE_HEADER_FORMAT = (line.find(": ") == std::string::npos);
 
-    if (FALSE_HEADER_FORMAT)
-    {
-        std::cout << "\033[1;31m"<< line <<"\033[0m\n";
-        throw HttpRequest::Error400;
-    }
+    // if (FALSE_HEADER_FORMAT)
+    // {
+    //     std::cout << "\033[1;31m"<< line <<"\033[0m\n";
+    //     throw HttpRequest::Error400;
+    // }
 
     key     = line.substr(0, line.find(": "));
     value   = line.substr(line.find(": ") + 1, line.size() - 1);
@@ -80,80 +78,46 @@ void HttpRequest::generateUniqueFile(void)
         i++;
     }
     else
-        throw HttpRequest::Error500;
+        throw ErrorClass500();
 }
 
-void HttpRequest::ParseBody(std::string line)
+void HttpRequest::ParseBody(char *line, size_t size)
 {
-    if (line != boundary + "--" && content_length > 0)
+    std::ofstream file(bodyFile, std::ios::app | std::ios::binary);
+    if (file.is_open())
     {
-        std::ofstream file(bodyFile, std::ios::app);
-        if (file.is_open())
-        {
-            file.write(line.c_str(), line.size());
-        }
-        else
-            throw HttpRequest::Error500;
+        file.write(line,size);
     }
-    else if (line != "0\r")
-    {
-        line = line.substr(0, line.size() - 1);
-        std::ofstream file(bodyFile, std::ios::app);
-        if (file.is_open())
-            file.write(line.c_str(), line.size());
-        else
-            throw HttpRequest::Error500;
-    }
+    else
+        throw ErrorClass500();
 }
 
-enum ParseState{
-    FirstLine,
-    Headers,
-    Body
-};
-
-void HttpRequest::ParseRequest(int client_fd)
+void HttpRequest::ParseRequest(char *request, size_t size)
 {
-    char request[1000000] = {0};
-    std::string line;
-    ParseState state = FirstLine;
 
-    read(client_fd, request, 2000000);
-    
-    std::stringstream tokensStream(request);
-    while (std::getline(tokensStream, line))
+    std::string line(request);
+    if (line == "\r\n" && state == Headers)
     {
-        bool LINE_WITH_NO_CRLF = (line.size() < 1 || line.substr(line.size() - 1) != "\r");
-        // if(LINE_WITH_NO_CRLF)
-        //     throw HttpRequest::Error400;
-        if (line == "\r" && state == Headers)
+        if (method == "POST" || method == "DELETE")
         {
-            if (method == "POST" || method == "DELETE")
-            {
-                state = Body;
-                generateUniqueFile();
-            }
-            else
-                break;
+            state = Body;
+            generateUniqueFile();
+            return ;
         }
-        switch (state)
-        {
-            case FirstLine:
-                ParseFirstLine(line);
-                state = Headers;
-                break;
-            case Headers:
-                ParseHeaders(line);
-                break;
-            case Body:
-                ParseBody(line);
-        }
-        std::cout << line << std::endl;
     }
-    
-    std::cout << "<_______-Parsed Request__________>" << std::endl;
-    std::cout << *this << std::endl;
-    PerformChecks();
+    switch (state)
+    {
+        case FirstLine:
+            ParseFirstLine(line);
+            state = Headers;
+            break;
+        case Headers:
+            ParseHeaders(line);
+            break;
+        case Body:
+            ParseBody(request, size);
+    }
+
 }
 
 void HttpRequest::PerformChecks(void){
@@ -165,10 +129,10 @@ void HttpRequest::PerformChecks(void){
         if (this->GetMethod() == methods[i])
             ValidMethod = true;
     if (!ValidMethod)
-        throw HttpRequest::Error400;
+        throw ErrorClass400();
     
-    if (this->GetUri()[0] != '/' || this->GetVersion() != "HTTP/1.1" )
-        throw HttpRequest::Error400;
+    if (this->GetUri()[0] != '/' || this->GetVersion() != "HTTP/1.1\r\n" )
+        throw ErrorClass400();
 }
 
 std::ostream& operator<<(std::ostream& os, HttpRequest& req)
@@ -184,4 +148,44 @@ std::ostream& operator<<(std::ostream& os, HttpRequest& req)
     for (std::map<std::string, std::string>::iterator it = print.begin(); it != print.end(); it++)
         os << it->first << ": " << it->second << std::endl;
     return os;
+}
+
+void HttpRequest::ReadRequest(int fd) {
+    std::vector<char> crlf;
+    crlf.push_back('\r');
+    crlf.push_back('\n');
+    const size_t buffer_size = 100000;
+    char buffer[buffer_size];
+
+    read_bytes = recv(fd, buffer, buffer_size, 0);
+
+    if (read_bytes < 0) 
+    {
+        std::cerr << "Error reading from socket: " << strerror(errno) << std::endl;
+        return;
+    }
+    if (read_bytes == 0)
+    {
+        isDone = true;
+        return;
+    }
+    total_read_bytes += read_bytes;
+    partial_data.insert(partial_data.end(), buffer, buffer + read_bytes);
+    std::vector<char>::iterator pos;
+    while ((pos = std::search(partial_data.begin(), partial_data.end(), crlf.begin(), crlf.end())) != partial_data.end())
+    {
+        std::vector<char> line(partial_data.begin(), pos + 2);
+        ParseRequest(line.data(), line.size());
+        partial_data.erase(partial_data.begin(), pos + 2);
+    }
+    std::cout << "\033[1;32m" << total_read_bytes << "\033[0m" << std::endl;
+    if (total_read_bytes >= content_length)
+        isDone = true;
+    memset(buffer, 0, buffer_size);
+    if (!partial_data.empty() && isDone)
+        ParseRequest(partial_data.data(), partial_data.size());
+
+    std::cout << "<_________________Parsed Request__________>" << std::endl;
+    std::cout << *this << std::endl;
+    PerformChecks();
 }
