@@ -34,15 +34,15 @@ int WebServ::handleExistedConnection(struct kevent* current)
     HttpRequest* req = (HttpRequest*) ((t_eventData*)current->udata)->data;
     std::cout << "\033[1;32m"<< req->getTotalReadBytes() <<  "  isDone  " << req->getIsDone()<< "\033[0m" << std::endl;
 
-    try {
     req->ReadRequest(current->ident);
-    } catch(SuccessStatus& e) {
-        std::cerr << e.what();
-    } catch(ErrorStatus& e) {
-        std::cerr << e.what();
-    }
 
     if(req->getIsDone() == true) {
+        req->PerformChecks();
+        std::string response = "HTTP/1.1 201 Created\r\n";
+        response += "Content-Type: text/html\r\n";
+        response += "Content-Length: 0\r\n";
+        response += "\r\n";
+        send(current->ident, response.c_str(), response.size(), 0);
         delete req;
         delete (t_eventData*)current->udata;
         KQueue::removeFd(current->ident);

@@ -4,11 +4,6 @@
 #include <iostream>
 #include <map>
 #include <vector>
-#include <sstream>
-#include <string>
-#include <fstream>
-#include <sys/socket.h>
-#include "Exceptions.hpp"
 
 enum ParseState{
     FirstLine,
@@ -16,19 +11,62 @@ enum ParseState{
     Body
 };
 
+class ErrorClass400 : public std::exception {
+    public:
+        const char* what() const throw(){
+            return "HTTP/1.1 400\r\n"
+                "Content-Type: text/html\r\n"
+                "Connection: close\r\n" 
+                "\r\n"
+                "<html><head><title>400 Bad Request</title></head><body><center><h1>400 Bad Request</h1></center><hr></body></html>";
+        }
+};
+
+
+class Succes201 : public std::exception {
+    public:
+        const char* what() const throw(){
+            return "HTTP/1.1 201\r\n"
+                "Content-Type: text/html\r\n"
+                "Connection: keep-alive\r\n"
+                "\r\n"
+                "<html><head><title>201 Created</title></head><body><center><h1>201 Created</h1></center><hr></body></html>";
+        }
+};
+
+class ErrorClass500 : public std::exception {
+    public:
+        const char* what() const throw(){
+            return "HTTP/1.1 500\r\n"
+                "Content-Type: text/html\r\n"
+                "Connection: close\r\n" 
+                "\r\n"
+                "<html><head><title>500 Internal Server Error</title></head><body><center><h1>500 Internal Server Error</h1></center><hr></body></html>";
+        }
+};
+
+class ErrorClass404 : public std::exception {
+    public:
+        const char* what() const throw(){
+            return "HTTP/1.1 404\r\n"
+                "Content-Type: text/html\r\n"
+                "Connection: close\r\n" 
+                "\r\n"
+                "<html><head><title>404 Not Found</title></head><body><center><h1>404 Not Found</h1></center><hr></body></html>";
+        }
+};
+
 class HttpRequest {
 private:
 
     std::string method ,uri, version, boundary, bodyFile;
-    long long content_length, chunk_size, bodyRead;
+    double content_length, chunk_size, bodyRead;
     std::map<std::string, std::string> headers;
     std::vector<char> partial_data;
     ParseState state;
     size_t total_read_bytes;
     ssize_t read_bytes;
-    size_t readed_body;
     bool isDone;
-    int iters;
 
 public:
 
@@ -39,8 +77,7 @@ public:
     void ParseBody(char *line, size_t size);
 
 
-    HttpRequest() : content_length(0), chunk_size(0), bodyRead(0), state(FirstLine) , total_read_bytes(0), read_bytes(0) , isDone(false), iters(0) {
-        readed_body= 0;
+    HttpRequest() : content_length(0), chunk_size(0), bodyRead(0), state(FirstLine) , total_read_bytes(0), read_bytes(0) , isDone(false) {
         partial_data.reserve(1);
     }
     void SetMethod(std::string method) { this->method = method; }
@@ -48,7 +85,7 @@ public:
     void SetVersion(std::string version) { this->version = version; }
     void SetHeader(std::string key, std::string value) { this->headers[key] = value; }
     void SetBoundary(std::string boundary) { this->boundary = boundary; }
-    void SetContentLength(std::string content_length) { this->content_length = std::stol(content_length); }
+    void SetContentLength(std::string content_length) { this->content_length = std::stod(content_length); }
     void SetChunkSize(double chunk_size) { this->chunk_size = chunk_size; }
     void SetBodyRead(double bodyRead) { this->bodyRead = bodyRead; }
     
@@ -62,10 +99,9 @@ public:
     double GetBodyRead() { return this->bodyRead; }
     bool getIsDone() { return this->isDone; }
     std::map<std::string, std::string> GetHeaders() { return this->headers; }
+    size_t getTotalReadBytes() { return this->total_read_bytes; }
     void generateUniqueFile(void);
     void ReadRequest(int fd);
-    size_t getTotalReadBytes(){return this->total_read_bytes;}
-
 };
 
 std::ostream& operator<<(std::ostream& os, HttpRequest& req);
