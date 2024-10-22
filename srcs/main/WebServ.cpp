@@ -32,11 +32,12 @@ int WebServ::handleExistedConnection(struct kevent* current)
 {
     // Read and Parse Request
     HttpRequest* req = (HttpRequest*) ((t_eventData*)current->udata)->data;
-    std::cout << "\033[1;32m"<< req->getTotalReadBytes() <<  "  isDone  " << req->getIsDone()<< "\033[0m" << std::endl;
 
     req->ReadRequest(current->ident);
 
     if(req->getIsDone() == true) {
+        std::cout << "<_________________Parsed Request__________>" << std::endl;
+        std::cout << *req << std::endl;
         req->PerformChecks();
         std::string response = "HTTP/1.1 201 Created\r\n";
         response += "Content-Type: text/html\r\n";

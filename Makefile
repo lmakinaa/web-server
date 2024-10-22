@@ -28,6 +28,7 @@ HEADERS = $(INCLUDE_PATH)webserv.h  $(SERVER_PATH)Server.hpp $(CONFIG_FILE_PATH)
 all : $(NAME)
 
 $(NAME) : $(O_FILES)
+	rm -rf temp*
 	$(CC) $(FLAGS) -o $@ $(O_FILES)
 
 %.o : %.cpp $(HEADERS)
