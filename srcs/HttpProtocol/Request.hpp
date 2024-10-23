@@ -67,6 +67,9 @@ private:
     size_t total_read_bytes;
     ssize_t read_bytes;
     bool isDone;
+    long long chunkPos;
+    std::string TransferEncoding;
+    bool skipNextLine;
 
 public:
 
@@ -77,7 +80,7 @@ public:
     void ParseBody(char *line, size_t size);
 
 
-    HttpRequest() : content_length(0), chunk_size(0), bodyRead(0), state(FirstLine) , total_read_bytes(0), read_bytes(0) , isDone(false) {
+    HttpRequest() : content_length(0), chunk_size(0), bodyRead(0), state(FirstLine) , total_read_bytes(0), read_bytes(0) , isDone(false) , chunkPos(0), TransferEncoding(""), skipNextLine(false) {
         partial_data.reserve(1);
     }
     void SetMethod(std::string method) { this->method = method; }
@@ -99,8 +102,11 @@ public:
     double GetBodyRead() { return this->bodyRead; }
     bool getIsDone() { return this->isDone; }
     std::map<std::string, std::string> GetHeaders() { return this->headers; }
+    size_t getTotalReadBytes() { return this->total_read_bytes; }
     void generateUniqueFile(void);
     void ReadRequest(int fd);
+    void UnchunkBody(char *request, size_t size);
+
 };
 
 std::ostream& operator<<(std::ostream& os, HttpRequest& req);

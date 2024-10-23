@@ -60,6 +60,8 @@ void HttpRequest::ParseHeaders(std::string line)
         SetContentLength(value);
     else if (value.find("boundary=") != std::string::npos)
         SetBoundary(value.substr(value.find("boundary=") + 9, value.size() - 1));
+    else if (key == "Transfer-Encoding")
+        TransferEncoding = value;
     else
         SetHeader(key, value);
 }
@@ -92,18 +94,26 @@ void HttpRequest::ParseBody(char *line, size_t size)
         throw ErrorClass500();
 }
 
+enum ChunkState {
+    WAITING_FOR_SIZE,
+    READING_CHUNK,
+    SKIPPING_EMPTY_LINE
+};
+
+ChunkState chunkState = WAITING_FOR_SIZE;
+
 void HttpRequest::ParseRequest(char *request, size_t size)
 {
 
     std::string line(request);
     if (line == "\r\n" && state == Headers)
     {
-        if (method == "POST" || method == "DELETE")
+        if (method == "POST")
         {
             state = Body;
             generateUniqueFile();
-            return ;
         }
+        return ;
     }
     switch (state)
     {
@@ -115,10 +125,47 @@ void HttpRequest::ParseRequest(char *request, size_t size)
             ParseHeaders(line);
             break;
         case Body:
-            ParseBody(request, size);
+            if (TransferEncoding == "chunked\r\n")
+                UnchunkBody(request, size);
+            else
+                ParseBody(request, size);            
     }
-
 }
+
+void HttpRequest::UnchunkBody(char *request, size_t size)
+{
+   if (chunk_size == 0)
+   {
+        try{
+            chunk_size = std::stoul(request, nullptr, 16);
+            std::cout << "\033[1;32m" << request << " = " << chunk_size << "\033[0m" << std::endl;
+        }
+        catch(const std::exception& e){
+            std::cout << "\033[1;31m" << request << "\033[0m" << std::endl;
+        }
+        return ;
+   }
+   else if (chunkPos < chunk_size)
+   {
+        if (size > 2)
+            chunkPos+=size -2;
+        else
+            chunkPos+=size;
+        ParseBody(request,size);
+        if (chunkPos == chunk_size)
+        {
+            chunk_size = 0;
+            chunkPos = 0;
+        }
+   }
+//    else
+//     {
+//         ParseBody(request, size);
+//         chunk_size = 0;
+//         chunkPos = 0;
+//     }
+}
+
 
 void HttpRequest::PerformChecks(void){
 
@@ -178,14 +225,10 @@ void HttpRequest::ReadRequest(int fd) {
         ParseRequest(line.data(), line.size());
         partial_data.erase(partial_data.begin(), pos + 2);
     }
-    std::cout << "\033[1;32m" << total_read_bytes << "\033[0m" << std::endl;
     if (total_read_bytes >= content_length)
         isDone = true;
     memset(buffer, 0, buffer_size);
     if (!partial_data.empty() && isDone)
         ParseRequest(partial_data.data(), partial_data.size());
 
-    std::cout << "<_________________Parsed Request__________>" << std::endl;
-    std::cout << *this << std::endl;
-    PerformChecks();
 }
