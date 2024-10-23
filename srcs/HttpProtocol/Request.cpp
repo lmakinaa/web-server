@@ -152,13 +152,18 @@ void HttpRequest::UnchunkBody(char *request, size_t size)
         else
             chunkPos+=size;
         ParseBody(request,size);
+        if (chunkPos == chunk_size)
+        {
+            chunk_size = 0;
+            chunkPos = 0;
+        }
    }
-   else
-    {
-        ParseBody(request, size);
-        chunk_size = 0;
-        chunkPos = 0;
-    }
+//    else
+//     {
+//         ParseBody(request, size);
+//         chunk_size = 0;
+//         chunkPos = 0;
+//     }
 }
 
 
