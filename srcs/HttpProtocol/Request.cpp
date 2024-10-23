@@ -1,11 +1,6 @@
 #include "Request.hpp"
-#include <sstream>
-#include <vector>
-#include <string>
-#include "../server/Server.hpp"
-#include <fstream>
 
-std::string strtrim(std::string str)
+static std::string ft_strtrim(std::string& str)
 {
     unsigned long x;
     unsigned long y;
@@ -18,52 +13,6 @@ std::string strtrim(std::string str)
         if (str[y] != ' ' && str[y] != '\r' && str[y] != '\t')
             break;
     return str.substr(x, y - x + 1);
-}
-
-void HttpRequest::ParseFirstLine(std::string line)
-{
-    std::vector<std::string> tokens;
-    std::stringstream tokensStream(line);
-    std::string token;
-
-    while (std::getline(tokensStream, token, ' '))
-        tokens.push_back(token);
-
-    if (tokens.size() != 3)
-        throw ErrorClass400();
-
-    SetMethod(tokens[0]);
-    SetUri(tokens[1]);
-    SetVersion(tokens[2]);
-}
-
-void HttpRequest::ParseHeaders(std::string line)
-{
-    std::string key;
-    std::string value;
-
-    // bool FALSE_HEADER_FORMAT = (line.find(": ") == std::string::npos);
-
-    // if (FALSE_HEADER_FORMAT)
-    // {
-    //     std::cout << "\033[1;31m"<< line <<"\033[0m\n";
-    //     throw HttpRequest::Error400;
-    // }
-
-    key     = line.substr(0, line.find(": "));
-    value   = line.substr(line.find(": ") + 1, line.size() - 1);
-
-    key = strtrim(key);
-    value = strtrim(value);
-
-    if (key == "Content-Length")
-        SetContentLength(value);
-    else if (value.find("boundary=") != std::string::npos)
-        SetBoundary(value.substr(value.find("boundary=") + 9, value.size() - 1));
-    else if (key == "Transfer-Encoding")
-        TransferEncoding = value;
-    else
-        SetHeader(key, value);
 }
 
 void HttpRequest::generateUniqueFile(void)
@@ -80,150 +29,233 @@ void HttpRequest::generateUniqueFile(void)
         i++;
     }
     else
-        throw ErrorClass500();
+        throw ErrorStatus(500, "generateUniqueFile()");
 }
 
-void HttpRequest::ParseBody(char *line, size_t size)
+void HttpRequest::parseHeaders(std::string line)
 {
-    std::ofstream file(bodyFile, std::ios::app | std::ios::binary);
-    if (file.is_open())
-    {
-        file.write(line,size);
-    }
+    std::string key;
+    std::string value;
+
+    key     = line.substr(0, line.find(": "));
+    value   = line.substr(line.find(": ") + 1, line.size() - 1);
+
+    key = ft_strtrim(key);
+    value = ft_strtrim(value);
+
+    if (key == "Content-Length")
+        content_length = std::stod(value);
+    else if (value.find("boundary=") != std::string::npos)
+        boundary = value.substr(value.find("boundary=") + 9, value.size() - 1);
+    else if (key == "Transfer-Encoding")
+        TransferEncoding = value;
     else
-        throw ErrorClass500();
+        headers[key] = value;;
 }
 
-enum ChunkState {
-    WAITING_FOR_SIZE,
-    READING_CHUNK,
-    SKIPPING_EMPTY_LINE
-};
-
-ChunkState chunkState = WAITING_FOR_SIZE;
-
-void HttpRequest::ParseRequest(char *request, size_t size)
+void HttpRequest::parseFirstLine(std::string line)
 {
+    std::vector<std::string> tokens;
+    std::stringstream tokensStream(line);
+    std::string token;
 
+    while (std::getline(tokensStream, token, ' '))
+        tokens.push_back(token);
+
+    if (tokens.size() != 3)
+        throw ErrorStatus(400, "parseFirstLine()");
+
+    method = tokens[0];
+    uri = tokens[1];
+    version = tokens[2];
+}
+
+HttpRequest::HttpRequest()
+    : isDone(false)
+    , content_length(-1)
+    , total_read_bytes(0)
+    , chunk_size(0)
+    , bodyRead(0)
+    , state(FirstLine)
+    , read_bytes(0)
+    , chunkPos(0)
+    , TransferEncoding("")
+    , skipNextLine(false)
+{
+        partial_data.reserve(1);
+}
+
+void HttpRequest::parseRequest(char *request, size_t size)
+{
     std::string line(request);
+
     if (line == "\r\n" && state == Headers)
     {
         if (method == "POST")
         {
             state = Body;
             generateUniqueFile();
+            
+            // If it's a POST with no content-length and no chunked encoding, it's malformed
+            if (content_length == -1 && TransferEncoding.empty())
+                throw ErrorStatus(400, "Missing Content-Length or Transfer-Encoding");
         }
-        return ;
+        else
+        {
+            // If it's not a POST request, we're done after headers
+            isDone = true;
+        }
+        return;
     }
+
     switch (state)
     {
         case FirstLine:
-            ParseFirstLine(line);
+            parseFirstLine(line);
             state = Headers;
             break;
         case Headers:
-            ParseHeaders(line);
+            parseHeaders(line);
             break;
         case Body:
             if (TransferEncoding == "chunked\r\n")
-                UnchunkBody(request, size);
+                unchunkBody(request, size);
             else
-                ParseBody(request, size);            
+                parseBody(request, size);            
     }
 }
-
-void HttpRequest::UnchunkBody(char *request, size_t size)
+void HttpRequest::unchunkBody(char *request, size_t size)
 {
-   if (chunk_size == 0)
-   {
-        try{
+    if (chunk_size == 0)
+    {
+        try {
             chunk_size = std::stoul(request, nullptr, 16);
             std::cout << "\033[1;32m" << request << " = " << chunk_size << "\033[0m" << std::endl;
+            
+            // If we receive a chunk of size 0, it means we're done
+            if (chunk_size == 0) {
+                isDone = true;
+                return;
+            }
         }
         catch(const std::exception& e){
             std::cout << "\033[1;31m" << request << "\033[0m" << std::endl;
         }
-        return ;
-   }
-   else if (chunkPos < chunk_size)
-   {
-        if (size > 2)
-            chunkPos+=size -2;
-        else
-            chunkPos+=size;
-        ParseBody(request,size);
-   }
-   else
+        return;
+    }
+    else if (chunkPos < chunk_size)
     {
-        ParseBody(request, size);
+        size_t bytesToWrite = std::min<long>(size, chunk_size - chunkPos);
+        if (size > 2)
+            chunkPos += bytesToWrite;
+        else
+            chunkPos += size;
+        parseBody(request, bytesToWrite);
+    }
+    else
+    {
         chunk_size = 0;
         chunkPos = 0;
     }
 }
 
-
-void HttpRequest::PerformChecks(void){
-
-    bool ValidMethod = false;
-    std::string methods[3] = {"POST", "GET", "DELETE"};
-
-    for (int i = 0; i < 3; i++)
-        if (this->GetMethod() == methods[i])
-            ValidMethod = true;
-    if (!ValidMethod)
-        throw ErrorClass400();
-    
-    if (this->GetUri()[0] != '/' || this->GetVersion() != "HTTP/1.1\r\n" )
-        throw ErrorClass400();
-}
-
-std::ostream& operator<<(std::ostream& os, HttpRequest& req)
+void HttpRequest::parseBody(char *line, size_t size)
 {
-    os << "Method: " << req.GetMethod() << std::endl;
-    os << "Uri: " << req.GetUri() << std::endl;
-    os << "Version: " << req.GetVersion() << std::endl;
-    os << "Content-Length: " << req.GetContentLength() << std::endl;
-    os << "Boundary: " << req.GetBoundary() << std::endl;
-    os << "Headers: " << std::endl;
-    std::map<std::string, std::string> print = req.GetHeaders();
+    // For regular POST requests, make sure we don't exceed content_length
+    if (TransferEncoding.empty() && content_length != -1)
+    {
+        size_t remaining = content_length - total_read_bytes;
+        size = std::min(size, remaining);
+    }
 
-    for (std::map<std::string, std::string>::iterator it = print.begin(); it != print.end(); it++)
-        os << it->first << ": " << it->second << std::endl;
-    return os;
+    total_read_bytes += size;
+    
+    std::ofstream file(bodyFile, std::ios::app | std::ios::binary);
+    if (file.is_open())
+    {
+        file.write(line, size);
+        file.close();  // Make sure to close the file after writing
+    }
+    else
+        throw ErrorStatus(500, "parseBody()");
 }
 
-void HttpRequest::ReadRequest(int fd) {
+void HttpRequest::readRequest(int fd) {
+    const size_t buffer_size = 1024;
+    char buffer[buffer_size] = {};
     std::vector<char> crlf;
     crlf.push_back('\r');
     crlf.push_back('\n');
-    const size_t buffer_size = 100000;
-    char buffer[buffer_size];
 
     read_bytes = recv(fd, buffer, buffer_size, 0);
-
-    if (read_bytes < 0) 
+    if (read_bytes <= 0) 
     {
-        std::cerr << "Error reading from socket: " << strerror(errno) << std::endl;
-        return;
-    }
-    if (read_bytes == 0)
-    {
+        if (read_bytes < 0)
+            perror("recv(2)");
         isDone = true;
         return;
     }
-    total_read_bytes += read_bytes;
+
+    // Add new data to our partial buffer
     partial_data.insert(partial_data.end(), buffer, buffer + read_bytes);
-    std::vector<char>::iterator pos;
-    while ((pos = std::search(partial_data.begin(), partial_data.end(), crlf.begin(), crlf.end())) != partial_data.end())
+
+    // If we're already processing the body for a non-chunked request
+    if (state == Body && TransferEncoding.empty())
+    {
+        parseBody(partial_data.data(), partial_data.size());
+        partial_data.clear();
+        
+        // Check if we've received all the data
+        if (total_read_bytes >= content_length)
+        {
+            isDone = true;
+        }
+        return;
+    }
+
+    // Process headers line by line
+    std::vector<char>::iterator pos = std::search(partial_data.begin(), partial_data.end(), crlf.begin(), crlf.end());
+    while (pos != partial_data.end() && state != Body)
     {
         std::vector<char> line(partial_data.begin(), pos + 2);
-        ParseRequest(line.data(), line.size());
+        parseRequest(line.data(), line.size());
         partial_data.erase(partial_data.begin(), pos + 2);
-    }
-    if (total_read_bytes >= content_length)
-        isDone = true;
-    memset(buffer, 0, buffer_size);
-    if (!partial_data.empty() && isDone)
-        ParseRequest(partial_data.data(), partial_data.size());
 
+        // If we've just transitioned to Body state, break the line processing
+        if (state == Body)
+            break;
+
+        pos = std::search(partial_data.begin(), partial_data.end(), crlf.begin(), crlf.end());
+    }
+
+    // If we're in Body state and have remaining data
+    if (state == Body && !partial_data.empty())
+    {
+        if (TransferEncoding == "chunked\r\n")
+        {
+            // Process chunked data
+            pos = std::search(partial_data.begin(), partial_data.end(), crlf.begin(), crlf.end());
+            while (pos != partial_data.end())
+            {
+                std::vector<char> line(partial_data.begin(), pos + 2);
+                parseRequest(line.data(), line.size());
+                partial_data.erase(partial_data.begin(), pos + 2);
+
+                if (isDone)
+                    break;
+
+                pos = std::search(partial_data.begin(), partial_data.end(), crlf.begin(), crlf.end());
+            }
+        }
+        else
+        {
+            // For regular POST, process all remaining data as body
+            parseBody(partial_data.data(), partial_data.size());
+            partial_data.clear();
+            if (total_read_bytes >= content_length)
+            {
+                isDone = true;
+            }
+        }
+    }
 }
