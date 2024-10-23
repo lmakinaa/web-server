@@ -33,12 +33,14 @@ int WebServ::handleExistedConnection(struct kevent* current)
     // Read and Parse Request
     HttpRequest* req = (HttpRequest*) ((t_eventData*)current->udata)->data;
 
-    req->ReadRequest(current->ident);
+    req->readRequest(current->ident);
 
-    if(req->getIsDone() == true) {
-        std::cout << "<_________________Parsed Request__________>" << std::endl;
-        std::cout << *req << std::endl;
-        req->PerformChecks();
+    if(req->isDone == true) {
+        std::cerr << "-->" << req->total_read_bytes << "--" << req->content_length << '\n';
+
+        // std::cout << "<_________________Parsed Request__________>" << std::endl;
+        // std::cout << *req << std::endl;
+        // req->PerformChecks();
         std::string response = "HTTP/1.1 201 Created\r\n";
         response += "Content-Type: text/html\r\n";
         response += "Content-Length: 0\r\n";
@@ -113,7 +115,7 @@ void WebServ::run()
             }
             else if ((long)events[i].udata > OPEN_MAX && !std::strcmp(static_cast<t_eventData*>(events[i].udata)->type, "client socket")) {
 				handleExistedConnection(&events[i]);
-				std::cout << "Request parsed" << std::endl ;
+				// std::cout << "Request parsed" << std::endl ;
             }
             // else {
             //     sendResponse(&events[i]);
