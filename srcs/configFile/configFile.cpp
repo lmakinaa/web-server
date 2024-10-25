@@ -4,9 +4,9 @@
 
 bool    isAllowedDirectiveServ(std::string direc)
 {
-    std::string arr[8] = {"listen", "host", "server_name", "error_page", "client_max_body_size", "root", "index", "upload_path"};
+    std::string arr[10] = {"listen", "host", "server_name", "error_page", "client_max_body_size", "root", "index", "upload_path", "autoindex", "return"};
 
-    for (int i = 0; i < 8; i++)
+    for (int i = 0; i < 10; i++)
     {
         if (arr[i] == direc)
             return (1);

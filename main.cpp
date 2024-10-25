@@ -60,7 +60,9 @@ int main(int ac, char *av[])
         return (EXIT_FAILURE);
     // server();
 
-    _GET_DELETE(main);
+    std::string responeFile = _GET_DELETE(main);
+
+    
 
 
     // affiche(main);

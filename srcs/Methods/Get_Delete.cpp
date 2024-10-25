@@ -187,13 +187,13 @@ std::string getFileFullPath(Server &serv, std::map<std::string, Location>::itera
                 if (fileExist(path))
                     return (path);
             }
-            if (it->second.directives.find("return") != it->second.directives.end())
+            if (serv.directives.find("return") != serv.directives.end())
             {
                 // should redirect to ...
-                std::cout << "redirect to " << it->second.directives["return"].values[0] << std::endl;
+                std::cout << "redirect to " << serv.directives["return"].values[0] << std::endl;
             }
-            else if (it->second.directives.find("autoindex") != it->second.directives.end()
-                        &&  it->second.directives["autoindex"].values[0] == "on")
+            else if (serv.directives.find("autoindex") != serv.directives.end()
+                        &&  serv.directives["autoindex"].values[0] == "on")
             {
                 // should list all files
                 std::cout << "list all files\n";
@@ -202,7 +202,7 @@ std::string getFileFullPath(Server &serv, std::map<std::string, Location>::itera
             }
             else
             {
-                // throw 404NotFoundClass;
+                // throw 403ForbiddenClass;
                 std::cout << "1\n";
                 return "";
             }
@@ -266,7 +266,7 @@ std::string getFileFullPath(Server &serv, std::map<std::string, Location>::itera
             }
             else
             {
-                // throw 404NotFoundClass;
+                // throw 403ForbiddenClass;
                 std::cout << "4\n";
                 return "";
             }
@@ -297,7 +297,7 @@ bool    stringMaching(std::string locat , std::string &requestPath)
     return (0);
 }
 
-void    _GET_DELETE(Main &main)
+std::string    _GET_DELETE(Main &main)
 {
     Server serv = main.servers[0];
     std::string requestPath = "/";
@@ -355,4 +355,5 @@ void    _GET_DELETE(Main &main)
 
     // Send the file to the Client.
     std::cout << "Result : " << resquestedFile << std::endl;
+    return (resquestedFile);
 }

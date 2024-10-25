@@ -7,4 +7,4 @@
 #include "../main/main.hpp"
 
 
-void    _GET_DELETE(Main &main);
+std::string    _GET_DELETE(Main &main);
