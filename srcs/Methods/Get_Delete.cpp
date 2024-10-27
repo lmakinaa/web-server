@@ -297,7 +297,7 @@ bool    stringMaching(std::string locat , std::string &requestPath)
     return (0);
 }
 
-std::string    _GET_DELETE(Main &main)
+std::string    _GET_DELETE(WebServ &main)
 {
     Server serv = main.servers[0];
     std::string requestPath = "/";
@@ -330,7 +330,7 @@ std::string    _GET_DELETE(Main &main)
         {
             // throw 404NotFoundClass;
             std::cout << "404 NOt found" << std::endl;
-            return ;
+            return "";
         }
 
         /* ===== Check Read Permession ===== */
@@ -338,7 +338,7 @@ std::string    _GET_DELETE(Main &main)
         {
             // Throw 403 Forbidden
             std::cout << "403 Forbidden" << std::endl;
-            return ;
+            return "";
         }
     }
     else

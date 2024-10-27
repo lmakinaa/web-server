@@ -85,7 +85,7 @@ HttpRequest::HttpRequest()
         partial_data.reserve(1);
 }
 
-void HttpRequest::parseRequest(char *request, size_t size)
+void HttpRequest::parseRequest(const std::string& request)
 {
     std::string line(request);
 
@@ -119,9 +119,9 @@ void HttpRequest::parseRequest(char *request, size_t size)
             break;
         case Body:
             if (TransferEncoding == "chunked\r\n")
-                unchunkBody(request, size);
+                unchunkBody(const_cast<char*>(request.c_str()), request.size());
             else
-                parseBody(request, size);            
+                parseBody(const_cast<char*>(request.c_str()), request.size());            
     }
 }
 void HttpRequest::unchunkBody(char *request, size_t size)
@@ -248,7 +248,8 @@ void HttpRequest::readRequest(int fd) {
     while (pos != partial_data.end() && state != Body)
     {
         std::vector<char> line(partial_data.begin(), pos + 2);
-        parseRequest(line.data(), line.size());
+        std::string strLine(line.begin(), line.end());
+        parseRequest(strLine);
         partial_data.erase(partial_data.begin(), pos + 2);
 
         // If we've just transitioned to Body state, break the line processing
@@ -268,7 +269,8 @@ void HttpRequest::readRequest(int fd) {
             while (pos != partial_data.end())
             {
                 std::vector<char> line(partial_data.begin(), pos + 2);
-                parseRequest(line.data(), line.size());
+                std::string strLine(line.begin(), line.end());
+                parseRequest(strLine);
                 partial_data.erase(partial_data.begin(), pos + 2);
 
                 if (isDone)

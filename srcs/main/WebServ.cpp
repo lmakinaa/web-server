@@ -17,14 +17,13 @@ int WebServ::handleNewConnection(struct kevent* current)
         perror("accept(2)");
 
 
-	// int flags = fcntl(clientSock, F_GETFL);
-	// fcntl(clientSock, F_SETFL, flags | O_NONBLOCK);
     KQueue::setFdNonBlock(clientSock);
 
     HttpRequest *req = new HttpRequest();
     t_eventData *clientEvData = new t_eventData("client socket", req);
 
 	KQueue::watchFd(clientSock, clientEvData);
+    m_openedSockets++;
 	return 0;
 }
 
@@ -107,15 +106,14 @@ void WebServ::run()
 
         for (int i = 0; i < nevents; i++) {
 
-            if ((long)events[i].udata > OPEN_MAX && !std::strcmp((static_cast<t_eventData*>(events[i].udata))->type, "server socket")) {
+            if (!std::strcmp((static_cast<t_eventData*>(events[i].udata))->type, "server socket")) {
 
                 handleNewConnection(&events[i]);
-                m_openedSockets++;
 				std::cout << "Connection accepted" << std::endl ;
             }
-            else if ((long)events[i].udata > OPEN_MAX && !std::strcmp(static_cast<t_eventData*>(events[i].udata)->type, "client socket")) {
+            else if (!std::strcmp(static_cast<t_eventData*>(events[i].udata)->type, "client socket")) {
 				handleExistedConnection(&events[i]);
-				// std::cout << "Request parsed" << std::endl ;
+				std::cout << "Request parsed" << std::endl ;
             }
             // else {
             //     sendResponse(&events[i]);

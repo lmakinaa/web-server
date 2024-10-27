@@ -273,7 +273,7 @@ int checkDirectives(std::vector<std::string> &conf, size_t i, Server &serv)
     return (i);
 }
 
-int checkServerBlock(std::vector<std::string> &conf, Main &main)
+int checkServerBlock(std::vector<std::string> &conf, WebServ &main)
 
 {
 
@@ -317,7 +317,7 @@ int checkServerBlock(std::vector<std::string> &conf, Main &main)
 }
 
 
-int parseConfigFile(std::string config, Main &main)
+int parseConfigFile(std::string config, WebServ &main)
 
 {
     std::ifstream file(config);

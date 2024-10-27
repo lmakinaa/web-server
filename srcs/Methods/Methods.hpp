@@ -4,7 +4,7 @@
 #include <sys/stat.h>
 #include <fstream>
 #include <dirent.h>
-#include "../main/main.hpp"
+#include "../main/WebServ.hpp"
 
 
-std::string    _GET_DELETE(Main &main);
+std::string    _GET_DELETE(WebServ &main);
