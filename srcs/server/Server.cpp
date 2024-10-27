@@ -1,6 +1,7 @@
 
 #include "Server.hpp"
 
+
 Server::Server()
     : m_sockAddress ()
     , m_sockLen ()
@@ -15,7 +16,6 @@ Server::~Server()
 
 void Server::init()
 {
-
 	if ((m_socket = socket(PF_INET, SOCK_STREAM, 0)) == -1)
 		throw std::runtime_error((std::string("socket(2): ") + strerror(errno)));
 
@@ -26,6 +26,7 @@ void Server::init()
 	m_sockAddress.sin_family = AF_INET;
 
 	m_sockLen = sizeof(m_sockAddress);
+
 
 	// if (inet_pton(AF_INET, directives["host"].values[0].c_str(), &m_sockAddress.sin_addr.s_addr) == 0) 
 	if (inet_pton(AF_INET, directives["host"].values[0].c_str(), &m_sockAddress.sin_addr.s_addr) == 0) 
@@ -47,6 +48,7 @@ void Server::init()
 
     m_sockData.sockAddress = &m_sockAddress;
     m_sockData.sockLen = &m_sockLen;
+
 
     m_sEventData.data = &m_sockData;
 }

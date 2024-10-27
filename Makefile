@@ -3,7 +3,7 @@ NAME = webserv
 
 CC = c++
 
-FLAGS = -Wall -Wextra -Werror -std=c++98 #-g -fsanitize=address
+FLAGS = -Wall -Wextra -Werror -std=c++98 -fsanitize=address -g
 
 # ============= Files path variable ============ #
 
@@ -13,17 +13,20 @@ CONFIG_FILE_PATH = srcs/configFile/
 
 MAIN_PATH = srcs/main/
 
+ 
+RESPONSE_PATH = srcs/Methods/
+
 INCLUDE_PATH = includes/
 
 # ============= Files path variable ============ #
 
 C_FILES = main.cpp $(SERVER_PATH)Server.cpp $(CONFIG_FILE_PATH)configFile.cpp $(CONFIG_FILE_PATH)Location.cpp $(MAIN_PATH)WebServ.cpp srcs/KQueue/KQueue.cpp srcs/CGI/CGI.cpp\
-	srcs/HttpProtocol/Request.cpp  srcs/HttpProtocol/Response.cpp
+	srcs/HttpProtocol/Request.cpp  srcs/HttpProtocol/Response.cpp $(RESPONSE_PATH)Get_Delete.cpp
 
 O_FILES = $(C_FILES:.cpp=.o)
 
 HEADERS = $(INCLUDE_PATH)webserv.h  $(SERVER_PATH)Server.hpp $(CONFIG_FILE_PATH)configFile.hpp $(CONFIG_FILE_PATH)Location.hpp $(MAIN_PATH)WebServ.hpp $(CONFIG_FILE_PATH)Directive.hpp\
-	srcs/KQueue/KQueue.hpp srcs/CGI/CGI.hpp srcs/HttpProtocol/Request.hpp  srcs/HttpProtocol/Response.hpp srcs/HttpProtocol/Exceptions.hpp
+	srcs/KQueue/KQueue.hpp srcs/CGI/CGI.hpp srcs/HttpProtocol/Request.hpp  srcs/HttpProtocol/Response.hpp srcs/HttpProtocol/Exceptions.hpp $(RESPONSE_PATH)Methods.hpp
 
 all : $(NAME)
 

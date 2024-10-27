@@ -4,9 +4,10 @@
 
 bool    isAllowedDirectiveServ(std::string direc)
 {
-    std::string arr[7] = {"listen", "host", "server_name", "error_page", "client_max_body_size", "root", "index"};
+    std::string arr[10] = {"listen", "host", "server_name", "error_page", "client_max_body_size", "root", "index", "upload_path", "autoindex", "return"};
 
-    for (int i = 0; i < 7; i++)
+    for (int i = 0; i < 10; i++)
+
     {
         if (arr[i] == direc)
             return (1);
@@ -17,9 +18,10 @@ bool    isAllowedDirectiveServ(std::string direc)
 
 bool    isAllowedDirectiveloc(std::string direc)
 {
-    std::string arr[8] = {"autoindex", "allow_methods", "return", "alias", "cgi_path", "root", "index", "cgi_ext"};
+    std::string arr[7] = {"autoindex", "allow_methods", "return", "cgi_path", "root", "index", "cgi_ext"};
 
-    for (int i = 0; i < 8; i++)
+    for (int i = 0; i < 7; i++)
+
     {
         if (arr[i] == direc)
             return (1);
@@ -123,6 +125,8 @@ int checkDirValue(std::vector<std::string> &directive)
             if ((directive[0] != "error_page" || (directive[0] == "error_page" && i != directive.size() - 1)) && (ss.fail() || !ss.eof()))
                 return (-1);
             if (directive[0] == "client_max_body_size" && directive.size() != 2)
+                return (-1);
+            if (directive[0] == "listen" && directive.size() != 2)
                 return (-1);
         }
         else if (directive[0] == "autoindex")
@@ -269,7 +273,8 @@ int checkDirectives(std::vector<std::string> &conf, size_t i, Server &serv)
     return (i);
 }
 
-int checkServerBlock(std::vector<std::string> &conf, WebServ &main)
+int checkServerBlock(std::vector<std::string> &conf, Main &main)
+
 {
 
     std::vector<std::string> block;
@@ -312,7 +317,8 @@ int checkServerBlock(std::vector<std::string> &conf, WebServ &main)
 }
 
 
-int parseConfigFile(std::string config, WebServ &main)
+int parseConfigFile(std::string config, Main &main)
+
 {
     std::ifstream file(config);
 
