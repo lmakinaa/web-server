@@ -40,6 +40,9 @@ void    affiche(WebServ &main)
 
 int main(int ac, char *av[])
 {
+
+    signal(SIGPIPE, SIG_IGN);
+
     int confErr;
     WebServ    main;
 

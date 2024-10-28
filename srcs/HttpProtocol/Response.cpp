@@ -84,7 +84,7 @@ std::string WhatContentType(std::string uri) {
 }
 
 void HttpResponse::sendingResponse() {
-    int buffSize = 1024;
+    int buffSize = 50000;
     char buff[buffSize];
 
     int r = read(responseFd, buff, buffSize - 1);
@@ -95,6 +95,7 @@ void HttpResponse::sendingResponse() {
         send(clientSocket, "0\r\n\r\n", 5, 0);
         close(clientSocket);
         ended = true;
+        std::cerr << "The connection is ended and closed\n";
         return;
     }
 
@@ -109,7 +110,7 @@ void HttpResponse::sendingResponse() {
 
 
     if (send(clientSocket, fullMessage.c_str(), fullMessage.size(), 0) == -1) {
-        // if (M_DEBUG) perror("send(5)");
+        if (M_DEBUG) perror("send(5)");
         return;
     }
 }

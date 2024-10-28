@@ -34,7 +34,7 @@ public:
     long content_length;
     long total_read_bytes;
 
-private:
+
     std::string method ,uri, version, boundary, bodyFile;
     double chunk_size, bodyRead;
     std::map<std::string, std::string> headers;

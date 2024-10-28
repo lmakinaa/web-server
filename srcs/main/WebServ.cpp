@@ -27,20 +27,23 @@ int WebServ::handleExistedConnection(struct kevent* current)
     req->readRequest(current->ident);
 
     if(req->isDone == true) {
+
         KQueue::removeWatch(current->ident, EVFILT_READ);
 
-        delete req;
-        delete (t_eventData*)current->udata;
-
         // Open something (file or pipe) and pass it to response
-        int fd = open("testimg.jpg", O_RDWR); // I will open index.html for exemple
+        std::cout << "\033[1;31m" << req->uri.c_str()+1 << "\033[0m" << std::endl;
+        int fd = open(req->uri.c_str()+1, O_RDONLY);
         if (fd <= 0)
             perror("open(2)");
 
         KQueue::setFdNonBlock(fd);
 		
         M_DEBUG && std::cerr << "Request parsed and passed to execution\n" ;
-        KQueue::watchState(fd, new t_eventData("response ready", (void*)new HttpResponse(current->ident, fd)), EVFILT_READ);
+        KQueue::watchState(fd, new t_eventData("response ready", (void*)new HttpResponse(current->ident, fd, WhatContentType(req->uri))), EVFILT_READ);
+        
+        delete req;
+        delete (t_eventData*)current->udata;
+
         return 0;
     }
 	return 0;
@@ -51,8 +54,10 @@ void WebServ::switchToSending(struct kevent* current)
     t_eventData* evData = (t_eventData*) current->udata;
     evData->type = "send response";
 
+    std::cerr << ((HttpResponse*)evData->data)->clientSocket;
+
     KQueue::removeWatch(current->ident, EVFILT_READ);
-    KQueue::watchState(current->ident, evData, EVFILT_WRITE);
+    KQueue::watchState(((HttpResponse*)evData->data)->clientSocket, evData, EVFILT_WRITE);
 }
 
 void WebServ::sendResponse(struct kevent* current)

@@ -13,7 +13,7 @@
 #endif
 
 class HttpResponse{
-    private :
+    public :
         std::string Version;
         std::string ResponseCode;
         std::string ContentType;
@@ -21,12 +21,13 @@ class HttpResponse{
         std::vector<char> Body;
         int clientSocket;
         int responseFd;
-
-    public :
         bool ended;
-        HttpResponse(int clientSocket, int fd) : Version("HTTP/1.1"), ResponseCode("200 OK"), ContentType("text/html"), Connection("close"), clientSocket(clientSocket), responseFd(fd), ended(false) {
+
+
+        HttpResponse(int clientSocket, int fd, std::string ContentType) : Version("HTTP/1.1"), ResponseCode("200 OK"), ContentType(ContentType), Connection("close"), clientSocket(clientSocket), responseFd(fd), ended(false) {
             std::cerr << "tconstructa\n";
-            send(clientSocket, "HTTP/1.1 200\r\nContent-Type: image/jpg\r\nConnection: keep-alive\r\nTransfer-Encoding: chunked\r\n\r\n", 93, 0);
+            std::string headers = "HTTP/1.1 200\r\nContent-Type: " + ContentType + "\r\nConnection: keep-alive\r\nTransfer-Encoding: chunked\r\n\r\n";
+            send(clientSocket, headers.c_str(), headers.size(), 0);
         }
         ~HttpResponse() {close(responseFd);}
         void sendingResponse();
