@@ -48,8 +48,9 @@ const std::vector<char>& HttpResponse::GetBody(){
 }
 
 
-std::string WhatContentType(std::string uri){
-
+std::string WhatContentType(std::string uri) {
+    
+    // Use Switch case here
     if ( uri.rfind(".") == std::string::npos|| uri.substr(uri.rfind(".")) == ".html" || uri == "/")
         return "text/html";
     else if (uri.substr(uri.rfind(".")) == ".css")
@@ -80,4 +81,35 @@ std::string WhatContentType(std::string uri){
         return "video/x-msvideo";
     else
         return "application/octet-stream";
+}
+
+void HttpResponse::sendingResponse() {
+    int buffSize = 1024;
+    char buff[buffSize];
+
+    int r = read(responseFd, buff, buffSize - 1);
+    if (r == -1)
+        return;
+
+    if (r == 0) {
+        send(clientSocket, "0\r\n\r\n", 5, 0);
+        close(clientSocket);
+        ended = true;
+        return;
+    }
+
+    buff[r] = '\0';
+
+    std::stringstream tmp;
+    tmp << std::hex << r;
+    std::string chunkLenHex = tmp.str() + "\r\n";
+
+
+    std::string fullMessage = chunkLenHex + std::string(buff, r) + "\r\n";
+
+
+    if (send(clientSocket, fullMessage.c_str(), fullMessage.size(), 0) == -1) {
+        // if (M_DEBUG) perror("send(5)");
+        return;
+    }
 }

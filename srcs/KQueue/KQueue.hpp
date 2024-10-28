@@ -27,8 +27,8 @@ public:
     static int createKq();
     static void closeKq();
     static int getFd() {return m_fd;}
-    static int watchFd(int fd, t_eventData* evData);
-    static void removeFd(int fd);
+    static int watchState(int fd, t_eventData* evData, int type);
+    static void removeWatch(int fd, int type);
     static int getEvents(struct kevent* buffArray, int size);
     static void setFdNonBlock(int fd);
     

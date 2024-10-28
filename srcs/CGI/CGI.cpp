@@ -28,7 +28,7 @@ void CGI::readOutput(int fd, std::string& buff)
             break ;
     }
     delete[] cbuff;
-    KQueue::removeFd(fd);
+    KQueue::removeWatch(fd, EVFILT_READ);
     close(fd);
 }
 
@@ -98,8 +98,8 @@ void CGI::runScript(t_method reqMethod, const char* cgiPath, const char* argv[],
         
         close(fds[1]);
         KQueue::setFdNonBlock(fds[0]);
-        KQueue::watchFd(fds[0], (t_eventData*)fd);
-        // fds[0] will be closed by KQueue::removeFd()
+        KQueue::watchState(fds[0], (t_eventData*)fd, EVFILT_READ);
+        // fds[0] will be closed by KQueue::removeWatch()
         
     }
 }

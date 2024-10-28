@@ -2,6 +2,15 @@
 
 #include <iostream>
 #include <vector>
+#include <fstream>
+#include <unistd.h>
+#include <sys/socket.h>
+#include <string>
+#include <sstream>
+
+#ifndef M_DEBUG
+# define M_DEBUG 1
+#endif
 
 class HttpResponse{
     private :
@@ -10,8 +19,17 @@ class HttpResponse{
         std::string ContentType;
         std::string Connection;
         std::vector<char> Body;
+        int clientSocket;
+        int responseFd;
+
     public :
-        HttpResponse() : Version("HTTP/1.1"), ResponseCode("200 OK"), ContentType("text/html"), Connection("close"){}
+        bool ended;
+        HttpResponse(int clientSocket, int fd) : Version("HTTP/1.1"), ResponseCode("200 OK"), ContentType("text/html"), Connection("close"), clientSocket(clientSocket), responseFd(fd), ended(false) {
+            std::cerr << "tconstructa\n";
+            send(clientSocket, "HTTP/1.1 200\r\nContent-Type: image/jpg\r\nConnection: keep-alive\r\nTransfer-Encoding: chunked\r\n\r\n", 93, 0);
+        }
+        ~HttpResponse() {close(responseFd);}
+        void sendingResponse();
         void SetVersion(std::string value);
         void SetResponseCode(std::string value);
         void SetContentType(std::string value);

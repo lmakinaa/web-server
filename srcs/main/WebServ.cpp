@@ -1,12 +1,5 @@
 #include "WebServ.hpp"
 
-WebServ::WebServ()
-    : m_cEventData("client socket", NULL)
-    , m_openedSockets (0)
-{
-}
-
-// returns -1 if kevent failed
 int WebServ::handleNewConnection(struct kevent* current)
 {
     t_eventData *serverEvData = (t_eventData*)current->udata;
@@ -22,8 +15,7 @@ int WebServ::handleNewConnection(struct kevent* current)
     HttpRequest *req = new HttpRequest();
     t_eventData *clientEvData = new t_eventData("client socket", req);
 
-	KQueue::watchFd(clientSock, clientEvData);
-    m_openedSockets++;
+	KQueue::watchState(clientSock, clientEvData, EVFILT_READ);
 	return 0;
 }
 
@@ -35,51 +27,46 @@ int WebServ::handleExistedConnection(struct kevent* current)
     req->readRequest(current->ident);
 
     if(req->isDone == true) {
-        std::cerr << "-->" << req->total_read_bytes << "--" << req->content_length << '\n';
+        KQueue::removeWatch(current->ident, EVFILT_READ);
 
-        // std::cout << "<_________________Parsed Request__________>" << std::endl;
-        // std::cout << *req << std::endl;
-        // req->PerformChecks();
-        std::string response = "HTTP/1.1 201 Created\r\n";
-        response += "Content-Type: text/html\r\n";
-        response += "Content-Length: 0\r\n";
-        response += "\r\n";
-        send(current->ident, response.c_str(), response.size(), 0);
         delete req;
         delete (t_eventData*)current->udata;
-        KQueue::removeFd(current->ident);
-        std::cerr << "Closing connection..\n";
-        close(current->ident);
-        return 1;
+
+        // Open something (file or pipe) and pass it to response
+        int fd = open("testimg.jpg", O_RDWR); // I will open index.html for exemple
+        if (fd <= 0)
+            perror("open(2)");
+
+        KQueue::setFdNonBlock(fd);
+		
+        M_DEBUG && std::cerr << "Request parsed and passed to execution\n" ;
+        KQueue::watchState(fd, new t_eventData("response ready", (void*)new HttpResponse(current->ident, fd)), EVFILT_READ);
+        return 0;
     }
-
-    // Pass to CGI
-    // const char* argv[3] = {"php-cgi", "/Users/ijaija/web-server/srcs/CGI/test.php", NULL};
-    // std::string postBody ("var1=5454&var2=test&path=sds");
-    // CGI::runScript(
-    //     POST,
-    //     "/Users/ijaija/web-server/www/server-cgis/php-cgi",
-    //     argv,
-    //     postBody, current->ident);
-    // m_openedSockets++;
-
 	return 0;
+}
+
+void WebServ::switchToSending(struct kevent* current)
+{
+    t_eventData* evData = (t_eventData*) current->udata;
+    evData->type = "send response";
+
+    KQueue::removeWatch(current->ident, EVFILT_READ);
+    KQueue::watchState(current->ident, evData, EVFILT_WRITE);
 }
 
 void WebServ::sendResponse(struct kevent* current)
 {
-    std::string content;
+    t_eventData* evData = (t_eventData*) current->udata;
+    HttpResponse *res = (HttpResponse*)evData->data;
 
-    CGI::readOutput(current->ident, content);
+    res->sendingResponse();
 
-
-	std::string response = "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: " + std::to_string(content.length()) + "\n\n" + content;
-
-    if (send((long)current->udata, response.c_str(), response.size(), 0) == -1) {
-		(M_DEBUG) && std::cerr << "error while sending response: " << strerror(errno) << '\n' ;
-	}
-
-    close((long)current->udata);
+    if (res->ended) {
+        KQueue::removeWatch(current->ident, EVFILT_WRITE);
+        delete res;
+        delete evData;
+    }
 }
 
 void WebServ::run()
@@ -109,16 +96,19 @@ void WebServ::run()
             if (!std::strcmp((static_cast<t_eventData*>(events[i].udata))->type, "server socket")) {
 
                 handleNewConnection(&events[i]);
+                m_openedSockets++;
 				std::cout << "Connection accepted" << std::endl ;
             }
             else if (!std::strcmp(static_cast<t_eventData*>(events[i].udata)->type, "client socket")) {
 				handleExistedConnection(&events[i]);
-				std::cout << "Request parsed" << std::endl ;
             }
-            // else {
-            //     sendResponse(&events[i]);
-			// 	std::cout << "Response sent" << std::endl ;
-            // }
+            else if (!std::strcmp(static_cast<t_eventData*>(events[i].udata)->type, "response ready")) {
+                switchToSending(&events[i]);
+            }
+            else if (!std::strcmp(static_cast<t_eventData*>(events[i].udata)->type, "send response")) {
+                sendResponse(&events[i]);
+            }
+
         }
         // if (waitpid(-1, NULL, WNOHANG) == -1)
         //     std::perror("waitpid(2)");
