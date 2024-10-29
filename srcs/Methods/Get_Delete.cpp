@@ -1,6 +1,31 @@
 
 #include "Methods.hpp"
 
+std::string sessionIdGen(Server &Serv)
+{
+    std::string session_id;
+    std::string elems = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+
+    srand(time(NULL));
+    while (true)
+    {
+        session_id = "";
+
+        for (int i = 0; i < 20; i++)
+        {
+            session_id += elems[rand() % 62];
+        }
+        if (Serv.session_ids.find(session_id) == Serv.session_ids.end())
+        {
+            Serv.session_ids[session_id] = time(0);
+            break ;
+        }
+    }
+
+    return (session_id);
+    
+}
+
 
 int isDirectory(const std::string& path) {
     struct stat info;
@@ -160,9 +185,9 @@ std::string getFileFullPath(Server &serv, std::map<std::string, Location>::itera
     {
         root = serv.directives["root"].values[0];
 
-        path = root + requestPath;
+        path = requestPath;
 
-        // path.replace(0, it->first.size(), root);
+        path.replace(0, it->first.size(), root);
 
         int val = isDirectory(path);
         if (val == -1)
@@ -300,7 +325,7 @@ bool    stringMaching(std::string locat , std::string &requestPath)
 std::string    _GET_DELETE(WebServ &main)
 {
     Server serv = main.servers[0];
-    std::string requestPath = "/";
+    std::string requestPath = "/srcs/hello/main.hpp";
     std::string resquestedFile = "";
     std::string line;
     std::string response = "";

@@ -35,6 +35,7 @@ public:
 
     std::map<std::string, Directive> directives;
     std::map<std::string, Location> locations;
+    std::map<std::string, std::time_t> session_ids;
 
 private:
     int m_socket;
