@@ -33,7 +33,11 @@ int WebServ::handleExistedConnection(struct kevent* current)
         KQueue::removeWatch(current->ident, EVFILT_READ);
 
         // Open something (file or pipe) and pass it to response
-        std::cout << "\033[1;31m" << req->uri.c_str() << "\033[0m" << std::endl;
+        std::cout << "\033[1;31m|" << req->uri.c_str() << "|\033[0m" << std::endl;
+
+        // We should handle directories and root here 
+        if (req->uri == "/" || req->uri == "")
+            req->uri = "/index.html";
         std::string extension = req->uri.substr(req->uri.find_last_of("."));
         if (extension == ".php" || extension == ".py")
         {
