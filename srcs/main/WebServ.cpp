@@ -31,7 +31,7 @@ int WebServ::handleExistedConnection(struct kevent* current)
         KQueue::removeWatch(current->ident, EVFILT_READ);
 
         // Open something (file or pipe) and pass it to response
-        std::cout << "\033[1;31m" << req->uri.c_str()+1 << "\033[0m" << std::endl;
+        std::cout << "\033[1;31m" << req->uri.c_str() << "\033[0m" << std::endl;
         int fd = open(req->uri.c_str()+1, O_RDONLY);
         if (fd <= 0)
             perror("open(2)");
@@ -65,10 +65,11 @@ void WebServ::sendResponse(struct kevent* current)
     t_eventData* evData = (t_eventData*) current->udata;
     HttpResponse *res = (HttpResponse*)evData->data;
 
-    res->sendingResponse();
+    res->sendingResponse(current->data);
 
     if (res->ended) {
-        KQueue::removeWatch(current->ident, EVFILT_WRITE);
+        KQueue::removeWatch(res->clientSocket, EVFILT_WRITE);
+        close(res->clientSocket);
         delete res;
         delete evData;
     }

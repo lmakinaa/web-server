@@ -30,7 +30,7 @@ class HttpResponse{
             send(clientSocket, headers.c_str(), headers.size(), 0);
         }
         ~HttpResponse() {close(responseFd);}
-        void sendingResponse();
+        void sendingResponse(long buffSize);
         void SetVersion(std::string value);
         void SetResponseCode(std::string value);
         void SetContentType(std::string value);

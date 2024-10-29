@@ -83,34 +83,33 @@ std::string WhatContentType(std::string uri) {
         return "application/octet-stream";
 }
 
-void HttpResponse::sendingResponse() {
-    int buffSize = 50000;
+void HttpResponse::sendingResponse(long buffSize) {
+
+    buffSize /= 1.75;
+
+    std::cerr << buffSize << '\n';
+
     char buff[buffSize];
 
-    int r = read(responseFd, buff, buffSize - 1);
-    if (r == -1)
-        return;
-
-    if (r == 0) {
-        send(clientSocket, "0\r\n\r\n", 5, 0);
-        close(clientSocket);
-        ended = true;
-        std::cerr << "The connection is ended and closed\n";
+    int r = read(responseFd, buff, buffSize);
+    if (r <= 0) {
+        if (r == 0) {
+            send(clientSocket, "0\r\n\r\n", 5, 0);
+            ended = true;
+            std::cerr << "The connection is ended and closed\n";
+        }
         return;
     }
 
-    buff[r] = '\0';
 
     std::stringstream tmp;
     tmp << std::hex << r;
     std::string chunkLenHex = tmp.str() + "\r\n";
-
-
     std::string fullMessage = chunkLenHex + std::string(buff, r) + "\r\n";
 
 
     if (send(clientSocket, fullMessage.c_str(), fullMessage.size(), 0) == -1) {
-        if (M_DEBUG) perror("send(5)");
-        return;
+        std::cerr << "Error in send: possibly client disconnect\n";
+        ended = true;  // Treat send failure as a connection issue
     }
 }
