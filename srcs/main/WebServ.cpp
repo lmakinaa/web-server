@@ -27,12 +27,28 @@ int WebServ::handleExistedConnection(struct kevent* current)
     req->readRequest(current->ident);
 
     if(req->isDone == true) {
+        int fd;
+        int body_fd;
 
         KQueue::removeWatch(current->ident, EVFILT_READ);
 
         // Open something (file or pipe) and pass it to response
         std::cout << "\033[1;31m" << req->uri.c_str() << "\033[0m" << std::endl;
-        int fd = open(req->uri.c_str()+1, O_RDONLY);
+        std::string extension = req->uri.substr(req->uri.find_last_of("."));
+        if (extension == ".php" || extension == ".py")
+        {
+            std::cout << "\033[1;31m" << req->bodyFile << "\033[0m" << std::endl;
+            if (req->bodyFile.empty())
+                body_fd = 0;
+            else
+                body_fd = open(req->bodyFile.c_str(), O_RDONLY);
+            if (body_fd < 0)
+                perror("Error opening body file");
+            fd = CGI::responseCGI(req, body_fd);
+           
+        }
+        else
+            fd = open(req->uri.c_str()+1, O_RDONLY);
         if (fd <= 0)
             perror("open(2)");
 

@@ -31,6 +31,9 @@ public:
     void generateUniqueFile(void);
     void unchunkBody(char *request, size_t size);
     bool isDone;
+    std::string getHeader(const std::string& key){
+        return headers[key];
+    };
     long content_length;
     long total_read_bytes;
 
