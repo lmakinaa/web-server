@@ -50,8 +50,8 @@ const std::vector<char>& HttpResponse::GetBody(){
 
 std::string WhatContentType(std::string uri) {
     
-    // Use Switch case here
-    if ( uri.rfind(".") == std::string::npos|| uri.substr(uri.rfind(".")) == ".html" || uri == "/")
+    if ( uri.rfind(".") == std::string::npos|| uri.substr(uri.rfind(".")) == ".html" || uri == "/" ||
+     uri.substr(uri.rfind(".")) == ".php" || uri.substr(uri.rfind(".")) == ".py" || strncmp(uri.substr(uri.rfind(".")).c_str(),".php?",5) == 0 || strncmp(uri.substr(uri.rfind(".")).c_str(),".py?",4) == 0)
         return "text/html";
     else if (uri.substr(uri.rfind(".")) == ".css")
         return "text/css";
@@ -82,6 +82,7 @@ std::string WhatContentType(std::string uri) {
     else
         return "application/octet-stream";
 }
+
 
 void HttpResponse::sendingResponse(long buffSize) {
 

@@ -39,7 +39,7 @@ int WebServ::handleExistedConnection(struct kevent* current)
         if (req->uri == "/" || req->uri == "")
             req->uri = "/index.html";
         std::string extension = req->uri.substr(req->uri.find_last_of("."));
-        if (extension == ".php" || extension == ".py")
+        if (strcmp(extension.c_str(), ".php") == 0 || strcmp(extension.c_str(), ".py") == 0 || strncmp(extension.c_str(), ".php?", 5) == 0 || strncmp(extension.c_str(), ".py?",5) == 0)
         {
             std::cout << "\033[1;31m" << req->bodyFile << "\033[0m" << std::endl;
             if (req->bodyFile.empty())
