@@ -24,7 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 echo "Nickname: " . htmlspecialchars($nickname) . "<br>";
             } else {
                 echo "Error: Could not save the uploaded file.";
-            }
+            } 
         } else {
             echo "Error: Only PDF files are allowed.";
         }
