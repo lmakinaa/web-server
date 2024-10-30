@@ -42,15 +42,13 @@ void HttpRequest::parseHeaders(std::string line)
 
     key = ft_strtrim(key);
     value = ft_strtrim(value);
-
+    M_DEBUG && std::cerr << line;
     if (key == "Content-Length")
         content_length = std::stod(value);
-    else if (value.find("boundary=") != std::string::npos)
-        boundary = value.substr(value.find("boundary=") + 9, value.size() - 1);
     else if (key == "Transfer-Encoding")
         TransferEncoding = value;
     else
-        headers[key] = value;;
+        headers[key] = value;
 }
 
 void HttpRequest::parseFirstLine(std::string line)

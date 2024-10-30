@@ -16,6 +16,8 @@ class HttpRequest;
 
 #define NOCHILD -2
 
+extern char **environ;
+
 class CGI {
 
 public:
