@@ -10,6 +10,7 @@
 #include <sys/socket.h>
 #include <algorithm>
 #include "Exceptions.hpp"
+#include "../server/Server.hpp"
 
 enum ParseState{
     FirstLine,
@@ -47,6 +48,7 @@ public:
     long long chunkPos;
     std::string TransferEncoding;
     bool skipNextLine;
+    Server* s;
 
 };
 

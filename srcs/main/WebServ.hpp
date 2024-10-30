@@ -26,7 +26,7 @@ class   WebServ
 public:
     WebServ()
     : m_cEventData("client socket", NULL)
-    , m_openedSockets (0)
+    , m_watchedStates (0)
     {
     }
     void run();
@@ -40,6 +40,6 @@ public:
     t_eventData m_cEventData;
 
 private:
-    int m_openedSockets;
+    int m_watchedStates;
 
 };

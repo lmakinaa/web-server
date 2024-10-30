@@ -155,7 +155,7 @@ int checkLocation(std::vector<std::string> &conf, size_t i, Location &loc)
 
         if (checkDirValue(directive) == -1)
         {
-            std::cout << "Syntaxe error in line " << i + 1 << ": invalid directive" << std::endl;
+            M_DEBUG && std::cerr << "Syntaxe error in line " << i + 1 << ": invalid directive" << std::endl;
             return (-1);
         }
 
@@ -167,7 +167,7 @@ int checkLocation(std::vector<std::string> &conf, size_t i, Location &loc)
         {
             if (directive[directive.size() - 1][directive[directive.size() - 1].size() - 1] != ';')
             {
-                std::cout << "Syntaxe error in line " << i + 1 << ": missing semi-colon" << std::endl;
+                M_DEBUG && std::cerr << "Syntaxe error in line " << i + 1 << ": missing semi-colon" << std::endl;
                 return (-1);
             }
             else
@@ -180,7 +180,7 @@ int checkLocation(std::vector<std::string> &conf, size_t i, Location &loc)
                             directive[j].pop_back();
                         if (directive[j].empty())
                         {
-                            std::cout << "Syntaxe error in line " << i + 1 << ": invalid directive" << std::endl;
+                            M_DEBUG && std::cerr << "Syntaxe error in line " << i + 1 << ": invalid directive" << std::endl;
                             return (-1);
                         }
                         loc.directives[directive[0]].values.push_back(directive[j]);
@@ -188,7 +188,7 @@ int checkLocation(std::vector<std::string> &conf, size_t i, Location &loc)
                 }
                 else
                 {
-                    std::cout << "Syntaxe error in line " << i + 1 << ": invalid directive" << std::endl;
+                    M_DEBUG && std::cerr << "Syntaxe error in line " << i + 1 << ": invalid directive" << std::endl;
                     return (-1);
                 }
             }
@@ -214,7 +214,7 @@ int checkDirectives(std::vector<std::string> &conf, size_t i, Server &serv)
 
         if (checkDirValue(directive) == -1)
         {
-            std::cout << "Syntaxe error in line " << i + 1 << ": invalid directive" << std::endl;
+            M_DEBUG && std::cerr << "Syntaxe error in line " << i + 1 << ": invalid directive" << std::endl;
             return (-1);
         }
 
@@ -222,7 +222,7 @@ int checkDirectives(std::vector<std::string> &conf, size_t i, Server &serv)
         {
             if (directive.size() != 3 || directive[0] != "location" || directive[2] != "{")
             {
-                std::cout << "Syntaxe error in line " << i + 1 << ": invalid location block" << std::endl;
+                M_DEBUG && std::cerr << "Syntaxe error in line " << i + 1 << ": invalid location block" << std::endl;
                 return (-1);
             }
             Location loc;
@@ -240,7 +240,7 @@ int checkDirectives(std::vector<std::string> &conf, size_t i, Server &serv)
         {
             if (directive[directive.size() - 1][directive[directive.size() - 1].size() - 1] != ';')
             {
-                std::cout << "Syntaxe error in line " << i + 1 << ": missing semi-colon" << std::endl;
+                M_DEBUG && std::cerr << "Syntaxe error in line " << i + 1 << ": missing semi-colon" << std::endl;
                 return (-1);
             }
             else
@@ -253,7 +253,7 @@ int checkDirectives(std::vector<std::string> &conf, size_t i, Server &serv)
                             directive[j].pop_back();
                         if (directive[j].empty())
                         {
-                            std::cout << "Syntaxe error in line " << i + 1 << ": invalid directive" << std::endl;
+                            M_DEBUG && std::cerr << "Syntaxe error in line " << i + 1 << ": invalid directive" << std::endl;
                             return (-1);
                         }
                         serv.directives[directive[0]].values.push_back(directive[j]);
@@ -261,7 +261,7 @@ int checkDirectives(std::vector<std::string> &conf, size_t i, Server &serv)
                 }
                 else
                 {
-                    std::cout << "Syntaxe error in line " << i + 1 << ": invalid directive" << std::endl;
+                    M_DEBUG && std::cerr << "Syntaxe error in line " << i + 1 << ": invalid directive" << std::endl;
                     return (-1);
                 }
             }
@@ -286,7 +286,7 @@ int checkServerBlock(std::vector<std::string> &conf, WebServ &main)
 
         if (block.size() != 2 || block[0] != "server" || block[1] != "{")
         {
-            std::cout << "Syntaxe error in line " << i + 1 << ": invalid server block" << std::endl;
+            M_DEBUG && std::cerr << "Syntaxe error in line " << i + 1 << ": invalid server block" << std::endl;
             return (-1);
         }
         Server serv;
@@ -296,13 +296,13 @@ int checkServerBlock(std::vector<std::string> &conf, WebServ &main)
 
         if (serv.directives.find("listen") == serv.directives.end())
         {
-            std::cout << "Syntaxe error : missing listen directive" << std::endl;
+            M_DEBUG && std::cerr << "Syntaxe error : missing listen directive" << std::endl;
             return (-1);
         }
 
         if (serv.directives.find("root") == serv.directives.end())
         {
-            std::cout << "Syntaxe error : missing root directive" << std::endl;
+            M_DEBUG && std::cerr << "Syntaxe error : missing root directive" << std::endl;
             return (-1);
         }
 

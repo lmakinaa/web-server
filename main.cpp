@@ -8,32 +8,32 @@ void    affiche(WebServ &main)
         std::map<std::string, Directive>::iterator it = main.servers[i].directives.begin();
         for ( ; it != main.servers[i].directives.end(); it++)
         {
-            std::cout << (*it).first << ": ";
+            M_DEBUG && std::cerr << (*it).first << ": ";
             for (size_t j = 0; j < (*it).second.values.size(); j++)
             {
-                std::cout << (*it).second.values[j] << " ";
+                M_DEBUG && std::cerr << (*it).second.values[j] << " ";
             }
-            std::cout << std::endl;
+            M_DEBUG && std::cerr << std::endl;
         }
 
         std::map<std::string, Location>::iterator it2 = main.servers[i].locations.begin();
         for ( ; it2 != main.servers[i].locations.end(); it2++)
         {
-            std::cout << "location " << (*it2).first << " {\n";
+            M_DEBUG && std::cerr << "location " << (*it2).first << " {\n";
 
 
             std::map<std::string, Directive>::iterator it3 = (*it2).second.directives.begin();
             for ( ; it3 != (*it2).second.directives.end(); it3++)
             {
-                std::cout << (*it3).first << ": ";
+                M_DEBUG && std::cerr << (*it3).first << ": ";
                 for (size_t j = 0; j < (*it3).second.values.size(); j++)
                 {
-                    std::cout << (*it3).second.values[j] << " ";
+                    M_DEBUG && std::cerr << (*it3).second.values[j] << " ";
                 }
-                std::cout << std::endl;
+                M_DEBUG && std::cerr << std::endl;
             }
 
-            std::cout << "}\n";
+            M_DEBUG && std::cerr << "}\n";
         }
     }
 }

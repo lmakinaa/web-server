@@ -193,7 +193,7 @@ std::string getFileFullPath(Server &serv, std::map<std::string, Location>::itera
         if (val == -1)
         {
             // throw 404NotFoundClass;
-            std::cout << "0\n";
+            M_DEBUG && std::cerr << "0\n";
             return "";
         }
         else if (val == 1)
@@ -202,7 +202,7 @@ std::string getFileFullPath(Server &serv, std::map<std::string, Location>::itera
             if (_Method == "DELETE")
             {
                 // throw 403 Forbidden
-                std::cout << "403 Forbidden" << std::endl;
+                M_DEBUG && std::cerr << "403 Forbidden" << std::endl;
                 return "";
             }
             sec_path = path;
@@ -215,20 +215,20 @@ std::string getFileFullPath(Server &serv, std::map<std::string, Location>::itera
             if (serv.directives.find("return") != serv.directives.end())
             {
                 // should redirect to ...
-                std::cout << "redirect to " << serv.directives["return"].values[0] << std::endl;
+                M_DEBUG && std::cerr << "redirect to " << serv.directives["return"].values[0] << std::endl;
             }
             else if (serv.directives.find("autoindex") != serv.directives.end()
                         &&  serv.directives["autoindex"].values[0] == "on")
             {
                 // should list all files
-                std::cout << "list all files\n";
+                M_DEBUG && std::cerr << "list all files\n";
                 listAllfiles(sec_path);
                 return "";
             }
             else
             {
                 // throw 403ForbiddenClass;
-                std::cout << "1\n";
+                M_DEBUG && std::cerr << "1\n";
                 return "";
             }
         }
@@ -239,7 +239,7 @@ std::string getFileFullPath(Server &serv, std::map<std::string, Location>::itera
             else
             {
                 // throw 404NotFoundClass;
-                std::cout << "2\n";
+                M_DEBUG && std::cerr << "2\n";
                 return "";
             }
         }
@@ -257,7 +257,7 @@ std::string getFileFullPath(Server &serv, std::map<std::string, Location>::itera
         if (val == -1)
         {
             // throw 404NotFoundClass;
-            std::cout << "3\n";
+            M_DEBUG && std::cerr << "3\n";
             return "";
         }
         else if (val == 1)
@@ -266,7 +266,7 @@ std::string getFileFullPath(Server &serv, std::map<std::string, Location>::itera
             if (_Method == "DELETE")
             {
                 // throw 403 Forbidden
-                std::cout << "403 Forbidden" << std::endl;
+                M_DEBUG && std::cerr << "403 Forbidden" << std::endl;
                 return "";
             }
             sec_path = path;
@@ -279,20 +279,20 @@ std::string getFileFullPath(Server &serv, std::map<std::string, Location>::itera
             if (it->second.directives.find("return") != it->second.directives.end())
             {
                 // should redirect to ...
-                std::cout << "redirect to " << it->second.directives["return"].values[0] << std::endl;
+                M_DEBUG && std::cerr << "redirect to " << it->second.directives["return"].values[0] << std::endl;
             }
             else if (it->second.directives.find("autoindex") != it->second.directives.end()
                         &&  it->second.directives["autoindex"].values[0] == "on")
             {
                 // should list all files
-                std::cout << "list all files\n";
+                M_DEBUG && std::cerr << "list all files\n";
                 listAllfiles(sec_path);
                 return "";
             }
             else
             {
                 // throw 403ForbiddenClass;
-                std::cout << "4\n";
+                M_DEBUG && std::cerr << "4\n";
                 return "";
             }
         }
@@ -303,7 +303,7 @@ std::string getFileFullPath(Server &serv, std::map<std::string, Location>::itera
             else
             {
                 // throw 404NotFoundClass;
-                std::cout << "5\n";
+                M_DEBUG && std::cerr << "5\n";
                 return "";
             }
         }
@@ -354,7 +354,7 @@ std::string    _GET_DELETE(WebServ &main)
         if (resquestedFile == "")
         {
             // throw 404NotFoundClass;
-            std::cout << "404 NOt found" << std::endl;
+            M_DEBUG && std::cerr << "404 NOt found" << std::endl;
             return "";
         }
 
@@ -362,14 +362,14 @@ std::string    _GET_DELETE(WebServ &main)
         if (access(resquestedFile.c_str(), R_OK) != 0)
         {
             // Throw 403 Forbidden
-            std::cout << "403 Forbidden" << std::endl;
+            M_DEBUG && std::cerr << "403 Forbidden" << std::endl;
             return "";
         }
     }
     else
     {
         // throw 404NotFoundClass;
-        std::cout << "404 NOt found" << std::endl;
+        M_DEBUG && std::cerr << "404 NOt found" << std::endl;
     }
 
     if (_Method == "DELETE")
@@ -379,6 +379,6 @@ std::string    _GET_DELETE(WebServ &main)
     }
 
     // Send the file to the Client.
-    std::cout << "Result : " << resquestedFile << std::endl;
+    M_DEBUG && std::cerr << "Result : " << resquestedFile << std::endl;
     return (resquestedFile);
 }

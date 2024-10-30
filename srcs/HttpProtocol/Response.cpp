@@ -86,9 +86,7 @@ std::string WhatContentType(std::string uri) {
 
 void HttpResponse::sendingResponse(long buffSize) {
 
-    buffSize /= 1.75;
-
-    // M_DEBUG && std::cerr << buffSize << '\n';
+    buffSize *= 0.80; // I wont use the whole available buffSize to decrease the load on it
 
     char buff[buffSize];
 
@@ -99,18 +97,22 @@ void HttpResponse::sendingResponse(long buffSize) {
             ended = true;
             M_DEBUG && std::cerr << "The connection is ended and closed\n";
         }
+        // When using non block mode, r may returns -1 if there is no data in the fd
+        // and it will normally wait but here it'll return -1
         return;
     }
 
-
     std::stringstream tmp;
     tmp << std::hex << r;
+
     std::string chunkLenHex = tmp.str() + "\r\n";
     std::string fullMessage = chunkLenHex + std::string(buff, r) + "\r\n";
 
-
     if (send(clientSocket, fullMessage.c_str(), fullMessage.size(), 0) == -1) {
-        M_DEBUG && std::cerr << "Error in send: possibly client disconnect\n";
+        if (M_DEBUG) {
+            std::cerr << "the client probably disconnected -- ";
+            perror("send(2)");
+        }
         ended = true;  // Treat send failure as a connection issue
     }
 }

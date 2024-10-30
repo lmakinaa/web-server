@@ -1,0 +1,7 @@
+handling directories
+
+any error inside parsing request or generating the response should be thrown with error code and cleaned after that. It should not be just ignored
+
+PATH_INFO
+
+∗ Your program should call the CGI with the file requested as first argument.

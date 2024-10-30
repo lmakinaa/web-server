@@ -42,7 +42,7 @@ void HttpRequest::parseHeaders(std::string line)
 
     key = ft_strtrim(key);
     value = ft_strtrim(value);
-    M_DEBUG && std::cerr << line;
+
     if (key == "Content-Length")
         content_length = std::stod(value);
     else if (key == "Transfer-Encoding")
@@ -132,7 +132,7 @@ void HttpRequest::unchunkBody(char *request, size_t size)
                 // Find the end of the chunk size line
                 char *endOfSize = strstr(request, "\r\n");
                 if (endOfSize == nullptr) {
-                    std::cout << "\033[1;31mIncomplete chunk size line\033[0m" << std::endl;
+                    M_DEBUG && std::cerr << "\033[1;31mIncomplete chunk size line\033[0m" << std::endl;
                     return;
                 }
 
@@ -141,7 +141,7 @@ void HttpRequest::unchunkBody(char *request, size_t size)
                 chunk_size = std::stoul(request, nullptr, 16);
                 *endOfSize = '\r'; // Restore the original string
 
-                std::cout << "\033[1;32mChunk size: " << chunk_size << "\033[0m" << std::endl;
+                M_DEBUG && std::cerr << "\033[1;32mChunk size: " << chunk_size << "\033[0m" << std::endl;
 
                 // Move the request pointer past the chunk size line
                 size_t sizeLineLength = endOfSize - request + 2; // +2 for \r\n
@@ -155,7 +155,7 @@ void HttpRequest::unchunkBody(char *request, size_t size)
                 }
             }
             catch(const std::exception& e){
-                std::cout << "\033[1;31mFailed to parse chunk size: " << e.what() << "\033[0m" << std::endl;
+                M_DEBUG && std::cerr << "\033[1;31mFailed to parse chunk size: " << e.what() << "\033[0m" << std::endl;
                 return;
             }
         }
@@ -180,7 +180,7 @@ void HttpRequest::unchunkBody(char *request, size_t size)
                 request += 2;
                 size -= 2;
             } else {
-                std::cout << "\033[1;31mMissing chunk terminator\033[0m" << std::endl;
+                M_DEBUG && std::cerr << "\033[1;31mMissing chunk terminator\033[0m" << std::endl;
                 return;
             }
         }
@@ -218,9 +218,8 @@ void HttpRequest::readRequest(int fd) {
     read_bytes = recv(fd, buffer, buffer_size, 0);
     if (read_bytes <= 0) 
     {
-        if (read_bytes < 0)
-            perror("recv(2)");
-        isDone = true;
+        if (read_bytes == 0)
+            isDone = true;
         return;
     }
 

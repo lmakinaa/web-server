@@ -40,8 +40,8 @@ int CGI::responseCGI(HttpRequest* req, int bodyFd) {
     {
         dup2(outputPipe[1], 1);
         dup2(bodyFd, 0);
+
         close(bodyFd);
-        
         closePipe(outputPipe);
 
         setenv("SCRIPT_FILENAME", scriptPath.c_str(), 1);
@@ -61,15 +61,14 @@ int CGI::responseCGI(HttpRequest* req, int bodyFd) {
     }
     else
     {
-
         if (pid == -1) {
             if (M_DEBUG)
                 perror("fork(2)");
-            return (closePipe(outputPipe), -1); // No response
+            return (closePipe(outputPipe), close(bodyFd), -1); // Should throw
         }
-
         
         close(outputPipe[1]);
+        close(bodyFd);
         KQueue::setFdNonBlock(outputPipe[0]);
         
     }

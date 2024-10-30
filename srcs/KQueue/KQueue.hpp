@@ -9,16 +9,11 @@
 #include <unistd.h>
 #include <iostream>
 #include <fcntl.h>
+#include "../server/Server.hpp"
 
 #ifndef M_DEBUG
 # define M_DEBUG 1
 #endif
-
-typedef struct s_eventData {
-    const char* type;
-    void* data;
-    s_eventData(const char* type, void* data): type(type), data(data){}
-} t_eventData;
 
 class KQueue
 {

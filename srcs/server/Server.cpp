@@ -27,8 +27,6 @@ void Server::init()
 
 	m_sockLen = sizeof(m_sockAddress);
 
-
-	// if (inet_pton(AF_INET, directives["host"].values[0].c_str(), &m_sockAddress.sin_addr.s_addr) == 0) 
 	if (inet_pton(AF_INET, directives["host"].values[0].c_str(), &m_sockAddress.sin_addr.s_addr) == 0) 
 		throw std::runtime_error("invalide Ip address");
 
@@ -36,8 +34,6 @@ void Server::init()
 	if (setsockopt(m_socket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1)
 		throw std::runtime_error((std::string("setsockopt(2): ") + strerror(errno)));
 
-	// int f = fcntl(m_socket, F_GETFL);
-	// fcntl(m_socket, F_SETFL, f | O_NONBLOCK);
     KQueue::setFdNonBlock(m_socket);
 
 	if (bind(m_socket, (sockaddr*) &m_sockAddress, m_sockLen) == -1)
@@ -51,4 +47,5 @@ void Server::init()
 
 
     m_sEventData.data = &m_sockData;
+    m_sEventData.s = this;
 }
