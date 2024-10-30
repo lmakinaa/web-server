@@ -34,7 +34,7 @@ public:
     std::string getHeader(const std::string& key){
         return headers[key];
     };
-    long content_length;
+    long content_length; 
     long total_read_bytes;
 
 
