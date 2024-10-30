@@ -1,129 +1,124 @@
-// #include "CGI.hpp"
+#include "CGI.hpp"
 
-// extern char **environ;
-
-// t_eventData CGI::m_cgiEventData("cgi response", NULL);
-
-// void CGI::readOutput(int fd, std::string& buff)
-// {
-//     char* cbuff; 
-//     try {cbuff = new char[BUFF_SIZE]();} catch(std::exception&e) {return ;} // No response if fail
-//     size_t count = 0;
-//     while (1) {
-//         int r = read(fd, cbuff, BUFF_SIZE);
-
-//         if (r <= 0) {
-//             if (r == -1 && M_DEBUG)
-//                 perror("read(2)");
-//             break ; // No response
-//         }
-
-//         count += r;
-//         if (count > buff.max_size())
-//             break ; // No response
-
-//         buff.append(cbuff, r);
-//         std::memset(cbuff, 0, r + 1);
-//         if (r < BUFF_SIZE)
-//             break ;
-//     }
-//     delete[] cbuff;
-//     // KQueue::removeFd(fd);
-//     close(fd);
-// }
-
-// static void closePipe(int fds[2])
-// {
-//     close(fds[0]);
-//     close(fds[1]);
-// }
-
-// int CGI::runScript(t_method reqMethod, const char* cgiPath, const char* argv[], std::string& postData, long fd)
-// {
-//     int fds[2];
-//     if (pipe(fds) == -1) {
-//         if (M_DEBUG)
-//             perror("pipe(2)");
-//         return ; // No response. Todo: send internal error response and close connection
-//     }
-//     int input_pipe[2];
-//     if (pipe(input_pipe) == -1) {
-//         if (M_DEBUG)
-//             perror("pipe(2)");
-//         return ; // No response
-//     }
-
-//     int pid = fork();
-//     if (!pid)
-//     {
-//         dup2(fds[1], 1);
-//         dup2(input_pipe[0], 0);
-        
-//         closePipe(input_pipe);
-//         closePipe(fds);
-
-//         setenv("SCRIPT_FILENAME", argv[1], 1);
-//         setenv("REDIRECT_STATUS", "200", 1);
-//         setenv("CONTENT_TYPE", "application/x-www-form-urlencoded", 1);
-//         setenv("REQUEST_METHOD", reqMethod == POST ? "POST":(reqMethod == GET ? "GET":"DELETE"), 1);
-
-//         (reqMethod == POST) && setenv("CONTENT_LENGTH", std::to_string(postData.length()).c_str(), 1);
-//         (reqMethod == GET) && setenv("QUERY_STRING", postData.c_str(), 1);
-        
-//         if (execve(cgiPath, const_cast<char* const*>(argv), environ) == -1) {
-//             if (M_DEBUG)
-//                 perror("execve(2)");
-//             exit(1);
-//         }
-//     }
-//     else
-//     {
-
-//         if (pid == -1) {
-//             if (M_DEBUG)
-//                 perror("fork(2)");
-//             return (closePipe(fds), -1); // No response
-//         }
-
-//         write(input_pipe[1], postData.c_str(), postData.length());
-//         closePipe(input_pipe);
-
-//         // if (waitpid(pid, NULL, 0) == -1)
-//         // {
-//         //     if (M_DEBUG)
-//         //         std::perror("waitpid(2)");
-//         //     return (closePipe(fds)); // No response
-//         // }
-
-        
-//         close(fds[1]);
-//         // KQueue::setFdNonBlock(fds[0]);
-//         // KQueue::watchFd(fds[0], (t_eventData*)fd);
-//         // fds[0] will be closed by KQueue::removeFd()
-//         return fds[0];
-//     }
-// }
-
-// int main()
-// {
-//     const char* cgiPath = "/Users/ijaija/web-server/www/server-cgis/python-cgi";
-//     const char* cgi = "php";
-//     const char* file = "/Users/ijaija/web-server/srcs/CGI/test.py";
-//     const char* argv[3];
-//     argv[0] = cgi;
+char** CGI::setupCGIEnvironment(HttpRequest* req) {
+    std::vector<std::string> envVars;
     
+    std::string documentRoot = "/Users/ijaija/merge"; 
+    std::string scriptPath = req->uri;
+    std::string scriptName = req->uri;
+    
+    size_t queryPos = scriptPath.find('?');
+    if (queryPos != std::string::npos) {
+        scriptPath = documentRoot + scriptPath.substr(0, queryPos);
+        scriptName = scriptName.substr(0, queryPos);
+    }
+    else
+        scriptPath = documentRoot + scriptPath;
 
-//     argv[1] = file;
-//     argv[2] = NULL;
+    std::cerr << scriptPath << '\n';
 
-//     std::string buff;
+    envVars.push_back("REDIRECT_STATUS=200");
+    envVars.push_back("GATEWAY_INTERFACE=CGI/1.1");
+    envVars.push_back("SERVER_PROTOCOL=HTTP/1.1");
+    envVars.push_back("SERVER_SOFTWARE=CustomWebServer/1.0");
+    envVars.push_back("SERVER_NAME=localhost");
+    envVars.push_back("SERVER_PORT=8080");
+    envVars.push_back("REQUEST_METHOD=" + req->method);
+    envVars.push_back("SCRIPT_FILENAME=" + scriptPath);
+    envVars.push_back("SCRIPT_NAME=" + scriptName);
+    envVars.push_back("DOCUMENT_ROOT=" + documentRoot);
+    envVars.push_back("PATH_TRANSLATED=" + scriptPath);
+    // envVars.push_back("CONTENT_TYPE=multipart/form-data; boundary=" + req->boundary);
 
-// std::string postData = "var1=5454&var2=test&path=sds";
+    
+    if (queryPos != std::string::npos) {
+        envVars.push_back("QUERY_STRING=" + req->uri.substr(queryPos + 1));
+    } else {
+        envVars.push_back("QUERY_STRING=");
+    }
 
-//     CGI::runScript(POST, cgiPath, argv, postData);
+    if (req->method == "POST") {
+        envVars.push_back("CONTENT_LENGTH=" + std::to_string(req->content_length));
+        std::string contentType = req->getHeader("Content-Type"); // this is not parsed
+        // if (!contentType.empty()) {
+            std::cerr << req->boundary.substr(0, req->boundary.size() - 2) << "----" << req->boundary.substr(0, req->boundary.size() - 2).size() << '\n';
+            envVars.push_back("CONTENT_TYPE=multipart/form-data; boundary=" + req->boundary.substr(0, req->boundary.size() - 2));
+        // }
+    }
 
-//     std::cout << buff << std::endl;
-//     return 0;
+    char** env = new char*[envVars.size() + 1];
+    for (size_t i = 0; i < envVars.size(); ++i) {
+        env[i] = strdup(envVars[i].c_str());
+    }
+    env[envVars.size()] = NULL;
 
-// }
+    for (size_t i = 0; env[i] != nullptr; ++i) {
+        std::cerr << env[i] << '\n';
+    }
+
+    return env;
+}
+int CGI::responseCGI(HttpRequest* req, int BodyFd) {
+    int pipe_in[2];
+    int pipe_out[2];
+    
+    if (pipe(pipe_in) < 0 || pipe(pipe_out) < 0) {
+        throw std::runtime_error("Failed to create pipes");
+    }
+
+    pid_t pid = fork();
+    if (pid < 0) {
+        close(pipe_in[0]); close(pipe_in[1]);
+        close(pipe_out[0]); close(pipe_out[1]);
+        throw std::runtime_error("Fork failed");
+    }
+
+    if (pid == 0) {
+        try {
+            close(pipe_in[1]);
+            close(pipe_out[0]);
+
+            dup2(pipe_in[0], STDIN_FILENO);
+            dup2(pipe_out[1], STDOUT_FILENO);
+
+            close(pipe_in[0]);
+            close(pipe_out[1]);
+
+            char** env = setupCGIEnvironment(req);
+
+            char* const args[] = {
+                const_cast<char*>("/Users/ijaija/merge/www/server-cgis/php-cgi"),
+                nullptr
+            };
+
+            execve(args[0], args, env);
+
+            for (int i = 0; env[i] != nullptr; ++i) {
+                free(env[i]);
+            }
+            delete[] env;
+            
+            throw std::runtime_error("Failed to execute CGI script");
+        }
+        catch (const std::exception& e) {
+            exit(1);
+        }
+    }
+
+    close(pipe_in[0]);
+    close(pipe_out[1]);
+
+    if (req->method == "POST" && BodyFd != -1) {
+        char buffer[4096];
+        ssize_t bytes_read;
+        while ((bytes_read = read(BodyFd, buffer, sizeof(buffer))) > 0) {
+            if (write(pipe_in[1], buffer, bytes_read) == -1)
+                perror("write(2)");
+        }
+    }
+
+    close(pipe_in[1]);
+
+    return pipe_out[0];
+}
 

@@ -88,7 +88,7 @@ void HttpResponse::sendingResponse(long buffSize) {
 
     buffSize /= 1.75;
 
-    std::cerr << buffSize << '\n';
+    // M_DEBUG && std::cerr << buffSize << '\n';
 
     char buff[buffSize];
 
@@ -97,7 +97,7 @@ void HttpResponse::sendingResponse(long buffSize) {
         if (r == 0) {
             send(clientSocket, "0\r\n\r\n", 5, 0);
             ended = true;
-            std::cerr << "The connection is ended and closed\n";
+            M_DEBUG && std::cerr << "The connection is ended and closed\n";
         }
         return;
     }
@@ -110,7 +110,7 @@ void HttpResponse::sendingResponse(long buffSize) {
 
 
     if (send(clientSocket, fullMessage.c_str(), fullMessage.size(), 0) == -1) {
-        std::cerr << "Error in send: possibly client disconnect\n";
+        M_DEBUG && std::cerr << "Error in send: possibly client disconnect\n";
         ended = true;  // Treat send failure as a connection issue
     }
 }

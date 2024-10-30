@@ -74,7 +74,6 @@ void WebServ::switchToSending(struct kevent* current)
     t_eventData* evData = (t_eventData*) current->udata;
     evData->type = "send response";
 
-    std::cerr << ((HttpResponse*)evData->data)->clientSocket;
 
     KQueue::removeWatch(current->ident, EVFILT_READ);
     KQueue::watchState(((HttpResponse*)evData->data)->clientSocket, evData, EVFILT_WRITE);

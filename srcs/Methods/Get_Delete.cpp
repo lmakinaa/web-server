@@ -130,7 +130,7 @@ void    listAllfiles(std::string path)
     // Open the current directory
     dir = opendir(path.c_str());
     if (dir == NULL) {
-        std::cerr << "Error: Could not open current directory" << std::endl;
+        M_DEBUG && std::cerr << "Error: Could not open current directory" << std::endl;
         return ;
     }
 
