@@ -16,7 +16,12 @@ static int checkAndOpen(HttpRequest* req)
     // Rachid gad throws f _GET_DELETE() wcleani ressourses gbal ma throwi
     // We should handle directories and root here
     req->uri = _GET_DELETE(*req->s, req->uri, req->method); // this give the path of the file
-    std::string extension = req->uri.substr(req->uri.find_last_of("."));
+    std::string extension = "";
+
+    size_t pPos = req->uri.find_last_of(".");
+    if (pPos != std::string::npos)
+        extension = req->uri.substr(pPos);
+
     if (!strcmp(extension.c_str(), ".php") || !strcmp(extension.c_str(), ".py") || !strncmp(extension.c_str(), ".php?", 5) || !strncmp(extension.c_str(), ".py?", 5))
     {
         M_DEBUG && std::cerr << "\033[1;31m" << req->bodyFile << "\033[0m" << std::endl;
@@ -30,7 +35,7 @@ static int checkAndOpen(HttpRequest* req)
         fd = CGI::responseCGI(req, body_fd);
     }
     else {
-        fd = open(req->uri.c_str()+1, O_RDONLY);
+        fd = open(req->uri.c_str(), O_RDONLY);
         if (fd < 0)
             throw (ErrorStatus(500, "open failed in checkAndOpen"));
     }
@@ -115,25 +120,14 @@ void WebServ::sendResponse(struct kevent* current)
     if (res->ended) {
         KQueue::removeWatch(res->clientSocket, EVFILT_WRITE);
         close(res->clientSocket);
-        delete res;
         delete evData;
         m_watchedStates--;
         // Salat response kolchi daz mzyan
     }
 }
 
-void WebServ::run()
+void WebServ::loop()
 {
-    KQueue::createKq();
-
-    for (size_t i = 0; i < servers.size(); i++) {
-        servers[i].init();
-
-        if (KQueue::watchState(servers[i].getSocket(), &(servers[i].m_sEventData), EVFILT_READ) == -1) // sockets are closed in destructor of servers
-            throw std::runtime_error("There was an error while adding server socket to kqueue");
-        m_watchedStates++;
-    }
-
     while (true)
     {
         struct kevent events[m_watchedStates];
@@ -173,6 +167,32 @@ void WebServ::run()
         }
         waitpid(-1, NULL, WNOHANG); // This is for cleaning the cgi processes that terminated
     }
+}
+
+void WebServ::run()
+{
+    KQueue::createKq();
+
+    for (size_t i = 0; i < servers.size(); i++) {
+        servers[i].init();
+
+        if (KQueue::watchState(servers[i].getSocket(), &(servers[i].m_sEventData), EVFILT_READ) == -1) // sockets are closed in destructor of servers
+            throw std::runtime_error("There was an error while adding server socket to kqueue");
+        m_watchedStates++;
+    }
+
+    while (true) 
+    {
+        try {
+            loop();
+        } catch(std::exception& e) {
+            M_DEBUG && std::cerr << e.what() << '\n';
+        } catch(std::out_of_range& e) {
+            M_DEBUG && std::cerr << e.what() << '\n';
+        }
+    }
+
+    
 }
 
 // void WebServ::fdCollector(int fd)

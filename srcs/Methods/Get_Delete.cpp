@@ -139,6 +139,7 @@ std::string    listAllfiles(std::string path, Server &Serv)
     struct dirent* entry;
 
     // Open the current directory
+    std::cerr << "======> " << path << std::endl;
     dir = opendir(path.c_str());
     if (dir == NULL) {
         M_DEBUG && std::cerr << "Error: Could not open current directory" << std::endl;
@@ -178,7 +179,8 @@ std::string    listAllfiles(std::string path, Server &Serv)
         "</html>";
 
     // std::ofstream ofs("filelisting.html", std::ios::out | std::ios::trunc);
-    int fd = open("filelisting.html",  O_WRONLY | O_TRUNC | O_CREAT, 777);
+    unlink("filelisting.html");
+    int fd = open("filelisting.html",  O_WRONLY | O_TRUNC | O_CREAT, 0644);
 
     write(fd, file.c_str(), file.size());
 
@@ -207,14 +209,14 @@ std::string getFileFullPath(Server &serv, std::map<std::string, Location>::itera
         if (val == -1)
         {
             // throw 404NotFoundClass;
-             throw ErrorStatus(404, "1 in getFileFullPath");
+             throw ErrorStatus(404, "Path does not exist");
         }
         else if (val == 1)
         {
             if (_Method == "DELETE")
             {
                 // throw 403 Forbidden
-                throw ErrorStatus(403, NULL);
+                throw ErrorStatus(403, "Can't delete a folder");
             }
             sec_path = path;
             for (size_t i = 0; i < serv.directives["index"].values.size(); i++)
@@ -238,7 +240,7 @@ std::string getFileFullPath(Server &serv, std::map<std::string, Location>::itera
             else
             {
                 // throw 403ForbiddenClass;
-                throw ErrorStatus(403, NULL);
+                throw ErrorStatus(403, "index file not found in directory");
             }
         }
         else if (val == 0)
@@ -248,7 +250,7 @@ std::string getFileFullPath(Server &serv, std::map<std::string, Location>::itera
             else
             {
                 // throw 404NotFoundClass;
-                throw ErrorStatus(404, "2 in getFileFullPath");
+                throw ErrorStatus(404, "file doesn't exist");
             }
         }
 
@@ -265,7 +267,7 @@ std::string getFileFullPath(Server &serv, std::map<std::string, Location>::itera
         if (val == -1)
         {
             // throw 404NotFoundClass;
-            throw ErrorStatus(404, "3 in getFileFullPath");
+            throw ErrorStatus(404, "Path does not exist");
         }
         else if (val == 1)
         {
@@ -273,7 +275,7 @@ std::string getFileFullPath(Server &serv, std::map<std::string, Location>::itera
             if (_Method == "DELETE")
             {
                 // throw 403 Forbidden
-                throw ErrorStatus(403, "4 in getFileFullPath");
+                throw ErrorStatus(403, "Can't delete folder");
             }
             sec_path = path;
             for (size_t i = 0; i < it->second.directives["index"].values.size(); i++)
@@ -297,7 +299,7 @@ std::string getFileFullPath(Server &serv, std::map<std::string, Location>::itera
             else
             {
                 // throw 403ForbiddenClass;
-                throw ErrorStatus(403, "5 in getFileFullPath");
+                throw ErrorStatus(403, "idex file doesn't exit");
             }
         }
         else if (val == 0)
@@ -307,7 +309,7 @@ std::string getFileFullPath(Server &serv, std::map<std::string, Location>::itera
             else
             {
                 // throw 404NotFoundClass;
-                throw ErrorStatus(404, "6 in getFileFullPath");
+                throw ErrorStatus(404, "File doesn't exist");
             }
         }
 

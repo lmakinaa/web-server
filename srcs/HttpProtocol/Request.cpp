@@ -131,14 +131,14 @@ void HttpRequest::unchunkBody(char *request, size_t size)
             try {
                 // Find the end of the chunk size line
                 char *endOfSize = strstr(request, "\r\n");
-                if (endOfSize == nullptr) {
+                if (endOfSize == NULL) {
                     M_DEBUG && std::cerr << "\033[1;31mIncomplete chunk size line\033[0m" << std::endl;
                     return;
                 }
 
                 // Parse the chunk size
                 *endOfSize = '\0'; // Temporarily null-terminate the chunk size string
-                chunk_size = std::stoul(request, nullptr, 16);
+                chunk_size = std::stoul(request, NULL, 16);
                 *endOfSize = '\r'; // Restore the original string
 
                 M_DEBUG && std::cerr << "\033[1;32mChunk size: " << chunk_size << "\033[0m" << std::endl;

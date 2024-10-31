@@ -31,6 +31,7 @@ public:
     {
     }
     void run();
+    void loop();
     int handleNewConnection(struct kevent* current);
     int handleExistedConnection(struct kevent* current);
     void sendResponse(struct kevent* current);

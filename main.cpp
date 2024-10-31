@@ -63,11 +63,8 @@ int main(int ac, char *av[])
         return (EXIT_FAILURE);
 
 
-    try {
-        main.run();
-    } catch (std::exception& e) {
-        M_DEBUG && std::cerr << e.what() << '\n';
-    }
+    main.run();
+    
 
 
 

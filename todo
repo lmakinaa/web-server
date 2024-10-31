@@ -9,7 +9,6 @@ PATH_INFO
 
 
 
-
 cgi directives
 
 session and cookies - ismail
@@ -23,3 +22,11 @@ route location
 • Setup default error pages. in config file
 
 Integri config file directives m3a lcode
+
+
+Forging proper response header
+
+Path does not exist http://127.0.0.1:8080/webserv.h
+
+ The first server for a host:port will be the default for this host:port (that means
+it will answer to all the requests that don’t belong to an other server).
