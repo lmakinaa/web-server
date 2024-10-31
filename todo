@@ -1,7 +1,25 @@
-handling directories
+handling directories //
 
 any error inside parsing request or generating the response should be thrown with error code and cleaned after that. It should not be just ignored
 
 PATH_INFO
 
 ∗ Your program should call the CGI with the file requested as first argument.
+
+
+
+
+
+cgi directives
+
+session and cookies - ismail
+
+server_name
+
+route location
+
+• Limit client body size.
+
+• Setup default error pages. in config file
+
+Integri config file directives m3a lcode

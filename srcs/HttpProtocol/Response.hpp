@@ -25,8 +25,14 @@ class HttpResponse{
 
 
         HttpResponse(int clientSocket, int fd, std::string ContentType) : Version("HTTP/1.1"), ResponseCode("200 OK"), ContentType(ContentType), Connection("close"), clientSocket(clientSocket), responseFd(fd), ended(false) {
-            std::string headers = "HTTP/1.1 200\r\nContent-Type: " + ContentType + "\r\nConnection: keep-alive\r\nTransfer-Encoding: chunked\r\n\r\n";
+
+            std::string headers = "HTTP/1.1 200\r\nContent-Type: " + ContentType + "\r\n"
+            "Connection: keep-alive\r\nTransfer-Encoding: chunked\r\n"
+            "Set-Cookie:"
+            "\r\n";
+
             send(clientSocket, headers.c_str(), headers.size(), 0);
+
         }
         ~HttpResponse() {close(responseFd);}
         void sendingResponse(long buffSize);

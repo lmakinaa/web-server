@@ -40,10 +40,16 @@ int WebServ::handleExistedConnection(struct kevent* current)
 
         // Open something (file or pipe) and pass it to response
         M_DEBUG && std::cerr << "\033[1;31m|" << req->uri.c_str() << "|\033[0m" << std::endl;
+        
+        // if (req->getHeader("Cookie") == "")
+        //     req->headers["Set-Cookie"] = "sessionId=" + sessionIdGen(*req->s);
+        // else
+        // {
+
+        // }
 
         // We should handle directories and root here 
-        if (req->uri == "/" || req->uri == "")
-            req->uri = "/index.html";
+        req->uri = _GET_DELETE(*req->s, req->uri, req->method); // this give the path of the file
         std::string extension = req->uri.substr(req->uri.find_last_of("."));
         if (!strcmp(extension.c_str(), ".php") || !strcmp(extension.c_str(), ".py") || !strncmp(extension.c_str(), ".php?", 5) || !strncmp(extension.c_str(), ".py?", 5))
         {

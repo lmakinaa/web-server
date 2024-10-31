@@ -8,6 +8,8 @@ static void closePipe(int fds[2])
 
 int CGI::responseCGI(HttpRequest* req, int bodyFd) {
 
+    // bodyFd will be 0 if we get request to a .php or .py file --> it should be protected
+
     int outputPipe[2];
 
     if (pipe(outputPipe) == -1) {
