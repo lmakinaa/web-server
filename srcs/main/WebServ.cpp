@@ -14,6 +14,15 @@ static int checkAndOpen(HttpRequest* req)
         req->headers["Set-Cookie"] = "";
 
 
+
+    //Replace %20 to " "
+    size_t p = 0;
+    while ((p = req->uri.find("%20", p)) != std::string::npos) {
+        req->uri.replace(p, 3, " ");
+        p += 1;
+    }
+
+
     // remove querystring to check existance of the file
     std::string uri = req->uri;
     std::string querystr = "";

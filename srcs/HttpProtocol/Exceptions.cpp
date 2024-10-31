@@ -4,14 +4,40 @@ void ErrorStatus::setErrorMessage()
 {
     switch (errorCode)
     {
-        case 500:
-            statusMessage = headers + "<html><head><title>500 Internal Error</title></head><body><center><h1>500 Internal Error</h1></center><hr></body></html>";
-            break;
         case 400:
             statusMessage = headers + "<html><head><title>400 Bad Request</title></head><body><center><h1>400 Bad Request</h1></center><hr></body></html>";
             break;
+    
+        case 401:
+            statusMessage = headers + "<html><head><title>401 Unauthorized</title></head><body><center><h1>401 Unauthorized</h1></center><hr></body></html>";
+            break;
+
+        case 403:
+            statusMessage = headers + "<html><head><title>403 Forbidden</title></head><body><center><h1>403 Forbidden</h1></center><hr></body></html>";
+            break;
+
         case 404:
             statusMessage = headers + "<html><head><title>404 Not Found</title></head><body><center><h1>404 Not Found</h1></center><hr></body></html>";
+            break;
+
+        case 500:
+            statusMessage = headers + "<html><head><title>500 Internal Server Error</title></head><body><center><h1>500 Internal Server Error</h1></center><hr></body></html>";
+            break;
+
+        case 501:
+            statusMessage = headers + "<html><head><title>501 Not Implemented</title></head><body><center><h1>501 Not Implemented</h1></center><hr></body></html>";
+            break;
+
+        case 502:
+            statusMessage = headers + "<html><head><title>502 Bad Gateway</title></head><body><center><h1>502 Bad Gateway</h1></center><hr></body></html>";
+            break;
+
+        case 503:
+            statusMessage = headers + "<html><head><title>503 Service Unavailable</title></head><body><center><h1>503 Service Unavailable</h1></center><hr></body></html>";
+            break;
+
+        case 504:
+            statusMessage = headers + "<html><head><title>504 Gateway Timeout</title></head><body><center><h1>504 Gateway Timeout</h1></center><hr></body></html>";
             break;
         // Add more status codes
         // ..
@@ -47,8 +73,20 @@ void SuccessStatus::setSuccessMessage()
 {
     switch (successCode)
     {
+        case 200:
+            statusMessage = headers + "<html><head><title>200 OK</title></head><body><center><h1>200 OK</h1></center><hr></body></html>";
+            break;
+        
         case 201:
             statusMessage = headers + "<html><head><title>201 Created</title></head><body><center><h1>201 Created</h1></center><hr></body></html>";
+            break;
+
+        case 202:
+            statusMessage = headers + "<html><head><title>202 Accepted</title></head><body><center><h1>202 Accepted</h1></center><hr></body></html>";
+            break;
+
+        case 204:
+            statusMessage = headers + "<html><head><title>204 No Content</title></head><body><center><h1>204 No Content</h1></center><hr></body></html>";
             break;
         // Add more status codes
         // ..
