@@ -15,7 +15,7 @@ int CGI::responseCGI(HttpRequest* req, int bodyFd) {
     if (pipe(outputPipe) == -1) {
         if (M_DEBUG)
             perror("pipe(2)");
-        return (-1); // No response. Todo: send internal error response and close connection
+        throw ErrorStatus(503, "pipe failed in responseCGI");
     }
 
     char *argv[] = {
@@ -68,13 +68,14 @@ int CGI::responseCGI(HttpRequest* req, int bodyFd) {
         if (pid == -1) {
             if (M_DEBUG)
                 perror("fork(2)");
-            return (closePipe(outputPipe), close(bodyFd), -1); // Should throw
+            closePipe(outputPipe);
+            close(bodyFd);
+            throw ErrorStatus(503, "fork failed in responseCGI");
         }
         
         close(outputPipe[1]);
         close(bodyFd);
         KQueue::setFdNonBlock(outputPipe[0]);
-        
     }
 
     return outputPipe[0];

@@ -1,6 +1,6 @@
 #include "WebServ.hpp"
 
-static int checkAndOpen(struct kevent* current, HttpRequest* req)
+static int checkAndOpen(HttpRequest* req)
 {
     int body_fd;
     int fd;
@@ -13,7 +13,8 @@ static int checkAndOpen(struct kevent* current, HttpRequest* req)
     else
         req->headers["Set-Cookie"] = "";
 
-    // We should handle directories and root here 
+    // Rachid gad throws f _GET_DELETE() wcleani ressourses gbal ma throwi
+    // We should handle directories and root here
     req->uri = _GET_DELETE(*req->s, req->uri, req->method); // this give the path of the file
     std::string extension = req->uri.substr(req->uri.find_last_of("."));
     if (!strcmp(extension.c_str(), ".php") || !strcmp(extension.c_str(), ".py") || !strncmp(extension.c_str(), ".php?", 5) || !strncmp(extension.c_str(), ".py?", 5))
@@ -24,16 +25,15 @@ static int checkAndOpen(struct kevent* current, HttpRequest* req)
         else
             body_fd = open(req->bodyFile.c_str(), O_RDONLY);
         if (body_fd < 0)
-            if (M_DEBUG) { // should clean and throw
-                perror("Error opening body file");
-                close(current->ident);
-                return -1;
-            }
+            throw ErrorStatus(503, "Error opening body file in checkAndOpen");
+
         fd = CGI::responseCGI(req, body_fd);
-        
     }
-    else
+    else {
         fd = open(req->uri.c_str()+1, O_RDONLY);
+        if (fd < 0)
+            throw (ErrorStatus(500, "open failed in checkAndOpen"));
+    }
 
     return fd;
 }
@@ -50,14 +50,14 @@ int WebServ::handleExistedConnection(struct kevent* current)
     {
         KQueue::removeWatch(current->ident, EVFILT_READ);
 
-        int fd = checkAndOpen(current, req);
+        int fd = checkAndOpen(req);
         KQueue::setFdNonBlock(fd);
         
         M_DEBUG && std::cerr << "Request parsed and passed to execution\n" ;
 
         t_eventData* evData = new t_eventData("response ready", new HttpResponse(current->ident, fd, WhatContentType(req->uri)));
         if (KQueue::watchState(fd, evData, EVFILT_READ) == -1)
-            (delete evData, throw ErrorStatus(503, "WatchState at handleExistedConnection"));
+            (delete evData, close(fd), throw ErrorStatus(503, "WatchState at handleExistedConnection"));
 
         delete (t_eventData*)current->udata;
         current->udata = NULL;
@@ -117,8 +117,8 @@ void WebServ::sendResponse(struct kevent* current)
         close(res->clientSocket);
         delete res;
         delete evData;
-
         m_watchedStates--;
+        // Salat response kolchi daz mzyan
     }
 }
 
@@ -162,11 +162,28 @@ void WebServ::run()
                 if (!std::strcmp(static_cast<t_eventData*>(events[i].udata)->type, "client socket")
                     || !std::strcmp(static_cast<t_eventData*>(events[i].udata)->type, "send response"))
                     e.clientSock = events[i].ident;
-
+            
                 e.sendError();
+                if (events[i].udata)
+                    delete (t_eventData*)events[i].udata;
+                m_watchedStates--;
+                // connection will be closed automatically by getting out of the scope of the catch
             }
 
         }
         waitpid(-1, NULL, WNOHANG); // This is for cleaning the cgi processes that terminated
     }
 }
+
+// void WebServ::fdCollector(int fd)
+// {
+//     static std::vector<int> nonSocketFds;
+
+//     if (fd == -2) {
+//         for (std::vector<int>::iterator i = nonSocketFds.begin(); i < nonSocketFds.end(); i++) {
+//             close(*i);
+//         }
+//         return ;
+//     }
+//     nonSocketFds.push_back(fd);
+// }

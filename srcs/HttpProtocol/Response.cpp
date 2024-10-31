@@ -113,6 +113,6 @@ void HttpResponse::sendingResponse(long buffSize) {
             std::cerr << "the client probably disconnected -- ";
             perror("send(2)");
         }
-        ended = true;  // Treat send failure as a connection issue
+        ended = true; // Treat send failure as a connection issue, I wont throw because there is no one to receive the error code
     }
 }

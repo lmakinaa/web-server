@@ -207,7 +207,7 @@ std::string getFileFullPath(Server &serv, std::map<std::string, Location>::itera
         if (val == -1)
         {
             // throw 404NotFoundClass;
-             throw ErrorStatus(404, NULL);
+             throw ErrorStatus(404, "1 in getFileFullPath");
         }
         else if (val == 1)
         {
@@ -248,7 +248,7 @@ std::string getFileFullPath(Server &serv, std::map<std::string, Location>::itera
             else
             {
                 // throw 404NotFoundClass;
-                throw ErrorStatus(404, NULL);
+                throw ErrorStatus(404, "2 in getFileFullPath");
             }
         }
 
@@ -265,7 +265,7 @@ std::string getFileFullPath(Server &serv, std::map<std::string, Location>::itera
         if (val == -1)
         {
             // throw 404NotFoundClass;
-            throw ErrorStatus(404, NULL);
+            throw ErrorStatus(404, "3 in getFileFullPath");
         }
         else if (val == 1)
         {
@@ -273,7 +273,7 @@ std::string getFileFullPath(Server &serv, std::map<std::string, Location>::itera
             if (_Method == "DELETE")
             {
                 // throw 403 Forbidden
-                throw ErrorStatus(403, NULL);
+                throw ErrorStatus(403, "4 in getFileFullPath");
             }
             sec_path = path;
             for (size_t i = 0; i < it->second.directives["index"].values.size(); i++)
@@ -297,7 +297,7 @@ std::string getFileFullPath(Server &serv, std::map<std::string, Location>::itera
             else
             {
                 // throw 403ForbiddenClass;
-                throw ErrorStatus(403, NULL);
+                throw ErrorStatus(403, "5 in getFileFullPath");
             }
         }
         else if (val == 0)
@@ -307,7 +307,7 @@ std::string getFileFullPath(Server &serv, std::map<std::string, Location>::itera
             else
             {
                 // throw 404NotFoundClass;
-                throw ErrorStatus(404, NULL);
+                throw ErrorStatus(404, "6 in getFileFullPath");
             }
         }
 
@@ -355,20 +355,20 @@ std::string    _GET_DELETE(Server &serv, std::string requestPath, std::string _M
         {
             // throw 404NotFoundClass;
             // std::cout << "404 NOt found" << std::endl;
-            throw ErrorStatus(404, NULL);
+            throw ErrorStatus(404, "1 in _GET_DELETE");
         }
 
         /* ===== Check Read Permession ===== */
         if (access(resquestedFile.c_str(), R_OK) != 0)
         {
             // Throw 403 Forbidden
-            throw ErrorStatus(403, NULL);
+            throw ErrorStatus(403, "2 in _GET_DELETE");
         }
     }
     else
     {
         // throw 404NotFoundClass;
-        throw ErrorStatus(404, NULL);
+        throw ErrorStatus(404, "3 in _GET_DELETE");
     }
 
     if (_Method == "DELETE")
