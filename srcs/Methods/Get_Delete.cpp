@@ -138,8 +138,6 @@ std::string    listAllfiles(std::string path, Server &Serv, std::string reqpath)
     DIR* dir;
     struct dirent* entry;
 
-    // Open the current directory
-    M_DEBUG && std::cerr << "Path: " << path << std::endl;
     dir = opendir(path.c_str());
     if (dir == NULL) {
         M_DEBUG && std::cerr << "Error: Could not open current directory" << std::endl;
@@ -353,6 +351,18 @@ std::string    _GET_DELETE(Server &serv, std::string requestPath, std::string _M
     /* ======= Found the matching path ======= */
     if (it != serv.locations.end())
     {
+
+        //check allowed method
+        if (it->second.directives.find("allow_methods") != it->second.directives.end())
+        {
+            if (find(it->second.directives["allow_methods"].values.begin(), it->second.directives["allow_methods"].values.end(), _Method) == it->second.directives["allow_methods"].values.end())
+            {
+                // throw 405 Method Not Allowed
+                std::cout << "405 method not allowed\n";
+                throw ErrorStatus(405, NULL);
+            }
+        }
+
         resquestedFile = getFileFullPath(serv, it, requestPath);
         if (resquestedFile == "")
         {
@@ -365,13 +375,13 @@ std::string    _GET_DELETE(Server &serv, std::string requestPath, std::string _M
         if (access(resquestedFile.c_str(), R_OK) != 0)
         {
             // Throw 403 Forbidden
-            throw ErrorStatus(403, "2 in _GET_DELETE");
+            throw ErrorStatus(403, "file has no permission");
         }
     }
     else
     {
         // throw 404NotFoundClass;
-        throw ErrorStatus(404, "3 in _GET_DELETE");
+        throw ErrorStatus(404, "3 in path does exist");
     }
 
     if (_Method == "DELETE")
