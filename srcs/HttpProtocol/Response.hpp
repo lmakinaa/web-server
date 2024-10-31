@@ -7,6 +7,9 @@
 #include <sys/socket.h>
 #include <string>
 #include <sstream>
+#include "Request.hpp"
+
+std::string WhatContentType(std::string uri);
 
 #ifndef M_DEBUG
 # define M_DEBUG 1
@@ -24,10 +27,14 @@ class HttpResponse{
         bool ended;
 
 
-        HttpResponse(int clientSocket, int fd, std::string ContentType) : Version("HTTP/1.1"), ResponseCode("200 OK"), ContentType(ContentType), Connection("close"), clientSocket(clientSocket), responseFd(fd), ended(false) {
-
+        HttpResponse(int clientSocket, int fd, HttpRequest* req) : Version("HTTP/1.1"), ResponseCode("200 OK"), ContentType(WhatContentType(req->uri)), Connection("close"), clientSocket(clientSocket), responseFd(fd), ended(false) {
+            
+            std::string cookieToSet = req->getHeader("Set-Cookie");
+            if (cookieToSet != "")
+                cookieToSet = "Set-Cookie: " + cookieToSet + "\r\n";
             std::string headers = "HTTP/1.1 200 OK\r\nContent-Type: " + ContentType + "\r\n"
-            "Connection: keep-alive\r\nTransfer-Encoding: chunked\r\n"
+            "Connection: keep-alive\r\nTransfer-Encoding: chunked\r\n" + 
+            cookieToSet +
             "\r\n";
 
             send(clientSocket, headers.c_str(), headers.size(), 0);

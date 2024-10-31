@@ -38,8 +38,10 @@ static int checkAndOpen(HttpRequest* req)
         M_DEBUG && std::cerr << "\033[1;31m" << req->bodyFile << "\033[0m" << std::endl;
         if (req->bodyFile.empty())
             body_fd = 0;
-        else
+        else {
             body_fd = open(req->bodyFile.c_str(), O_RDONLY);
+            unlink(req->bodyFile.c_str());
+        }
         if (body_fd < 0)
             throw ErrorStatus(503, "Error opening body file in checkAndOpen");
 
@@ -71,7 +73,7 @@ int WebServ::handleExistedConnection(struct kevent* current)
         
         M_DEBUG && std::cerr << "Request parsed and passed to execution\n" ;
 
-        t_eventData* evData = new t_eventData("response ready", new HttpResponse(current->ident, fd, WhatContentType(req->uri)));
+        t_eventData* evData = new t_eventData("response ready", new HttpResponse(current->ident, fd, req));
         if (KQueue::watchState(fd, evData, EVFILT_READ) == -1)
             (delete evData, close(fd), throw ErrorStatus(503, "WatchState at handleExistedConnection"));
 

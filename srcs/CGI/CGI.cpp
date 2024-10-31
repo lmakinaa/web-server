@@ -19,22 +19,21 @@ int CGI::responseCGI(HttpRequest* req, int bodyFd) {
     }
 
     char *argv[] = {
-        const_cast<char*>("/usr/bin/python3"),
-        const_cast<char*>("/Users/ijaija/merge/test.py"),
+        // const_cast<char*>("/usr/bin/python3"),
+        const_cast<char*>("/Users/ijaija/merge/www/server-cgis/php-cgi"),
         NULL
     };
 
     std::string scriptPath = req->uri; // to replace this section
     std::string scriptName = req->uri;
-    std::string documentRoot = "/Users/ijaija/merge";
     size_t queryPos = scriptPath.find('?');
     if (queryPos != std::string::npos) {
-        scriptPath = documentRoot + scriptPath.substr(0, queryPos);
+        scriptPath = scriptPath.substr(0, queryPos);
         scriptName = scriptName.substr(0, queryPos);
     }
-    else
-        scriptPath = documentRoot + scriptPath;
+
     std::cerr << scriptPath << '\n';
+    std::cerr << "script name: " << scriptName << '\n';
 
 
     int pid = fork();
