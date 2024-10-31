@@ -13,9 +13,19 @@ static int checkAndOpen(HttpRequest* req)
     else
         req->headers["Set-Cookie"] = "";
 
+
+    // remove querystring to check existance of the file
+    std::string uri = req->uri;
+    std::string querystr = "";
+    size_t pos = req->uri.find("?");
+    if (pos != std::string::npos)
+    {
+        querystr = req->uri.substr(pos);
+        uri = req->uri.substr(0, pos);
+    }
     // Rachid gad throws f _GET_DELETE() wcleani ressourses gbal ma throwi
     // We should handle directories and root here
-    req->uri = _GET_DELETE(*req->s, req->uri, req->method); // this give the path of the file
+    req->uri = _GET_DELETE(*req->s, uri, req->method); // this give the path of the file
     std::string extension = "";
 
     size_t pPos = req->uri.find_last_of(".");
@@ -24,6 +34,7 @@ static int checkAndOpen(HttpRequest* req)
 
     if (!strcmp(extension.c_str(), ".php") || !strcmp(extension.c_str(), ".py") || !strncmp(extension.c_str(), ".php?", 5) || !strncmp(extension.c_str(), ".py?", 5))
     {
+        req->uri += querystr;
         M_DEBUG && std::cerr << "\033[1;31m" << req->bodyFile << "\033[0m" << std::endl;
         if (req->bodyFile.empty())
             body_fd = 0;

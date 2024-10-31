@@ -60,7 +60,7 @@ bool    fileExist(std::string &path)
 }
 
 
-std::string    listAllfiles(std::string path, Server &Serv)
+std::string    listAllfiles(std::string path, Server &Serv, std::string reqpath)
 {
     std::string file = "<!DOCTYPE html>\n"
                        "<html lang=\"en\">\n"
@@ -146,7 +146,8 @@ std::string    listAllfiles(std::string path, Server &Serv)
         return "";
     }
 
-
+    if (reqpath.back() != '/')
+        reqpath += "/";
     while ((entry = readdir(dir)) != NULL) {
 
             if (entry->d_type == DT_DIR) {
@@ -154,7 +155,7 @@ std::string    listAllfiles(std::string path, Server &Serv)
                     "<div class=\"file\">"
                     "<span class=\"icon\">📁</span>";
 
-                file += "<a href=\"http://" + Serv.directives["host"].values[0] + ":" + Serv.directives["listen"].values[0] + "/" + static_cast<std::string>(entry->d_name) + "\">" + entry->d_name + "</a>";
+                file += "<a href=\"http://" + Serv.directives["host"].values[0] + ":" + Serv.directives["listen"].values[0] + reqpath + static_cast<std::string>(entry->d_name) + "\">" + entry->d_name + "</a>";
 
                 file += "</div>"
                 "</li>";
@@ -163,7 +164,7 @@ std::string    listAllfiles(std::string path, Server &Serv)
                     "<div class=\"file\">"
                     "<span class=\"icon\">📄</span>";
 
-                file += "<a href=\"http://" + Serv.directives["host"].values[0] + ":" + Serv.directives["listen"].values[0] + "/" + static_cast<std::string>(entry->d_name) + "\">" + entry->d_name + "</a>";
+                file += "<a href=\"http://" + Serv.directives["host"].values[0] + ":" + Serv.directives["listen"].values[0] + reqpath + static_cast<std::string>(entry->d_name) + "\">" + entry->d_name + "</a>";
 
                 file += "</div>"
                 "</li>";
@@ -235,7 +236,7 @@ std::string getFileFullPath(Server &serv, std::map<std::string, Location>::itera
             {
                 // should list all files
                 std::cout << "list all files\n";
-                return (listAllfiles(sec_path, serv));
+                return (listAllfiles(sec_path, serv, requestPath));
             }
             else
             {
@@ -294,7 +295,7 @@ std::string getFileFullPath(Server &serv, std::map<std::string, Location>::itera
             {
                 // should list all files
                 std::cout << "list all files\n";
-                return (listAllfiles(sec_path, serv));
+                return (listAllfiles(sec_path, serv, requestPath));
             }
             else
             {
