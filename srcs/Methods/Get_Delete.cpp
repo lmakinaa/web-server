@@ -139,7 +139,7 @@ std::string    listAllfiles(std::string path, Server &Serv)
     struct dirent* entry;
 
     // Open the current directory
-    std::cerr << "======> " << path << std::endl;
+    M_DEBUG && std::cerr << "Path: " << path << std::endl;
     dir = opendir(path.c_str());
     if (dir == NULL) {
         M_DEBUG && std::cerr << "Error: Could not open current directory" << std::endl;
