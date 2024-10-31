@@ -62,10 +62,15 @@ int main(int ac, char *av[])
     if (confErr == -1)
         return (EXIT_FAILURE);
 
-    main.run();
-    // server();
+
+    try {
+        main.run();
+    } catch (std::exception& e) {
+        M_DEBUG && std::cerr << e.what() << '\n';
+    }
 
 
-    // affiche(main);
+
+
     return (0);
 }

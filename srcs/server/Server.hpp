@@ -12,23 +12,10 @@
 #include "../configFile/Directive.hpp"
 #include "../configFile/Location.hpp"
 
-typedef struct s_eventData t_eventData;
-class   Server;
-
+#include "../HttpProtocol/Request.hpp"
+#include "../HttpProtocol/Response.hpp"
+#include "structs.hpp"
 #include "../KQueue/KQueue.hpp"
-
-typedef struct s_eventData {
-    const char* type;
-    void* data;
-    Server* s;
-    s_eventData(const char* type, void* data): type(type), data(data), s() {}
-} t_eventData;
-
-typedef struct s_sockData {
-    sockaddr_in* sockAddress;
-    socklen_t* sockLen;
-    s_sockData(): sockAddress (NULL), sockLen(NULL) {}
-} t_sockData;
 
 class   Server
 {
@@ -41,7 +28,7 @@ public:
 
     sockaddr_in m_sockAddress;
     socklen_t m_sockLen;
-    t_sockData m_sockData;
+    struct s_sockData m_sockData;
     struct s_eventData m_sEventData;
 
     std::map<std::string, Directive> directives;
@@ -52,3 +39,4 @@ private:
     int m_socket;
 
 };
+

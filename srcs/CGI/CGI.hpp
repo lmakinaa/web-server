@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include "../KQueue/KQueue.hpp"
 #include "../HttpProtocol/Request.hpp"
+#include "../Methods/Methods.hpp"
 
 class HttpRequest;
 #ifndef M_DEBUG

@@ -10,7 +10,8 @@
 #include <sys/socket.h>
 #include <algorithm>
 #include "Exceptions.hpp"
-#include "../server/Server.hpp"
+
+class Server;
 
 enum ParseState{
     FirstLine,

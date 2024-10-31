@@ -12,3 +12,4 @@
 
 std::string    _GET_DELETE(Server &serv, std::string requestPath, std::string _Method);
 std::string sessionIdGen(Server &Serv);
+std::string getSessionIdFromRequest(std::string cookies);

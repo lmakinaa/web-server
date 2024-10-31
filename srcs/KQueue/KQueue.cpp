@@ -29,7 +29,7 @@ int KQueue::watchState(int fd, t_eventData* evData, int type)
 	if (kevent(m_fd, &KQueue::m_keventBuff, 1, 0, 0, 0) == -1) {
         if (M_DEBUG)
             perror("kevent(2)");
-        close(fd);
+        // close(fd);
         return -1;
     }
     return 0;

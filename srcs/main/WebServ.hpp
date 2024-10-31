@@ -26,7 +26,7 @@ class   WebServ
 
 public:
     WebServ()
-    : m_cEventData("client socket", NULL)
+    : m_cEventData("client socket", (HttpRequest*)NULL)
     , m_watchedStates (0)
     {
     }

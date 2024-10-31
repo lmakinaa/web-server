@@ -21,7 +21,7 @@ INCLUDE_PATH = includes/
 # ============= Files path variable ============ #
 
 C_FILES = main.cpp $(SERVER_PATH)Server.cpp $(CONFIG_FILE_PATH)configFile.cpp $(CONFIG_FILE_PATH)Location.cpp $(MAIN_PATH)WebServ.cpp srcs/KQueue/KQueue.cpp srcs/CGI/CGI.cpp\
-	srcs/HttpProtocol/Request.cpp  srcs/HttpProtocol/Response.cpp $(RESPONSE_PATH)Get_Delete.cpp
+	srcs/HttpProtocol/Request.cpp  srcs/HttpProtocol/Response.cpp $(RESPONSE_PATH)Get_Delete.cpp srcs/HttpProtocol/Exceptions.cpp
 
 O_FILES = $(C_FILES:.cpp=.o)
 

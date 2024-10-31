@@ -5,7 +5,7 @@
 Server::Server()
     : m_sockAddress ()
     , m_sockLen ()
-    , m_sEventData ("server socket", NULL)
+    , m_sEventData ("server socket", (t_sockData*)NULL)
 {
 }
 
@@ -46,6 +46,6 @@ void Server::init()
     m_sockData.sockLen = &m_sockLen;
 
 
-    m_sEventData.data = &m_sockData;
+    m_sEventData.serverData = &m_sockData;
     m_sEventData.s = this;
 }

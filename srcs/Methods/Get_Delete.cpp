@@ -26,6 +26,17 @@ std::string sessionIdGen(Server &Serv)
     
 }
 
+std::string getSessionIdFromRequest(std::string cookies) {
+    size_t pos = cookies.find("SESSID=");
+    if (pos != std::string::npos) {
+        size_t end = cookies.find(';', pos);
+        if (end == std::string::npos) {
+            end = cookies.length();
+        }
+        return cookies.substr(pos + 7, end - (pos + 7));
+    }
+    return "";
+}
 
 int isDirectory(const std::string& path) {
     struct stat info;
