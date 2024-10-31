@@ -173,12 +173,17 @@ void WebServ::run()
 {
     KQueue::createKq();
 
-    for (size_t i = 0; i < servers.size(); i++) {
-        servers[i].init();
+    try {
+        for (size_t i = 0; i < servers.size(); i++) {
+            servers[i].init();
 
-        if (KQueue::watchState(servers[i].getSocket(), &(servers[i].m_sEventData), EVFILT_READ) == -1) // sockets are closed in destructor of servers
-            throw std::runtime_error("There was an error while adding server socket to kqueue");
-        m_watchedStates++;
+            if (KQueue::watchState(servers[i].getSocket(), &(servers[i].m_sEventData), EVFILT_READ) == -1) // sockets are closed in destructor of servers
+                throw std::runtime_error("There was an error while adding server socket to kqueue");
+            m_watchedStates++;
+        }
+    } catch(std::runtime_error& e) {
+        std::cerr << e.what() << '\n';
+        exit(1);
     }
 
     while (true) 
