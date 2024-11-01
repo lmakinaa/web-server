@@ -4,23 +4,25 @@
 #include <iostream>
 #include <exception>
 #include <unistd.h>
+#include <fstream>
 #include <sys/socket.h>
+#include <vector>
+#include "../configFile/Directive.hpp"
 
 
 #ifndef M_DEBUG
 # define M_DEBUG 1
 #endif
 
-
 class ErrorStatus;
 class SuccessStatus;
-
 
 class ErrorStatus {
 public:
     // You can Pass NUll to debugMsg
     ErrorStatus(int clienSocket, int errorCode, const char* debugMsg);
     ErrorStatus(int errorCode, const char* debugMsg);
+    ErrorStatus(int errorCode, const char* debugMsg, Directive *errorpages);
     void setErrorMessage();
     ~ErrorStatus() {
         if (clientSock != -1)
@@ -35,6 +37,7 @@ public:
     int errorCode;
     const std::string headers;
     std::string statusMessage;
+    Directive *errorpages;
 };
 
 class SuccessStatus {

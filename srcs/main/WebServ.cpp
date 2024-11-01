@@ -15,7 +15,7 @@ static int checkAndOpen(HttpRequest* req)
 
 
 
-    //Replace %20 to " "
+    //Replace %20 with " "
     size_t p = 0;
     while ((p = req->uri.find("%20", p)) != std::string::npos) {
         req->uri.replace(p, 3, " ");

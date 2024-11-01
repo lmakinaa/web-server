@@ -2,6 +2,27 @@
 
 void ErrorStatus::setErrorMessage()
 {
+    if (errorpages)
+    {
+        std::vector<std::string>::iterator itt = find(errorpages->values.begin(), errorpages->values.end(), std::to_string(errorCode));
+        if (itt !=  errorpages->values.end())
+        {
+            itt++;
+            if (access((*itt).c_str(), F_OK | R_OK) != 0)
+                throw ErrorStatus(403, "Error page Not exist or has not permission");
+            std::ifstream ofs(*itt);
+            if (ofs.fail())
+                throw ErrorStatus(500, "Can't open Error page");
+            std::string line, file = "";
+
+            while (std::getline(ofs, line))
+                file += line;
+            statusMessage = headers + file;
+            ofs.close();
+            return ;
+        }
+    }
+
     switch (errorCode)
     {
         case 400:
@@ -52,6 +73,7 @@ ErrorStatus::ErrorStatus(int clienSocket, int errorCode, const char* debugMsg)
     : clientSock (clienSocket)
     , errorCode (errorCode)
     , headers ("HTTP/1.1 " + std::to_string(errorCode) + "\r\nContent-Type: text/html\r\nConnection: close\r\n\r\n")
+    , errorpages (NULL)
 {
     if (M_DEBUG && debugMsg)
         std::cerr << debugMsg << "\n";
@@ -62,6 +84,18 @@ ErrorStatus::ErrorStatus(int errorCode, const char* debugMsg)
     : clientSock (-1)
     , errorCode (errorCode)
     , headers ("HTTP/1.1 " + std::to_string(errorCode) + "\r\nContent-Type: text/html\r\nConnection: close\r\n\r\n")
+    , errorpages (NULL)
+{
+    if (M_DEBUG && debugMsg)
+        std::cerr << debugMsg << "\n";
+    setErrorMessage();
+}
+
+ErrorStatus::ErrorStatus(int errorCode, const char* debugMsg, Directive *errorpages)
+    : clientSock (-1)
+    , errorCode (errorCode)
+    , headers ("HTTP/1.1 " + std::to_string(errorCode) + "\r\nContent-Type: text/html\r\nConnection: close\r\n\r\n")
+    , errorpages (errorpages)
 {
     if (M_DEBUG && debugMsg)
         std::cerr << debugMsg << "\n";

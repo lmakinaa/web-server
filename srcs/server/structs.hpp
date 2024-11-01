@@ -1,9 +1,10 @@
-
+#pragma once
 
 class HttpRequest;
 class HttpResponse;
 #include "../HttpProtocol/Request.hpp"
 #include "../HttpProtocol/Response.hpp"
+#include "../server/Server.hpp"
 #include <sys/socket.h>
 #include <arpa/inet.h>
 
