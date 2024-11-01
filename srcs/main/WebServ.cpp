@@ -34,8 +34,9 @@ static int checkAndOpen(HttpRequest* req)
     if (pPos != std::string::npos)
         extension = req->uri.substr(pPos);
 
-    if (!strcmp(extension.c_str(), ".php") || !strcmp(extension.c_str(), ".py") || !strncmp(extension.c_str(), ".php?", 5) || !strncmp(extension.c_str(), ".py?", 5))
+    if (!strcmp(extension.c_str(), ".php") || !strcmp(extension.c_str(), ".py") || !strncmp(extension.c_str(), ".php?", 5) || !strncmp(extension.c_str(), ".py?", 4))
     {
+        std::cerr << "chikaviww chikaviiw bum chaa chaaa   " << req->uri <<std::endl;
         req->uri += querystr;
         M_DEBUG && std::cerr << "\033[1;31m" << req->bodyFile << "\033[0m" << std::endl;
         if (req->bodyFile.empty())

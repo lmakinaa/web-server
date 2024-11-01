@@ -18,11 +18,6 @@ int CGI::responseCGI(HttpRequest* req, int bodyFd) {
         throw ErrorStatus(503, "pipe failed in responseCGI");
     }
 
-    char *argv[] = {
-        // const_cast<char*>("/usr/bin/python3"),
-        const_cast<char*>("/Users/ijaija/merge/www/server-cgis/php-cgi"),
-        NULL
-    };
 
     std::string scriptPath = req->uri; // to replace this section
     std::string scriptName = req->uri;
@@ -31,6 +26,19 @@ int CGI::responseCGI(HttpRequest* req, int bodyFd) {
         scriptPath = scriptPath.substr(0, queryPos);
         scriptName = scriptName.substr(0, queryPos);
     }
+
+    char *argv[] = {
+        // const_cast<char*>("/usr/bin/python3"),
+        const_cast<char*>("/Users/ijaija/merge/www/server-cgis/php-cgi"),
+        const_cast<char*>("/Users/ijaija/merge/www/html/index.php"),
+        NULL
+    };
+
+    // char *argv[] = {
+    //     const_cast<char*>("/usr/bin/python3"),
+    //     const_cast<char*>("/Users/ijaija/merge/www/html/test.py"),
+    //     NULL
+    // };
 
 
 

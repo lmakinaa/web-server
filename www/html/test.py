@@ -1,84 +1,55 @@
 #!/usr/bin/env python3
-
-import cgi
-import cgitb
 import os
-import sys
+import random
+from http import cookies
+import pickle
+import uuid
 
-# Enable detailed error reporting
-cgitb.enable()
-
-# Print the HTTP headers
-print("Content-Type: text/html")
-print()
-
-try:
-    # Create FieldStorage instance
-    form = cgi.FieldStorage()
-
-    # Get form fields
-    name = form.getvalue('name', 'No Name')
-    nickname = form.getvalue('nickname', 'No Nickname')
+def session_start():
+    cookie = cookies.SimpleCookie()
+    session_data = {}
+    session_id = None
+    is_new_session = True
     
-    # Handle file upload
-    uploaded_file = None
-    if 'pdfFile' in form:
-        fileitem = form['pdfFile']
-        if fileitem.filename:
-            # Get file details
-            filename = os.path.basename(fileitem.filename)
-            file_content = fileitem.file.read()
-            file_size = len(file_content)
-            
-            # You can save the file here if needed
-            with open(f'/Users/ijaija/merge/www/uploads/{filename}', 'wb') as f:
-                f.write(file_content)
-            
-            uploaded_file = {
-                'filename': filename,
-                'size': file_size,
-                'type': fileitem.type
-            }
+    if 'HTTP_COOKIE' in os.environ:
+        cookie.load(os.environ['HTTP_COOKIE'])
+        if 'PYSESSID' in cookie:
+            session_id = cookie['PYSESSID'].value
+            session_file = f"/tmp/sessions/sess_{session_id}"
+            if os.path.exists(session_file):
+                with open(session_file, 'rb') as f:
+                    session_data = pickle.load(f)
+                is_new_session = False
+                return session_data, session_id, is_new_session
+    
+    session_id = str(uuid.uuid4())
+    return session_data, session_id, is_new_session
 
-    # Generate response HTML
-    html = f"""
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <title>Upload Result</title>
-    </head>
-    <body>
-        <h1>Upload Result</h1>
-        <p>Name: {name}</p>
-        <p>Nickname: {nickname}</p>
-        <p>File Upload Status:</p>
-        """
-    
-    if uploaded_file:
-        html += f"""
-        <ul>
-            <li>Filename: {uploaded_file['filename']}</li>
-            <li>Size: {uploaded_file['size']} bytes</li>
-            <li>Type: {uploaded_file['type']}</li>
-        </ul>
-        """
-    else:
-        html += "<p>No file was uploaded</p>"
-    
-    html += """
-    </body>
-    </html>
-    """
-    
-    print(html)
+# Start session and get data
+session, session_id, is_new_session = session_start()
 
-except Exception as e:
-    # Print any errors that occur
-    print(f"""
-    <h2>Error occurred:</h2>
-    <pre>{str(e)}</pre>
-    <h3>Environment Variables:</h3>
-    <pre>
-    {os.environ}
-    </pre>
-    """)
+# Output headers with proper \r\n line endings
+print("Content-Type: text/html\r", end='')
+print("\n", end='')
+if is_new_session:
+    cookie = cookies.SimpleCookie()
+    cookie['PYSESSID'] = session_id
+    cookie['PYSESSID']['path'] = '/'
+    cookie['PYSESSID']['httponly'] = True
+    # Manual output of Set-Cookie to ensure proper line ending
+    print(f"Set-Cookie: {cookie['PYSESSID'].OutputString()}\r", end='')
+    print("\n", end='')
+
+# Extra \r\n to end headers
+print("\r", end='')
+print("\n", end='')
+
+# Session logic
+if 'x' not in session:
+    session['x'] = random.randint(100, 1000)
+    if not os.path.exists('/tmp/sessions'):
+        os.makedirs('/tmp/sessions', mode=0o733)
+    with open(f"/tmp/sessions/sess_{session_id}", 'wb') as f:
+        pickle.dump(session, f)
+
+print(f"id: {session['x']}")
