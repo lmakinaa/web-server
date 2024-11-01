@@ -25,20 +25,20 @@ class HttpResponse{
         int clientSocket;
         int responseFd;
         bool ended;
+        size_t iterations;
 
 
         HttpResponse(int clientSocket, int fd, HttpRequest* req) : Version("HTTP/1.1"), ResponseCode("200 OK"), ContentType(WhatContentType(req->uri)), Connection("close"), clientSocket(clientSocket), responseFd(fd), ended(false) {
-            
-            std::string cookieToSet = req->getHeader("Set-Cookie");
-            if (cookieToSet != "")
-                cookieToSet = "Set-Cookie: " + cookieToSet + "\r\n";
-            std::string headers = "HTTP/1.1 200 OK\r\nContent-Type: " + ContentType + "\r\n"
-            "Connection: keep-alive\r\nTransfer-Encoding: chunked\r\n" + 
-            cookieToSet +
-            "\r\n";
+
+            std::string headers = "HTTP/1.1 200 OK\r\n"
+            // "Content-Type: " + ContentType + "\r\n"
+            "Connection: keep-alive\r\n"
+            "Transfer-Encoding: chunked\r\n";
 
             send(clientSocket, headers.c_str(), headers.size(), 0);
 
+
+            iterations = 0;
         }
         ~HttpResponse() {close(responseFd);}
         void sendingResponse(long buffSize);

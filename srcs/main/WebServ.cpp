@@ -7,13 +7,6 @@ static int checkAndOpen(HttpRequest* req)
 
     // Open something (file or pipe) and pass it to response
     M_DEBUG && std::cerr << "\033[1;31m|" << req->uri.c_str() << "|\033[0m" << std::endl;
-    
-    if (req->getHeader("Cookie") == "")
-        req->headers["Set-Cookie"] = "SESSID=" + sessionIdGen(*req->s);
-    else
-        req->headers["Set-Cookie"] = "";
-
-
 
     //Replace %20 with " "
     size_t p = 0;

@@ -398,6 +398,6 @@ std::string    _GET_DELETE(Server &serv, std::string requestPath, std::string _M
     }
 
     // Send the file to the Client.
-    std::cout << "Result : " << resquestedFile << std::endl;
+    M_DEBUG && std::cerr << "Result : " << resquestedFile << std::endl;
     return (resquestedFile);
 }
