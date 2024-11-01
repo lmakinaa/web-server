@@ -122,6 +122,9 @@ void SuccessStatus::setSuccessMessage()
         case 204:
             statusMessage = headers + "<html><head><title>204 No Content</title></head><body><center><h1>204 No Content</h1></center><hr></body></html>";
             break;
+        case 301:
+            statusMessage = headers + "<html><head><title>301 Moved Permanently</title></head><body><center><h1>301 Moved Permanently</h1></center><hr><p>The requested resource has been permanently moved to <a href='" + retur->values[0] + "'>" + retur->values[0] + "</a>.</p></body></html>";
+            break;
         // Add more status codes
         // ..
         default:
@@ -135,6 +138,18 @@ SuccessStatus::SuccessStatus(int successCode, const char* debugMsg)
     : clientSock (-1)
     , successCode (successCode)
     , headers ("HTTP/1.1 " + std::to_string(successCode) + "\r\nContent-Type: text/html\r\nConnection: keep-alive\r\n\r\n")
+    , retur(NULL)
+{
+    if (M_DEBUG && debugMsg)
+        std::cerr << debugMsg << "\n";
+    setSuccessMessage();
+}
+
+SuccessStatus::SuccessStatus(int successCode, const char* debugMsg, Directive *retur)
+    : clientSock (-1)
+    , successCode (successCode)
+    , headers ("HTTP/1.1 " + std::to_string(successCode) + "\r\nContent-Type: text/html\r\nLocation: " + retur->values[0] + "\r\nConnection: keep-alive\r\n\r\n")
+    , retur(retur)
 {
     if (M_DEBUG && debugMsg)
         std::cerr << debugMsg << "\n";
@@ -145,6 +160,7 @@ SuccessStatus::SuccessStatus(int clienSocket, int successCode, const char* debug
     : clientSock (clienSocket)
     , successCode (successCode)
     , headers ("HTTP/1.1 " + std::to_string(successCode) + "\r\nContent-Type: text/html\r\nConnection: keep-alive\r\n\r\n")
+    , retur(NULL)
 {
     if (M_DEBUG && debugMsg)
         std::cerr << debugMsg << "\n";

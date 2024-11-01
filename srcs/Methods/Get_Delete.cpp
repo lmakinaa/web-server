@@ -227,7 +227,8 @@ std::string getFileFullPath(Server &serv, std::map<std::string, Location>::itera
             if (serv.directives.find("return") != serv.directives.end())
             {
                 // should redirect to ...
-                std::cout << "redirect to " << serv.directives["return"].values[0] << std::endl;
+                M_DEBUG && std::cerr << "redirect to " << serv.directives["return"].values[0] << std::endl;
+                throw SuccessStatus(301, NULL, &serv.directives["return"]);
             }
             else if (serv.directives.find("autoindex") != serv.directives.end()
                         &&  serv.directives["autoindex"].values[0] == "on")
@@ -286,7 +287,8 @@ std::string getFileFullPath(Server &serv, std::map<std::string, Location>::itera
             if (it->second.directives.find("return") != it->second.directives.end())
             {
                 // should redirect to ...
-                std::cout << "redirect to " << it->second.directives["return"].values[0] << std::endl;
+                M_DEBUG && std::cerr << "redirect to " << it->second.directives["return"].values[0] << std::endl;
+                throw SuccessStatus(301, NULL, &it->second.directives["return"]);
             }
             else if (it->second.directives.find("autoindex") != it->second.directives.end()
                         &&  it->second.directives["autoindex"].values[0] == "on")

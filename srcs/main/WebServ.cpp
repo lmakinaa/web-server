@@ -185,6 +185,17 @@ void WebServ::loop()
                 m_watchedStates--;
                 // connection will be closed automatically by getting out of the scope of the catch
             }
+            catch(SuccessStatus& e) {
+                if (!std::strcmp(static_cast<t_eventData*>(events[i].udata)->type, "client socket")
+                    || !std::strcmp(static_cast<t_eventData*>(events[i].udata)->type, "send response"))
+                    e.clientSock = events[i].ident;
+            
+                e.sendError();
+                if (events[i].udata)
+                    delete (t_eventData*)events[i].udata;
+                m_watchedStates--;
+                // connection will be closed automatically by getting out of the scope of the catch
+            }
 
         }
         waitpid(-1, NULL, WNOHANG); // This is for cleaning the cgi processes that terminated

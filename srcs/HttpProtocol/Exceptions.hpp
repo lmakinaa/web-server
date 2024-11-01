@@ -45,6 +45,7 @@ public:
     // You can Pass NUll to debugMsg
     SuccessStatus(int clienSocket, int successCode, const char* debugMsg);
     SuccessStatus(int successCode, const char* debugMsg);
+    SuccessStatus(int successCode, const char* debugMsg, Directive *retur);
     void setSuccessMessage();
     ~SuccessStatus() {
         if (clientSock != -1)
@@ -59,4 +60,5 @@ public:
     int successCode;
     const std::string headers;
     std::string statusMessage;
+    Directive *retur;
 };
