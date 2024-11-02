@@ -14,6 +14,13 @@ static int checkAndOpen(HttpRequest* req)
         req->headers["Set-Cookie"] = "";
 
 
+    // custom error pages
+    Directive *error_page = NULL;
+
+    std::map<std::string, Directive>::iterator eit = req->s->directives.find("error_page");
+    if ( eit != req->s->directives.end())
+        error_page = &(eit->second);
+
 
     //Replace %20 with " "
     size_t p = 0;
@@ -52,14 +59,14 @@ static int checkAndOpen(HttpRequest* req)
             unlink(req->bodyFile.c_str());
         }
         if (body_fd < 0)
-            throw ErrorStatus(503, "Error opening body file in checkAndOpen");
+            throw ErrorStatus(503, "Error opening body file in checkAndOpen", error_page);
 
         fd = CGI::responseCGI(req, body_fd);
     }
     else {
         fd = open(req->uri.c_str(), O_RDONLY);
         if (fd < 0)
-            throw (ErrorStatus(500, "open failed in checkAndOpen"));
+            throw (ErrorStatus(500, "open failed in checkAndOpen", error_page));
     }
 
     return fd;
@@ -69,6 +76,14 @@ int WebServ::handleExistedConnection(struct kevent* current)
 {
     // Read and Parse Request
     HttpRequest* req = (HttpRequest*) ((t_eventData*)current->udata)->reqData;
+
+    // custom error pages
+    Directive *error_page = NULL;
+
+    std::map<std::string, Directive>::iterator eit = req->s->directives.find("error_page");
+    if ( eit != req->s->directives.end())
+        error_page = &(eit->second);
+
 
     M_DEBUG && std::cerr << "Reading request\n";
     req->readRequest(current->ident);
@@ -84,7 +99,7 @@ int WebServ::handleExistedConnection(struct kevent* current)
 
         t_eventData* evData = new t_eventData("response ready", new HttpResponse(current->ident, fd, req));
         if (KQueue::watchState(fd, evData, EVFILT_READ) == -1)
-            (delete evData, close(fd), throw ErrorStatus(503, "WatchState at handleExistedConnection"));
+            (delete evData, close(fd), throw ErrorStatus(503, "WatchState at handleExistedConnection", error_page));
 
         delete (t_eventData*)current->udata;
         current->udata = NULL;
@@ -124,6 +139,7 @@ void WebServ::switchToSending(struct kevent* current)
 {
     t_eventData* evData = (t_eventData*) current->udata;
     evData->type = "send response";
+
 
     int clientSocket = ((HttpResponse*)evData->resData)->clientSocket;
 
