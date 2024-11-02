@@ -9,13 +9,19 @@ static void closePipe(int fds[2])
 int CGI::responseCGI(HttpRequest* req, int bodyFd) {
 
     // bodyFd will be 0 if we get request to a .php or .py file --> it should be protected
+    // custom error pages
+    Directive *error_page = NULL;
+
+    std::map<std::string, Directive>::iterator eit = req->s->directives.find("error_page");
+    if ( eit != req->s->directives.end())
+        error_page = &(eit->second);
 
     int outputPipe[2];
 
     if (pipe(outputPipe) == -1) {
         if (M_DEBUG)
             perror("pipe(2)");
-        throw ErrorStatus(503, "pipe failed in responseCGI");
+        throw ErrorStatus(503, "pipe failed in responseCGI", error_page);
     }
 
 
@@ -79,7 +85,7 @@ int CGI::responseCGI(HttpRequest* req, int bodyFd) {
                 perror("fork(2)");
             closePipe(outputPipe);
             close(bodyFd);
-            throw ErrorStatus(503, "fork failed in responseCGI");
+            throw ErrorStatus(503, "fork failed in responseCGI", error_page);
         }
         
         close(outputPipe[1]);

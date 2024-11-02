@@ -9,6 +9,13 @@ static int checkAndOpen(HttpRequest* req)
     M_DEBUG && std::cerr << "\033[1;31m|" << req->getHeader("Host") << "|\033[0m" << std::endl;
     // M_DEBUG && std::cerr << "\033[1;31m|" << req->uri.c_str() << "|\033[0m" << std::endl;
 
+    // custom error pages
+    Directive *error_page = NULL;
+
+    std::map<std::string, Directive>::iterator eit = req->s->directives.find("error_page");
+    if ( eit != req->s->directives.end())
+        error_page = &(eit->second);
+
     //Replace %20 with " "
     size_t p = 0;
     while ((p = req->uri.find("%20", p)) != std::string::npos) {
@@ -47,14 +54,14 @@ static int checkAndOpen(HttpRequest* req)
             unlink(req->bodyFile.c_str());
         }
         if (body_fd < 0)
-            throw ErrorStatus(503, "Error opening body file in checkAndOpen");
+            throw ErrorStatus(503, "Error opening body file in checkAndOpen", error_page);
 
         fd = CGI::responseCGI(req, body_fd);
     }
     else {
         fd = open(req->uri.c_str(), O_RDONLY);
         if (fd < 0)
-            throw (ErrorStatus(500, "open failed in checkAndOpen"));
+            throw (ErrorStatus(500, "open failed in checkAndOpen", error_page));
     }
 
     return fd;
@@ -64,6 +71,14 @@ int WebServ::handleExistedConnection(struct kevent* current)
 {
     // Read and Parse Request
     HttpRequest* req = (HttpRequest*) ((t_eventData*)current->udata)->reqData;
+
+    // custom error pages
+    Directive *error_page = NULL;
+
+    std::map<std::string, Directive>::iterator eit = req->s->directives.find("error_page");
+    if ( eit != req->s->directives.end())
+        error_page = &(eit->second);
+
 
     M_DEBUG && std::cerr << "Reading request\n";
     req->readRequest(current->ident);
@@ -79,7 +94,7 @@ int WebServ::handleExistedConnection(struct kevent* current)
 
         t_eventData* evData = new t_eventData("response ready", new HttpResponse(current->ident, fd, req));
         if (KQueue::watchState(fd, evData, EVFILT_READ) == -1)
-            (delete evData, close(fd), throw ErrorStatus(503, "WatchState at handleExistedConnection"));
+            (delete evData, close(fd), throw ErrorStatus(503, "WatchState at handleExistedConnection", error_page));
 
 
         std::map<t_eventData*, time_t>::iterator it = KQueue::connectedClients.find((t_eventData*)current->udata);
@@ -117,6 +132,7 @@ void WebServ::switchToSending(struct kevent* current)
 {
     t_eventData* evData = (t_eventData*) current->udata;
     evData->type = "send response";
+
 
     int clientSocket = ((HttpResponse*)evData->resData)->clientSocket;
 
