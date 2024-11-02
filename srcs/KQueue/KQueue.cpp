@@ -2,6 +2,8 @@
 
 int KQueue::m_fd = -1;
 struct kevent KQueue::m_keventBuff;
+struct timespec KQueue::m_timout = {TIMEOUT_SEC, 0};
+std::map<t_eventData*, std::time_t> KQueue::connectedClients;
 
 void KQueue::setFdNonBlock(int fd)
 {
@@ -47,11 +49,44 @@ void KQueue::removeWatch(int fd, int type)
 // It will print error if M_DEBUG is set to 1
 int KQueue::getEvents(struct kevent* buffArray, int size)
 {
-    int res = kevent(m_fd, NULL, 0, buffArray, size, NULL);
+    int res = kevent(m_fd, NULL, 0, buffArray, size, &m_timout);
     if (res == -1) {
         if (M_DEBUG)
             perror("kevent(2)");
         return 0;
+    } else if (res == 0) {
+        time_t now = time(NULL);
+        std::map<t_eventData*, std::time_t>::iterator e = connectedClients.end();
+        for (std::map<t_eventData*, std::time_t>::iterator i = connectedClients.begin(); i != e; ) {
+            if (now - i->second >= TIMEOUT_SEC) {
+                removeWatch(i->first->reqData->clientSocket, EVFILT_READ);
+                close(i->first->reqData->clientSocket);
+                delete i->first;
+                i = connectedClients.erase(i);
+            }
+            else
+                i++;
+        }
+        return 0;
     }
+
     return res;
+}
+
+void KQueue::waitForClientToSend(int clientSock, Server* s)
+{
+    HttpRequest *req = new HttpRequest();
+    req->s = s;
+    req->clientSocket = clientSock;
+
+    t_eventData *clientEvData = new t_eventData("client socket", req);
+
+	EV_SET(&KQueue::m_keventBuff, clientSock, EVFILT_READ, EV_ADD, 0, 0, (void*)clientEvData);
+	if (kevent(m_fd, &KQueue::m_keventBuff, 1, 0, 0, NULL) == -1) {
+        if (M_DEBUG)
+            perror("kevent(2) in waitForClientToSend");
+        delete clientEvData;
+        close(clientSock);
+    }
+    connectedClients[clientEvData] = time(NULL);
 }

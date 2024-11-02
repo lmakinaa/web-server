@@ -6,7 +6,8 @@ static int checkAndOpen(HttpRequest* req)
     int fd;
 
     // Open something (file or pipe) and pass it to response
-    M_DEBUG && std::cerr << "\033[1;31m|" << req->uri.c_str() << "|\033[0m" << std::endl;
+    M_DEBUG && std::cerr << "\033[1;31m|" << req->getHeader("Host") << "|\033[0m" << std::endl;
+    // M_DEBUG && std::cerr << "\033[1;31m|" << req->uri.c_str() << "|\033[0m" << std::endl;
 
     //Replace %20 with " "
     size_t p = 0;
@@ -80,6 +81,10 @@ int WebServ::handleExistedConnection(struct kevent* current)
         if (KQueue::watchState(fd, evData, EVFILT_READ) == -1)
             (delete evData, close(fd), throw ErrorStatus(503, "WatchState at handleExistedConnection"));
 
+
+        std::map<t_eventData*, time_t>::iterator it = KQueue::connectedClients.find((t_eventData*)current->udata);
+        KQueue::connectedClients.erase(it);
+
         delete (t_eventData*)current->udata;
         current->udata = NULL;
 
@@ -103,13 +108,7 @@ int WebServ::handleNewConnection(struct kevent* current)
 
     KQueue::setFdNonBlock(clientSock);
 
-    HttpRequest *req = new HttpRequest();
-    req->s = serverEvData->s;
-    
-    t_eventData *clientEvData = new t_eventData("client socket", req);
-
-	if (KQueue::watchState(clientSock, clientEvData, EVFILT_READ) == -1)
-        delete clientEvData;
+    KQueue::waitForClientToSend(clientSock, serverEvData->s);
 	return 0;
 }
 
@@ -137,21 +136,17 @@ void WebServ::sendResponse(struct kevent* current)
         KQueue::removeWatch(res->clientSocket, EVFILT_WRITE);
         // Salat response kolchi daz mzyan
         
-        if (res->connectionClose) {
+        if (res->connectionClose)
             close(res->clientSocket);
-        } else {
-
-            HttpRequest *req = new HttpRequest();
-            req->s = res->s;
-            
-            t_eventData *clientEvData = new t_eventData("client socket", req);
-
-            if (KQueue::watchState(res->clientSocket, clientEvData, EVFILT_READ) == -1)
-                delete clientEvData;
+        else {
+            KQueue::waitForClientToSend(res->clientSocket, res->s);
+            std::cerr << "entered here\n";
+            m_watchedStates++;
         }
+
+        m_watchedStates--;
+        delete evData;
     }
-    delete evData;
-    m_watchedStates--;
 }
 
 void WebServ::loop()
@@ -171,13 +166,14 @@ void WebServ::loop()
                     M_DEBUG && std::cerr << "Connection accepted" << std::endl ;
                 }
                 else if (!std::strcmp(static_cast<t_eventData*>(events[i].udata)->type, "client socket")) {
+                    std::cerr << "receiving\n";
                     handleExistedConnection(&events[i]);
                 }
                 else if (!std::strcmp(static_cast<t_eventData*>(events[i].udata)->type, "response ready")) {
                     switchToSending(&events[i]);
                 }
                 else if (!std::strcmp(static_cast<t_eventData*>(events[i].udata)->type, "send response")) {
-                    sendResponse(&events[i]);
+                    sendResponse(&events[i]);                    
                 }
 
             } catch(ErrorStatus& e) {
@@ -186,8 +182,11 @@ void WebServ::loop()
                     e.clientSock = events[i].ident;
             
                 e.sendError();
-                if (events[i].udata)
+                if (events[i].udata) {
+                    std::map<t_eventData*, time_t>::iterator it = KQueue::connectedClients.find((t_eventData*)events[i].udata);
+                    KQueue::connectedClients.erase(it);
                     delete (t_eventData*)events[i].udata;
+                }
                 m_watchedStates--;
                 // connection will be closed automatically by getting out of the scope of the catch
             }
@@ -195,10 +194,13 @@ void WebServ::loop()
                 if (!std::strcmp(static_cast<t_eventData*>(events[i].udata)->type, "client socket")
                     || !std::strcmp(static_cast<t_eventData*>(events[i].udata)->type, "send response"))
                     e.clientSock = events[i].ident;
-            
-                e.sendError();
-                if (events[i].udata)
+
+                e.sendSuccess();
+                if (events[i].udata) {
+                    std::map<t_eventData*, time_t>::iterator it = KQueue::connectedClients.find((t_eventData*)events[i].udata);
+                    KQueue::connectedClients.erase(it);
                     delete (t_eventData*)events[i].udata;
+                }
                 m_watchedStates--;
                 // connection will be closed automatically by getting out of the scope of the catch
             }
@@ -238,16 +240,3 @@ void WebServ::run()
 
     
 }
-
-// void WebServ::fdCollector(int fd)
-// {
-//     static std::vector<int> nonSocketFds;
-
-//     if (fd == -2) {
-//         for (std::vector<int>::iterator i = nonSocketFds.begin(); i < nonSocketFds.end(); i++) {
-//             close(*i);
-//         }
-//         return ;
-//     }
-//     nonSocketFds.push_back(fd);
-// }

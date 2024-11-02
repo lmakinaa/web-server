@@ -3,7 +3,7 @@ NAME = webserv
 
 CC = c++
 
-FLAGS = -Wall -Wextra -Werror -std=c++98 -fsanitize=address -g
+FLAGS = -Wall -Wextra -Werror -std=c++98 -g #-fsanitize=address 
 
 # ============= Files path variable ============ #
 

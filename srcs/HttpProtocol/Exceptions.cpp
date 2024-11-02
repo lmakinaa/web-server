@@ -25,6 +25,8 @@ void ErrorStatus::setErrorMessage()
 
     switch (errorCode)
     {
+        case -1:
+            break;
         case 400:
             statusMessage = headers + "<html><head><title>400 Bad Request</title></head><body><center><h1>400 Bad Request</h1></center><hr></body></html>";
             break;
@@ -107,6 +109,8 @@ void SuccessStatus::setSuccessMessage()
 {
     switch (successCode)
     {
+        case -1:
+            break;
         case 200:
             statusMessage = headers + "<html><head><title>200 OK</title></head><body><center><h1>200 OK</h1></center><hr></body></html>";
             break;

@@ -85,7 +85,7 @@ void HttpResponse::sendingResponse(long buffSize) {
         if (r == 0) {
             send(clientSocket, "0\r\n\r\n", 5, 0);
             ended = true;
-            M_DEBUG && std::cerr << "The connection is ended and closed\n";
+            M_DEBUG && std::cerr << "The connection is ended\n";
         }
         // When using non block mode, r may returns -1 if there is no data in the fd
         // and it will normally wait but here it'll return -1

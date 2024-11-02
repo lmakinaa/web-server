@@ -216,12 +216,16 @@ void HttpRequest::readRequest(int fd) {
     crlf.push_back('\n');
 
     read_bytes = recv(fd, buffer, buffer_size, 0);
-    if (read_bytes <= 0) 
+    if (read_bytes <= 0)
     {
+        if (read_bytes == 0 && state == FirstLine)
+            throw SuccessStatus(-1, "");
         if (read_bytes == 0)
             isDone = true;
         return;
     }
+
+        std::cerr << "raw:\n" << buffer << '\n';
 
     // Add new data to our partial buffer
     partial_data.insert(partial_data.end(), buffer, buffer + read_bytes);
@@ -235,7 +239,7 @@ void HttpRequest::readRequest(int fd) {
         // Check if we've received all the data
         if (total_read_bytes >= content_length)
         {
-            isDone = true;
+            // isDone = true;
         }
         return;
     }
