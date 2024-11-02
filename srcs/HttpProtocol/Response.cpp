@@ -1,23 +1,13 @@
 #include "Response.hpp"
 
-void HttpResponse::SetVersion(std::string value){
-    this->Version = value;
-}
-
-void HttpResponse::SetResponseCode(std::string value){
-    this->ResponseCode = value;
-}
-
-void HttpResponse::SetContentType(std::string value){
-    this->ContentType = value;
-}
-
-void HttpResponse::SetConnection(std::string value){
-    this->Connection = value;
-}
-
-void HttpResponse::SetBody(std::vector<char> value){
-    this->Body.insert(this->Body.end(), value.begin(), value.end());
+std::string strToLower(std::string s)
+{
+    std::string res("");
+    
+    for (std::string::iterator i = s.begin(); i < s.end(); i++) {
+        res += std::tolower(*i);
+    }
+    return res;
 }
 
 const std::vector<char> HttpResponse::BuildResponse() {

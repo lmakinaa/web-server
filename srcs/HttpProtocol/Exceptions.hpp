@@ -25,8 +25,10 @@ public:
     ErrorStatus(int errorCode, const char* debugMsg, Directive *errorpages);
     void setErrorMessage();
     ~ErrorStatus() {
-        if (clientSock != -1)
+        if (clientSock != -1) {
             close(clientSock);
+            M_DEBUG && std::cerr << "Closed connection after sending error response\n";
+        }
     }
     void sendError() const throw() {
         if (clientSock != -1)
@@ -50,6 +52,7 @@ public:
     ~SuccessStatus() {
         if (clientSock != -1)
             close(clientSock);
+            M_DEBUG && std::cerr << "Closed connection after sending success response\n";
     }
     void sendError() const throw() {
         if (clientSock != -1)

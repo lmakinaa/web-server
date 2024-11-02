@@ -135,11 +135,23 @@ void WebServ::sendResponse(struct kevent* current)
 
     if (res->ended) {
         KQueue::removeWatch(res->clientSocket, EVFILT_WRITE);
-        close(res->clientSocket);
-        delete evData;
-        m_watchedStates--;
         // Salat response kolchi daz mzyan
+        
+        if (res->connectionClose) {
+            close(res->clientSocket);
+        } else {
+
+            HttpRequest *req = new HttpRequest();
+            req->s = res->s;
+            
+            t_eventData *clientEvData = new t_eventData("client socket", req);
+
+            if (KQueue::watchState(res->clientSocket, clientEvData, EVFILT_READ) == -1)
+                delete clientEvData;
+        }
     }
+    delete evData;
+    m_watchedStates--;
 }
 
 void WebServ::loop()

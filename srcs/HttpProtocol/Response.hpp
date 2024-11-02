@@ -10,10 +10,13 @@
 #include "Request.hpp"
 
 std::string WhatContentType(std::string uri);
+std::string strToLower(std::string s);
 
 #ifndef M_DEBUG
 # define M_DEBUG 1
 #endif
+
+class Server;
 
 class HttpResponse{
     public :
@@ -26,6 +29,8 @@ class HttpResponse{
         int responseFd;
         bool ended;
         size_t iterations;
+        Server* s;
+        bool connectionClose;
 
 
         HttpResponse(int clientSocket, int fd, HttpRequest* req) : Version("HTTP/1.1"), ResponseCode("200 OK"), ContentType(WhatContentType(req->uri)), Connection("close"), clientSocket(clientSocket), responseFd(fd), ended(false) {
@@ -39,14 +44,12 @@ class HttpResponse{
 
 
             iterations = 0;
+            s = req->s;
+            connectionClose = (strToLower(req->getHeader("Connection")) == "close");
+
         }
         ~HttpResponse() {close(responseFd);}
         void sendingResponse(long buffSize);
-        void SetVersion(std::string value);
-        void SetResponseCode(std::string value);
-        void SetContentType(std::string value);
-        void SetConnection(std::string value);
-        void SetBody(std::vector<char> Body);
 
         std::string GetVersion();
         std::string GetResponseCode();
@@ -56,6 +59,4 @@ class HttpResponse{
         const std::vector<char> BuildResponse();
 
 };
-
-std::string WhatContentType(std::string uri);
 
