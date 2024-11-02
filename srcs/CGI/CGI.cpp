@@ -25,18 +25,19 @@ int CGI::responseCGI(HttpRequest* req, int bodyFd) {
     }
 
 
-    std::string scriptPath = req->uri; // to replace this section
     std::string scriptName = req->uri;
-    size_t queryPos = scriptPath.find('?');
-    if (queryPos != std::string::npos) {
-        scriptPath = scriptPath.substr(0, queryPos);
+    std::string cgiPath;
+    size_t queryPos = scriptName.find('?');
+    if (queryPos != std::string::npos) 
         scriptName = scriptName.substr(0, queryPos);
-    }
+    if (scriptName.find(".py") != std::string::npos)
+        cgiPath = "/usr/bin/python3";
+    else
+        cgiPath = "/Users/miguiji/Desktop/webserver/www/cgi-bin/php-cgi";
 
     char *argv[] = {
-        // const_cast<char*>("/usr/bin/python3"),
-        const_cast<char*>("/Users/ijaija/merge/www/server-cgis/php-cgi"),
-        const_cast<char*>("/Users/ijaija/merge/www/html/index.php"),
+        const_cast<char*>(cgiPath.c_str()),
+        const_cast<char*>(scriptName.c_str()),
         NULL
     };
 
@@ -61,7 +62,7 @@ int CGI::responseCGI(HttpRequest* req, int bodyFd) {
         if (cookie != "")
             cookie.insert(cookie.size() - 2, ";");
 
-        setenv("SCRIPT_FILENAME", scriptPath.c_str(), 1);
+        setenv("SCRIPT_FILENAME", scriptName.c_str(), 1);
         setenv("REDIRECT_STATUS", "200", 1);
         setenv("CONTENT_TYPE", req->getHeader("Content-Type").substr(0, req->getHeader("Content-Type").size() - 2).c_str(), 1);
         setenv("REQUEST_METHOD", req->method.c_str(), 1);

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Directory Listing</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            font-size: 24px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 30px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+        li {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        li:last-child {
+            border-bottom: none;
+        }
+        a {
+            color: #4CAF50;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        .file-info {
+            color: #555;
+            font-size: 14px;
+        }
+        .icon {
+            font-size: 20px;
+            margin-right: 10px;
+        }
+        .file {
+            display: flex;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        Directory Listing
+    </header>
+    <div class="container">
+        <ul>
+            <li>
+                <div class="file">
+                    <span class="icon">📄</span>
+                    <a href="file1.txt">file1.txt</a>
+                </div>
+                <span class="file-info">15 KB | 2024-10-10</span>
+            </li>
+            <li>
+                <div class="file">
+                    <span class="icon">📁</span>
+                    <a href="folder1/">folder1/</a>
+                </div>
+                <span class="file-info">- | 2024-10-09</span>
+            </li>
+        </ul>
+    </div>
+</body>
+</html>
+

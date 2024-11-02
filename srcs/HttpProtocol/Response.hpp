@@ -33,16 +33,17 @@ class HttpResponse{
         bool connectionClose;
 
 
-        HttpResponse(int clientSocket, int fd, HttpRequest* req) : Version("HTTP/1.1"), ResponseCode("200 OK"), ContentType(WhatContentType(req->uri)), Connection("close"), clientSocket(clientSocket), responseFd(fd), ended(false) {
+         HttpResponse(int clientSocket, int fd, HttpRequest* req) : Version("HTTP/1.1"), ResponseCode("200 OK"), ContentType(WhatContentType(req->uri)), Connection("close"), clientSocket(clientSocket), responseFd(fd), ended(false) {
 
             std::string headers = "HTTP/1.1 200 OK\r\n"
-            // "Content-Type: " + ContentType + "\r\n"
             "Connection: keep-alive\r\n"
             "Transfer-Encoding: chunked\r\n";
-
+            if (req->uri.find(".php") != std::string::npos || req->uri.find(".py") != std::string::npos);
+            else
+                headers += "Content-Type: " + ContentType + "\r\n\r\n";
             send(clientSocket, headers.c_str(), headers.size(), 0);
 
-
+            
             iterations = 0;
             s = req->s;
             connectionClose = (strToLower(req->getHeader("Connection")) == "close");
