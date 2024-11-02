@@ -24,11 +24,6 @@ int CGI::responseCGI(HttpRequest* req, int bodyFd) {
         throw ErrorStatus(503, "pipe failed in responseCGI", error_page);
     }
 
-    char *argv[] = {
-        // const_cast<char*>("/usr/bin/python3"),
-        const_cast<char*>("/Users/ijaija/merge/www/server-cgis/php-cgi"),
-        NULL
-    };
 
     std::string scriptPath = req->uri; // to replace this section
     std::string scriptName = req->uri;
@@ -38,8 +33,19 @@ int CGI::responseCGI(HttpRequest* req, int bodyFd) {
         scriptName = scriptName.substr(0, queryPos);
     }
 
-    std::cerr << scriptPath << '\n';
-    std::cerr << "script name: " << scriptName << '\n';
+    char *argv[] = {
+        // const_cast<char*>("/usr/bin/python3"),
+        const_cast<char*>("/Users/ijaija/merge/www/server-cgis/php-cgi"),
+        const_cast<char*>("/Users/ijaija/merge/www/html/index.php"),
+        NULL
+    };
+
+    // char *argv[] = {
+    //     const_cast<char*>("/usr/bin/python3"),
+    //     const_cast<char*>("/Users/ijaija/merge/www/html/test.py"),
+    //     NULL
+    // };
+
 
 
     int pid = fork();
@@ -51,12 +57,16 @@ int CGI::responseCGI(HttpRequest* req, int bodyFd) {
         close(bodyFd);
         closePipe(outputPipe);
 
+        std::string cookie = req->getHeader("Cookie");
+        if (cookie != "")
+            cookie.insert(cookie.size() - 2, ";");
+
         setenv("SCRIPT_FILENAME", scriptPath.c_str(), 1);
         setenv("REDIRECT_STATUS", "200", 1);
         setenv("CONTENT_TYPE", req->getHeader("Content-Type").substr(0, req->getHeader("Content-Type").size() - 2).c_str(), 1);
         setenv("REQUEST_METHOD", req->method.c_str(), 1);
-        setenv("HTTP_COOKIE", req->getHeader("Cookie").c_str(), 1);
-        setenv("SESSION_ID", getSessionIdFromRequest(req->getHeader("Cookie")).c_str(), 1);
+        setenv("HTTP_COOKIE", cookie.c_str(), 1);
+        // setenv("SESSION_ID", getSessionIdFromRequest(req->getHeader("Cookie")).c_str(), 1);
 
         (req->method == "POST") && setenv("CONTENT_LENGTH", std::to_string(req->content_length).c_str(), 1);
         if (queryPos != std::string::npos)
@@ -79,7 +89,6 @@ int CGI::responseCGI(HttpRequest* req, int bodyFd) {
         }
         
         close(outputPipe[1]);
-        close(bodyFd);
         KQueue::setFdNonBlock(outputPipe[0]);
     }
 

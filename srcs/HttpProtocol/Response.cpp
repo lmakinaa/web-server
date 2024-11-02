@@ -1,23 +1,13 @@
 #include "Response.hpp"
 
-void HttpResponse::SetVersion(std::string value){
-    this->Version = value;
-}
-
-void HttpResponse::SetResponseCode(std::string value){
-    this->ResponseCode = value;
-}
-
-void HttpResponse::SetContentType(std::string value){
-    this->ContentType = value;
-}
-
-void HttpResponse::SetConnection(std::string value){
-    this->Connection = value;
-}
-
-void HttpResponse::SetBody(std::vector<char> value){
-    this->Body.insert(this->Body.end(), value.begin(), value.end());
+std::string strToLower(std::string s)
+{
+    std::string res("");
+    
+    for (std::string::iterator i = s.begin(); i < s.end(); i++) {
+        res += std::tolower(*i);
+    }
+    return res;
 }
 
 const std::vector<char> HttpResponse::BuildResponse() {
@@ -88,9 +78,9 @@ void HttpResponse::sendingResponse(long buffSize) {
 
     buffSize *= 0.80; // I wont use the whole available buffSize to decrease the load on it
 
-    char buff[buffSize];
+    char bf[buffSize];
 
-    int r = read(responseFd, buff, buffSize);
+    int r = read(responseFd, bf, buffSize);
     if (r <= 0) {
         if (r == 0) {
             send(clientSocket, "0\r\n\r\n", 5, 0);
@@ -100,6 +90,19 @@ void HttpResponse::sendingResponse(long buffSize) {
         // When using non block mode, r may returns -1 if there is no data in the fd
         // and it will normally wait but here it'll return -1
         return;
+    }
+
+    char *buff = bf;
+    if (iterations == 0) {
+        std::string tmp(bf);
+        size_t p = tmp.find("\r\n\r\n");
+        if (p != std::string::npos) {
+            p += 4;
+            tmp = tmp.substr(0, p);
+            r -= p;
+            buff = bf + p;
+            send(clientSocket, tmp.c_str(), tmp.size(), 0);
+        }
     }
 
     std::stringstream tmp;
@@ -115,4 +118,6 @@ void HttpResponse::sendingResponse(long buffSize) {
         }
         ended = true; // Treat send failure as a connection issue, I wont throw because there is no one to receive the error code
     }
+
+    iterations++;
 }

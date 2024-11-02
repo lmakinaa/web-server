@@ -7,12 +7,6 @@ static int checkAndOpen(HttpRequest* req)
 
     // Open something (file or pipe) and pass it to response
     M_DEBUG && std::cerr << "\033[1;31m|" << req->uri.c_str() << "|\033[0m" << std::endl;
-    
-    if (req->getHeader("Cookie") == "")
-        req->headers["Set-Cookie"] = "SESSID=" + sessionIdGen(*req->s);
-    else
-        req->headers["Set-Cookie"] = "";
-
 
     // custom error pages
     Directive *error_page = NULL;
@@ -20,7 +14,6 @@ static int checkAndOpen(HttpRequest* req)
     std::map<std::string, Directive>::iterator eit = req->s->directives.find("error_page");
     if ( eit != req->s->directives.end())
         error_page = &(eit->second);
-
 
     //Replace %20 with " "
     size_t p = 0;
@@ -48,8 +41,9 @@ static int checkAndOpen(HttpRequest* req)
     if (pPos != std::string::npos)
         extension = req->uri.substr(pPos);
 
-    if (!strcmp(extension.c_str(), ".php") || !strcmp(extension.c_str(), ".py") || !strncmp(extension.c_str(), ".php?", 5) || !strncmp(extension.c_str(), ".py?", 5))
+    if (!strcmp(extension.c_str(), ".php") || !strcmp(extension.c_str(), ".py") || !strncmp(extension.c_str(), ".php?", 5) || !strncmp(extension.c_str(), ".py?", 4))
     {
+        std::cerr << "chikaviww chikaviiw bum chaa chaaa   " << req->uri <<std::endl;
         req->uri += querystr;
         M_DEBUG && std::cerr << "\033[1;31m" << req->bodyFile << "\033[0m" << std::endl;
         if (req->bodyFile.empty())
@@ -157,11 +151,23 @@ void WebServ::sendResponse(struct kevent* current)
 
     if (res->ended) {
         KQueue::removeWatch(res->clientSocket, EVFILT_WRITE);
-        close(res->clientSocket);
-        delete evData;
-        m_watchedStates--;
         // Salat response kolchi daz mzyan
+        
+        if (res->connectionClose) {
+            close(res->clientSocket);
+        } else {
+
+            HttpRequest *req = new HttpRequest();
+            req->s = res->s;
+            
+            t_eventData *clientEvData = new t_eventData("client socket", req);
+
+            if (KQueue::watchState(res->clientSocket, clientEvData, EVFILT_READ) == -1)
+                delete clientEvData;
+        }
     }
+    delete evData;
+    m_watchedStates--;
 }
 
 void WebServ::loop()
