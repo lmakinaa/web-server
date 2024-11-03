@@ -90,3 +90,15 @@ void KQueue::waitForClientToSend(int clientSock, Server* s)
     }
     connectedClients[clientEvData] = time(NULL);
 }
+
+int KQueue::watchChildExited(pid_t pid, t_eventData* evData)
+{
+    EV_SET(&m_keventBuff, pid, EVFILT_PROC, EV_ADD | EV_ONESHOT, NOTE_EXIT, 0, (void *)evData);
+
+    if (kevent(m_fd, &m_keventBuff, 1, NULL, 0, NULL) == -1) {
+        if (M_DEBUG)
+            perror("kevent(2) in watchChildExited");
+        return -1;
+    }
+    return 0;
+}

@@ -31,9 +31,10 @@ class HttpResponse{
         size_t iterations;
         Server* s;
         bool connectionClose;
+        pid_t cgiPid;
 
 
-         HttpResponse(int clientSocket, int fd, HttpRequest* req) : Version("HTTP/1.1"), ResponseCode("200 OK"), ContentType(WhatContentType(req->uri)), Connection("close"), clientSocket(clientSocket), responseFd(fd), ended(false) {
+        HttpResponse(int clientSocket, int fd, HttpRequest* req) : Version("HTTP/1.1"), ResponseCode("200 OK"), ContentType(WhatContentType(req->uri)), Connection("close"), clientSocket(clientSocket), responseFd(fd), ended(false) {
 
             std::string headers = "HTTP/1.1 200 OK\r\n"
             "Connection: keep-alive\r\n"
@@ -47,7 +48,7 @@ class HttpResponse{
             iterations = 0;
             s = req->s;
             connectionClose = (strToLower(req->getHeader("Connection")) == "close");
-
+            cgiPid = req->cgiPid;
         }
         ~HttpResponse() {close(responseFd);}
         void sendingResponse(long buffSize);

@@ -5,9 +5,7 @@ static int checkAndOpen(HttpRequest* req)
     int body_fd;
     int fd;
 
-    // Open something (file or pipe) and pass it to response
-    M_DEBUG && std::cerr << "\033[1;31m|" << req->getHeader("Host") << "|\033[0m" << std::endl;
-    // M_DEBUG && std::cerr << "\033[1;31m|" << req->uri.c_str() << "|\033[0m" << std::endl;
+    M_DEBUG && std::cerr << "\033[1;31m|" << req->uri << "|\033[0m" << std::endl;
 
     // custom error pages
     Directive *error_page = NULL;
@@ -41,8 +39,9 @@ static int checkAndOpen(HttpRequest* req)
     size_t pPos = req->uri.find_last_of(".");
     if (pPos != std::string::npos)
         extension = req->uri.substr(pPos);
-
     if (!strcmp(extension.c_str(), ".php") || !strcmp(extension.c_str(), ".py") || !strncmp(extension.c_str(), ".php?", 5) || !strncmp(extension.c_str(), ".py?", 4))
+        req->IsCgi = true;
+    if (req->IsCgi)
     {
         std::cerr << "chikaviww chikaviiw bum chaa chaaa   " << req->uri <<std::endl;
         req->uri += querystr;
@@ -87,15 +86,21 @@ int WebServ::handleExistedConnection(struct kevent* current)
     {
         KQueue::removeWatch(current->ident, EVFILT_READ);
 
+
         int fd = checkAndOpen(req);
         KQueue::setFdNonBlock(fd);
         
         M_DEBUG && std::cerr << "Request parsed and passed to execution\n" ;
 
-        t_eventData* evData = new t_eventData("response ready", new HttpResponse(current->ident, fd, req));
-        if (KQueue::watchState(fd, evData, EVFILT_READ) == -1)
-            (delete evData, close(fd), throw ErrorStatus(503, "WatchState at handleExistedConnection", error_page));
-
+        if (req->IsCgi) {
+            t_eventData* evData = new t_eventData("cgi ready", new HttpResponse(current->ident, fd, req));
+            if (KQueue::watchChildExited(req->cgiPid, evData) == -1)
+                throw ErrorStatus(503, "WatchState at handleExistedConnection(1)", error_page);
+        } else {
+            t_eventData* evData = new t_eventData("send response", new HttpResponse(current->ident, fd, req));
+            if (KQueue::watchState(current->ident, evData, EVFILT_WRITE) == -1)
+                throw ErrorStatus(503, "watchState in handleExistedConnection(2)", error_page);
+        }
 
         std::map<t_eventData*, time_t>::iterator it = KQueue::connectedClients.find((t_eventData*)current->udata);
         KQueue::connectedClients.erase(it);
@@ -128,17 +133,25 @@ int WebServ::handleNewConnection(struct kevent* current)
 }
 
 
-void WebServ::switchToSending(struct kevent* current)
+void WebServ::cgiSwitchToSending(struct kevent* current)
 {
     t_eventData* evData = (t_eventData*) current->udata;
-    evData->type = "send response";
-
 
     int clientSocket = ((HttpResponse*)evData->resData)->clientSocket;
 
-    KQueue::removeWatch(current->ident, EVFILT_READ);
+    int s;
+    waitpid(current->ident, &s, WNOHANG);
+
+    std::cerr << "status: " << s << '\n';
+
+    if (s != 0)
+        throw ErrorStatus(clientSocket, 500, "in cgiSwitchToSending: cgi failed");
+
+    evData->type = "send response";
+    // tal hna 3ad yt7ato lheaders dyal response
+
     if (KQueue::watchState(clientSocket, evData, EVFILT_WRITE) == -1)
-        throw ErrorStatus(clientSocket, 503, "watchState in switchToSending");
+        throw ErrorStatus(clientSocket, 503, "watchState in cgiSwitchToSending");
 }
 
 void WebServ::sendResponse(struct kevent* current)
@@ -182,11 +195,11 @@ void WebServ::loop()
                     M_DEBUG && std::cerr << "Connection accepted" << std::endl ;
                 }
                 else if (!std::strcmp(static_cast<t_eventData*>(events[i].udata)->type, "client socket")) {
-                    std::cerr << "receiving\n";
+                    M_DEBUG && std::cerr << "receiving\n";
                     handleExistedConnection(&events[i]);
                 }
-                else if (!std::strcmp(static_cast<t_eventData*>(events[i].udata)->type, "response ready")) {
-                    switchToSending(&events[i]);
+                else if (!std::strcmp(static_cast<t_eventData*>(events[i].udata)->type, "cgi ready")) {
+                    cgiSwitchToSending(&events[i]);
                 }
                 else if (!std::strcmp(static_cast<t_eventData*>(events[i].udata)->type, "send response")) {
                     sendResponse(&events[i]);                    
@@ -199,8 +212,10 @@ void WebServ::loop()
             
                 e.sendError();
                 if (events[i].udata) {
-                    std::map<t_eventData*, time_t>::iterator it = KQueue::connectedClients.find((t_eventData*)events[i].udata);
-                    KQueue::connectedClients.erase(it);
+                    if (std::strcmp(static_cast<t_eventData*>(events[i].udata)->type, "cgi ready")) {
+                        std::map<t_eventData*, time_t>::iterator it = KQueue::connectedClients.find((t_eventData*)events[i].udata);
+                        KQueue::connectedClients.erase(it);
+                    }
                     delete (t_eventData*)events[i].udata;
                 }
                 m_watchedStates--;
@@ -213,8 +228,10 @@ void WebServ::loop()
 
                 e.sendSuccess();
                 if (events[i].udata) {
-                    std::map<t_eventData*, time_t>::iterator it = KQueue::connectedClients.find((t_eventData*)events[i].udata);
-                    KQueue::connectedClients.erase(it);
+                    if (std::strcmp(static_cast<t_eventData*>(events[i].udata)->type, "cgi ready")) {
+                        std::map<t_eventData*, time_t>::iterator it = KQueue::connectedClients.find((t_eventData*)events[i].udata);
+                        KQueue::connectedClients.erase(it);
+                    }
                     delete (t_eventData*)events[i].udata;
                 }
                 m_watchedStates--;

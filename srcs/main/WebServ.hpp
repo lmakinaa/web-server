@@ -35,7 +35,7 @@ public:
     int handleNewConnection(struct kevent* current);
     int handleExistedConnection(struct kevent* current);
     void sendResponse(struct kevent* current);
-    void switchToSending(struct kevent* current);
+    void cgiSwitchToSending(struct kevent* current);
 
 public:
     std::vector<Server> servers;

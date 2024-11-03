@@ -31,6 +31,7 @@ public:
     static int getEvents(struct kevent* buffArray, int size);
     static void setFdNonBlock(int fd);
     static void waitForClientToSend(int clientSock, Server* s);
+    static int watchChildExited(pid_t pid, t_eventData* evData);
     
     static struct kevent m_keventBuff;
     static struct timespec m_timout;

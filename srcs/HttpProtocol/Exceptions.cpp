@@ -14,7 +14,6 @@ void ErrorStatus::setErrorMessage()
             if (ofs.fail())
                 throw ErrorStatus(500, "Can't open Error page");
             std::string line, file = "";
-
             while (std::getline(ofs, line))
                 file += line;
             statusMessage = headers + file;

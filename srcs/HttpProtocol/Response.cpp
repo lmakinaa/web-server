@@ -80,7 +80,9 @@ void HttpResponse::sendingResponse(long buffSize) {
 
     char bf[buffSize];
 
+    (iterations == 0) && lseek(responseFd, 0, SEEK_SET);
     int r = read(responseFd, bf, buffSize);
+    std::cerr << "read bytes: " << r << '\n';
     if (r <= 0) {
         if (r == 0) {
             send(clientSocket, "0\r\n\r\n", 5, 0);

@@ -79,8 +79,10 @@ HttpRequest::HttpRequest()
     , chunkPos(0)
     , TransferEncoding("")
     , skipNextLine(false)
+    , IsCgi(false)
 {
         partial_data.reserve(1);
+        cgiPid = -1;
 }
 
 void HttpRequest::parseRequest(const std::string& request)
@@ -119,7 +121,7 @@ void HttpRequest::parseRequest(const std::string& request)
             if (TransferEncoding == "chunked\r\n")
                 unchunkBody(const_cast<char*>(request.c_str()), request.size());
             else
-                parseBody(const_cast<char*>(request.c_str()), request.size());            
+                parseBody(const_cast<char*>(request.c_str()), request.size());
     }
 }
 void HttpRequest::unchunkBody(char *request, size_t size)

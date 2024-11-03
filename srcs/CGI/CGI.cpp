@@ -1,10 +1,41 @@
 #include "CGI.hpp"
 
-static void closePipe(int fds[2])
-{
-    close(fds[0]);
-    close(fds[1]);
+std::string  generateRandomFileName(const std::string path, const std::string extension) {
+
+    std::srand(static_cast<unsigned int>(std::time(0)));
+
+    std::time_t now = std::time(0);
+    std::tm* localTime = std::localtime(&now);
+
+    char timeBuffer[15]; // "YYYYMMDDHHMMSS"
+    std::strftime(timeBuffer, sizeof(timeBuffer), "%Y%m%d%H%M%S", localTime);
+
+    std::ostringstream oss;
+    if (!path.empty()) {
+        oss << path;
+        if (path[path.size() - 1] != '/') {
+            oss << "/";
+        }
+    }
+
+    oss << ".";
+
+    oss << timeBuffer;
+    oss << "_" << (std::rand() % 10000);
+
+    if (!extension.empty()) {
+        oss << "." << extension;
+    }
+
+    return oss.str();
 }
+
+
+// static void closePipe(int fds[2])
+// {
+//     close(fds[0]);
+//     close(fds[1]);
+// }
 
 int CGI::responseCGI(HttpRequest* req, int bodyFd) {
 
@@ -16,14 +47,22 @@ int CGI::responseCGI(HttpRequest* req, int bodyFd) {
     if ( eit != req->s->directives.end())
         error_page = &(eit->second);
 
-    int outputPipe[2];
+    // int outputPipe[2];
 
-    if (pipe(outputPipe) == -1) {
+    // if (pipe(outputPipe) == -1) {
+    //     if (M_DEBUG)
+    //         perror("pipe(2)");
+    //     throw ErrorStatus(503, "pipe failed in responseCGI", error_page);
+    // }
+
+    std::string fileName = generateRandomFileName("/tmp/", "webserv");
+    
+    int outputFile = open(fileName.c_str(), O_CREAT | O_WRONLY, 0644);
+    if (outputFile == -1) {
         if (M_DEBUG)
             perror("pipe(2)");
-        throw ErrorStatus(503, "pipe failed in responseCGI", error_page);
+        throw ErrorStatus(503, "open(2) failed in responseCGI", error_page);
     }
-
 
     std::string scriptName = req->uri;
     std::string cgiPath;
@@ -33,7 +72,7 @@ int CGI::responseCGI(HttpRequest* req, int bodyFd) {
     if (scriptName.find(".py") != std::string::npos)
         cgiPath = "/usr/bin/python3";
     else
-        cgiPath = "/Users/miguiji/Desktop/webserver/www/cgi-bin/php-cgi";
+        cgiPath = "/Users/ijaija/merge/www/cgi-bin/php-cgi";
 
     char *argv[] = {
         const_cast<char*>(cgiPath.c_str()),
@@ -52,11 +91,11 @@ int CGI::responseCGI(HttpRequest* req, int bodyFd) {
     int pid = fork();
     if (!pid)
     {
-        dup2(outputPipe[1], 1);
+        dup2(outputFile, 1);
         dup2(bodyFd, 0);
 
+        close(outputFile);
         close(bodyFd);
-        closePipe(outputPipe);
 
         std::string cookie = req->getHeader("Cookie");
         if (cookie != "")
@@ -83,15 +122,17 @@ int CGI::responseCGI(HttpRequest* req, int bodyFd) {
         if (pid == -1) {
             if (M_DEBUG)
                 perror("fork(2)");
-            closePipe(outputPipe);
+            close(outputFile);
             close(bodyFd);
             throw ErrorStatus(503, "fork failed in responseCGI", error_page);
         }
-        
-        close(outputPipe[1]);
-        KQueue::setFdNonBlock(outputPipe[0]);
+        req->cgiPid = pid;
+        close(outputFile);
+        outputFile = open(fileName.c_str(), O_RDONLY, 0644);
+        unlink(fileName.c_str());
+        KQueue::setFdNonBlock(outputFile);
     }
 
-    return outputPipe[0];
+    return outputFile;
 }
 

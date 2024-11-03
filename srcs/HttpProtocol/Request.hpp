@@ -48,8 +48,10 @@ public:
     long long chunkPos;
     std::string TransferEncoding;
     bool skipNextLine;
+    bool IsCgi;
     Server* s;
     int clientSocket;
+    pid_t cgiPid;
 
 };
 
