@@ -291,8 +291,7 @@ bool    sameNameChecker(std::vector<Server> &servers, VirtualServer &serv)
     for (size_t i = 0; i < servers.size(); i++)
     {
         if (servers[i].serv[0].directives["listen"].values[0] == serv.directives["listen"].values[0]
-        &&
-        servers[i].serv[0].directives["host"].values[0] == serv.directives["host"].values[0])
+        && servers[i].serv[0].directives["host"].values[0] == serv.directives["host"].values[0])
             return (1);
     }
     return (0);
