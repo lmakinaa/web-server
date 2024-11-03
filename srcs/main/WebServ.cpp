@@ -34,7 +34,7 @@ static int checkAndOpen(HttpRequest* req)
     }
     // Rachid gad throws f _GET_DELETE() wcleani ressourses gbal ma throwi
     // We should handle directories and root here
-    req->uri = _GET_DELETE(*req->s, uri, req->method, location); // this give the path of the file
+    req->uri = _GET_DELETE(*req->s, uri, req->method, &location); // this give the path of the file
     std::string extension = "";
 
     size_t pPos = req->uri.find_last_of(".");
@@ -55,7 +55,6 @@ static int checkAndOpen(HttpRequest* req)
         }
         if (body_fd < 0)
             throw ErrorStatus(503, "Error opening body file in checkAndOpen", error_page);
-
         fd = CGI::responseCGI(req, body_fd, location);
     }
     else {

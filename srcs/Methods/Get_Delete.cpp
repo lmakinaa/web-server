@@ -327,7 +327,7 @@ bool    stringMaching(std::string locat , std::string &requestPath)
     return (0);
 }
 
-std::string    _GET_DELETE(VirtualServer &serv, std::string requestPath, std::string _Method, Location *location)
+std::string    _GET_DELETE(VirtualServer &serv, std::string requestPath, std::string _Method, Location **location)
 {
     std::string resquestedFile = "";
     std::string line;
@@ -357,7 +357,7 @@ std::string    _GET_DELETE(VirtualServer &serv, std::string requestPath, std::st
     /* ======= Found the matching path ======= */
     if (it != serv.locations.end())
     {
-        location = &it->second;
+        *location = &it->second;
         //check allowed method
         if (it->second.directives.find("allow_methods") != it->second.directives.end())
         {
