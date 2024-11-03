@@ -37,7 +37,7 @@ std::string  generateRandomFileName(const std::string path, const std::string ex
 //     close(fds[1]);
 // }
 
-int CGI::responseCGI(HttpRequest* req, int bodyFd) {
+int CGI::responseCGI(HttpRequest* req, int bodyFd, Location *location) {
 
     // bodyFd will be 0 if we get request to a .php or .py file --> it should be protected
     // custom error pages
@@ -65,14 +65,24 @@ int CGI::responseCGI(HttpRequest* req, int bodyFd) {
     }
 
     std::string scriptName = req->uri;
-    std::string cgiPath;
+    std::string cgiPath = "";
     size_t queryPos = scriptName.find('?');
     if (queryPos != std::string::npos) 
         scriptName = scriptName.substr(0, queryPos);
     if (scriptName.find(".py") != std::string::npos)
-        cgiPath = "/usr/bin/python3";
+    {
+        if (location && location->directives.find("py-cgi") != location->directives.end())
+            cgiPath = location->directives["py-cgi"].values[0];
+        else if (location)
+            ErrorStatus(404, "Python Cgi path not found", error_page);
+    }
     else
-        cgiPath = "/Users/ijaija/merge/www/cgi-bin/php-cgi";
+    {
+        if (location && location->directives.find("php-cgi") != location->directives.end())
+            cgiPath = location->directives["php-cgi"].values[0];
+        else if (location)
+            ErrorStatus(404, "php Cgi path not found", error_page);
+    }
 
     char *argv[] = {
         const_cast<char*>(cgiPath.c_str()),

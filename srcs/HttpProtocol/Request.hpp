@@ -11,7 +11,7 @@
 #include <algorithm>
 #include "Exceptions.hpp"
 
-class Server;
+class VirtualServer;
 
 enum ParseState{
     FirstLine,
@@ -49,7 +49,7 @@ public:
     std::string TransferEncoding;
     bool skipNextLine;
     bool IsCgi;
-    Server* s;
+    VirtualServer* s;
     int clientSocket;
     pid_t cgiPid;
 

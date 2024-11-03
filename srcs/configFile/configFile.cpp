@@ -209,7 +209,7 @@ int checkLocation(std::vector<std::string> &conf, size_t i, Location &loc)
 }
 
 
-int checkDirectives(std::vector<std::string> &conf, size_t i, Server &serv)
+int checkDirectives(std::vector<std::string> &conf, size_t i, VirtualServer &serv)
 {
 
     std::vector<std::string> directive;
@@ -266,7 +266,7 @@ int checkDirectives(std::vector<std::string> &conf, size_t i, Server &serv)
                             M_DEBUG && std::cerr << "Syntaxe error in line " << i + 1 << ": invalid directive" << std::endl;
                             return (-1);
                         }
-                        if ( directive[0] != "error_page" &&  serv.directives.find(directive[0]) != serv.directives.end())
+                        if ( directive[0] != "error_page" &&  serv.directives.find(directive[0]) != serv.directives.end() && j == 1)
                         {
                             M_DEBUG && std::cerr << "Syntaxe error in line " << i + 1 << ": duplacate directive" << std::endl;
                             return (-1);
@@ -284,6 +284,18 @@ int checkDirectives(std::vector<std::string> &conf, size_t i, Server &serv)
     }
 
     return (i);
+}
+
+bool    sameNameChecker(std::vector<Server> &servers, VirtualServer &serv)
+{
+    for (size_t i = 0; i < servers.size(); i++)
+    {
+        if (servers[i].serv[0].directives["listen"].values[0] == serv.directives["listen"].values[0]
+        &&
+        servers[i].serv[0].directives["host"].values[0] == serv.directives["host"].values[0])
+            return (1);
+    }
+    return (0);
 }
 
 int checkServerBlock(std::vector<std::string> &conf, WebServ &main)
@@ -304,7 +316,7 @@ int checkServerBlock(std::vector<std::string> &conf, WebServ &main)
             M_DEBUG && std::cerr << "Syntaxe error in line " << i + 1 << ": invalid server block" << std::endl;
             return (-1);
         }
-        Server serv;
+        VirtualServer serv;
         int n = checkDirectives(conf, i + 1, serv);
         if (n == -1)
             return (-1);
@@ -327,7 +339,25 @@ int checkServerBlock(std::vector<std::string> &conf, WebServ &main)
             return (-1);
         }
 
-        main.servers.push_back(serv);
+        if (serv.directives.find("server_name") != serv.directives.end())
+            serv.server_name = serv.directives["server_name"].values[0];
+        if (!main.servers.size() || !sameNameChecker(main.servers, serv))
+        {
+            Server s;
+            s.serv.push_back(serv);
+            main.servers.push_back(s);
+        }
+        else
+        {
+            for (size_t q = 0; q < main.servers.size(); q++)
+            {
+                if (main.servers[q].serv[0].server_name == serv.server_name)
+                {
+                    main.servers[q].serv.push_back(serv);
+                    break ;
+                }
+            }
+        }
         i = n;   
     }
 

@@ -23,6 +23,6 @@ class CGI {
 
 public:
     static char** setupCGIEnvironment(HttpRequest* req);
-    static int responseCGI(HttpRequest* req, int BodyFd);
+    static int responseCGI(HttpRequest* req, int BodyFd, Location *location);
 
 };

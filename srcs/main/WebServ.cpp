@@ -9,6 +9,7 @@ static int checkAndOpen(HttpRequest* req)
 
     // custom error pages
     Directive *error_page = NULL;
+    Location *location = NULL;
 
     std::map<std::string, Directive>::iterator eit = req->s->directives.find("error_page");
     if ( eit != req->s->directives.end())
@@ -33,7 +34,7 @@ static int checkAndOpen(HttpRequest* req)
     }
     // Rachid gad throws f _GET_DELETE() wcleani ressourses gbal ma throwi
     // We should handle directories and root here
-    req->uri = _GET_DELETE(*req->s, uri, req->method); // this give the path of the file
+    req->uri = _GET_DELETE(*req->s, uri, req->method, location); // this give the path of the file
     std::string extension = "";
 
     size_t pPos = req->uri.find_last_of(".");
@@ -55,7 +56,7 @@ static int checkAndOpen(HttpRequest* req)
         if (body_fd < 0)
             throw ErrorStatus(503, "Error opening body file in checkAndOpen", error_page);
 
-        fd = CGI::responseCGI(req, body_fd);
+        fd = CGI::responseCGI(req, body_fd, location);
     }
     else {
         fd = open(req->uri.c_str(), O_RDONLY);

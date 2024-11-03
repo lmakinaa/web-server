@@ -1,30 +1,30 @@
 
 #include "Methods.hpp"
 
-std::string sessionIdGen(Server &Serv)
-{
-    std::string session_id;
-    std::string elems = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+// std::string sessionIdGen(Server &Serv)
+// {
+//     std::string session_id;
+//     std::string elems = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 
-    srand(time(NULL));
-    while (true)
-    {
-        session_id = "";
+//     srand(time(NULL));
+//     while (true)
+//     {
+//         session_id = "";
 
-        for (int i = 0; i < 20; i++)
-        {
-            session_id += elems[rand() % 62];
-        }
-        if (Serv.session_ids.find(session_id) == Serv.session_ids.end())
-        {
-            Serv.session_ids[session_id] = time(0);
-            break ;
-        }
-    }
+//         for (int i = 0; i < 20; i++)
+//         {
+//             session_id += elems[rand() % 62];
+//         }
+//         if (Serv.session_ids.find(session_id) == Serv.session_ids.end())
+//         {
+//             Serv.session_ids[session_id] = time(0);
+//             break ;
+//         }
+//     }
 
-    return (session_id);
+//     return (session_id);
     
-}
+// }
 
 std::string getSessionIdFromRequest(std::string cookies) {
     size_t pos = cookies.find("SESSID=");
@@ -60,7 +60,7 @@ bool    fileExist(std::string &path)
 }
 
 
-std::string    listAllfiles(std::string path, Server &Serv, std::string reqpath)
+std::string    listAllfiles(std::string path, VirtualServer &Serv, std::string reqpath)
 {
     std::string file = "<!DOCTYPE html>\n"
                        "<html lang=\"en\">\n"
@@ -188,11 +188,10 @@ std::string    listAllfiles(std::string path, Server &Serv, std::string reqpath)
 
 }
 
-std::string getFileFullPath(Server &serv, std::map<std::string, Location>::iterator &it, std::string &requestPath, Directive *error_page)
+std::string getFileFullPath(VirtualServer &serv, std::map<std::string, Location>::iterator &it, std::string &requestPath, Directive *error_page, std::string _Method)
 {
     std::string root = "";
     std::string path = "";
-    std::string _Method = "GET";
     std::string sec_path = "";
 
     /* ===== Location doesn't have a root directive ====*/
@@ -220,7 +219,7 @@ std::string getFileFullPath(Server &serv, std::map<std::string, Location>::itera
             sec_path = path;
             for (size_t i = 0; i < serv.directives["index"].values.size(); i++)
             {
-                path +=  "/" + serv.directives["index"].values[i];
+                path = sec_path +  "/" + serv.directives["index"].values[i];
                 if (fileExist(path))
                     return (path);
             }
@@ -280,7 +279,7 @@ std::string getFileFullPath(Server &serv, std::map<std::string, Location>::itera
             sec_path = path;
             for (size_t i = 0; i < it->second.directives["index"].values.size(); i++)
             {
-                path += "/" +  it->second.directives["index"].values[i];
+                path = sec_path + "/" +  it->second.directives["index"].values[i];
                 if (fileExist(path))
                     return (path);
             }
@@ -328,7 +327,7 @@ bool    stringMaching(std::string locat , std::string &requestPath)
     return (0);
 }
 
-std::string    _GET_DELETE(Server &serv, std::string requestPath, std::string _Method)
+std::string    _GET_DELETE(VirtualServer &serv, std::string requestPath, std::string _Method, Location *location)
 {
     std::string resquestedFile = "";
     std::string line;
@@ -348,7 +347,7 @@ std::string    _GET_DELETE(Server &serv, std::string requestPath, std::string _M
     {
         if (stringMaching((*it2).first , requestPath))
         {
-            if (it == serv.locations.end() || it2->first.size() >= it->first.size())
+            if ((it == serv.locations.end() || it2->first.size() >= it->first.size()) && (it2->first.size() == requestPath.size() || it2->first.back() == '/'))
                 it = it2;
             
         }
@@ -358,7 +357,7 @@ std::string    _GET_DELETE(Server &serv, std::string requestPath, std::string _M
     /* ======= Found the matching path ======= */
     if (it != serv.locations.end())
     {
-
+        location = &it->second;
         //check allowed method
         if (it->second.directives.find("allow_methods") != it->second.directives.end())
         {
@@ -369,8 +368,17 @@ std::string    _GET_DELETE(Server &serv, std::string requestPath, std::string _M
                 throw ErrorStatus(405, NULL, error_page);
             }
         }
+        else
+        {
+            if (_Method != "GET" && _Method != "DELETE" && _Method != "POST")
+            {
+                // throw 405 Method Not Allowed
+                std::cout << "405 method not allowed\n";
+                throw ErrorStatus(405, NULL, error_page);
+            }
+        }
 
-        resquestedFile = getFileFullPath(serv, it, requestPath, error_page);
+        resquestedFile = getFileFullPath(serv, it, requestPath, error_page, _Method);
         if (resquestedFile == "")
         {
             // throw 404NotFoundClass;
@@ -393,8 +401,14 @@ std::string    _GET_DELETE(Server &serv, std::string requestPath, std::string _M
 
     if (_Method == "DELETE")
     {
-        // unlink(resquestedFile.c_str());
-        // throw 204 No Content
+        if (access(resquestedFile.c_str(), F_OK | W_OK | X_OK) == 0)
+        {
+            unlink(resquestedFile.c_str());
+            // throw 200 Ok
+            throw SuccessStatus(200, NULL);
+        }
+        else
+            throw ErrorStatus(403, "file has no permission", error_page);
     }
 
     // Send the file to the Client.
