@@ -67,7 +67,6 @@ int CGI::responseCGI(HttpRequest* req, int bodyFd) {
         setenv("CONTENT_TYPE", req->getHeader("Content-Type").substr(0, req->getHeader("Content-Type").size() - 2).c_str(), 1);
         setenv("REQUEST_METHOD", req->method.c_str(), 1);
         setenv("HTTP_COOKIE", cookie.c_str(), 1);
-        // setenv("SESSION_ID", getSessionIdFromRequest(req->getHeader("Cookie")).c_str(), 1);
 
         (req->method == "POST") && setenv("CONTENT_LENGTH", std::to_string(req->content_length).c_str(), 1);
         if (queryPos != std::string::npos)

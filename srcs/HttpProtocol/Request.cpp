@@ -225,7 +225,7 @@ void HttpRequest::readRequest(int fd) {
         return;
     }
 
-        std::cerr << "raw:\n" << buffer << '\n';
+    // M_DEBUG && std::cerr << "raw:\n" << buffer << '\n';
 
     // Add new data to our partial buffer
     partial_data.insert(partial_data.end(), buffer, buffer + read_bytes);

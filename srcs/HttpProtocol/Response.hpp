@@ -38,12 +38,12 @@ class HttpResponse{
             std::string headers = "HTTP/1.1 200 OK\r\n"
             "Connection: keep-alive\r\n"
             "Transfer-Encoding: chunked\r\n";
-            if (req->uri.find(".php") != std::string::npos || req->uri.find(".py") != std::string::npos);
+            if (req->uri.find(".php") != std::string::npos || req->uri.find(".py") != std::string::npos)
+                ;
             else
                 headers += "Content-Type: " + ContentType + "\r\n\r\n";
             send(clientSocket, headers.c_str(), headers.size(), 0);
 
-            
             iterations = 0;
             s = req->s;
             connectionClose = (strToLower(req->getHeader("Connection")) == "close");
