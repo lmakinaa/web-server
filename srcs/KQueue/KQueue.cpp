@@ -1,9 +1,11 @@
 #include "KQueue.hpp"
+#include <signal.h>
 
 int KQueue::m_fd = -1;
 struct kevent KQueue::m_keventBuff;
-struct timespec KQueue::m_timout = {TIMEOUT_SEC, 0};
+struct timespec KQueue::m_timout = {CLIENT_TIMEOUT_SEC < CGI_TIMEOUT_SEC ? CLIENT_TIMEOUT_SEC : CGI_TIMEOUT_SEC, 0};
 std::map<t_eventData*, std::time_t> KQueue::connectedClients;
+std::map<t_eventData*, std::time_t> KQueue::startedCgis;
 
 void KQueue::setFdNonBlock(int fd)
 {
@@ -47,7 +49,7 @@ void KQueue::removeWatch(int fd, int type)
 
 // It will returns 0 if kevent fails (To help ignore it silently)
 // It will print error if M_DEBUG is set to 1
-int KQueue::getEvents(struct kevent* buffArray, int size)
+int KQueue::getEvents(struct kevent* buffArray, int size, int& watchedStates)
 {
     int res = kevent(m_fd, NULL, 0, buffArray, size, &m_timout);
     if (res == -1) {
@@ -56,13 +58,32 @@ int KQueue::getEvents(struct kevent* buffArray, int size)
         return 0;
     } else if (res == 0) {
         time_t now = time(NULL);
+
+        // Check Client timeout
+        std::map<t_eventData*, std::time_t>::iterator i;
         std::map<t_eventData*, std::time_t>::iterator e = connectedClients.end();
-        for (std::map<t_eventData*, std::time_t>::iterator i = connectedClients.begin(); i != e; ) {
-            if (now - i->second >= TIMEOUT_SEC) {
+        for (i = connectedClients.begin(); i != e; ) {
+            if (now - i->second >= CLIENT_TIMEOUT_SEC) {
                 removeWatch(i->first->reqData->clientSocket, EVFILT_READ);
                 close(i->first->reqData->clientSocket);
                 delete i->first;
                 i = connectedClients.erase(i);
+            }
+            else
+                i++;
+        }
+
+        // Check cgi timeout
+        e = startedCgis.end();
+        for (i = startedCgis.begin(); i != e; ) {
+            if (now - i->second >= CGI_TIMEOUT_SEC) {
+                removeWatch(i->first->resData->cgiPid, EVFILT_PROC);
+                kill(i->first->resData->cgiPid, SIGTERM);
+                ErrorStatus err(i->first->resData->clientSocket, 502, "CGI timeout\n");
+                err.sendError();
+                watchedStates--;
+                delete i->first;
+                i = startedCgis.erase(i);
             }
             else
                 i++;

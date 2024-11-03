@@ -96,6 +96,7 @@ int WebServ::handleExistedConnection(struct kevent* current)
             t_eventData* evData = new t_eventData("cgi ready", new HttpResponse(current->ident, fd, req));
             if (KQueue::watchChildExited(req->cgiPid, evData) == -1)
                 throw ErrorStatus(503, "WatchState at handleExistedConnection(1)", error_page);
+            KQueue::startedCgis[evData] = std::time(NULL);
         } else {
             t_eventData* evData = new t_eventData("send response", new HttpResponse(current->ident, fd, req));
             if (KQueue::watchState(current->ident, evData, EVFILT_WRITE) == -1)
@@ -135,7 +136,11 @@ int WebServ::handleNewConnection(struct kevent* current)
 
 void WebServ::cgiSwitchToSending(struct kevent* current)
 {
+
     t_eventData* evData = (t_eventData*) current->udata;
+
+    std::map<t_eventData*, time_t>::iterator it = KQueue::startedCgis.find(evData);
+    KQueue::startedCgis.erase(it);
 
     int clientSocket = ((HttpResponse*)evData->resData)->clientSocket;
 
@@ -183,7 +188,7 @@ void WebServ::loop()
     while (true)
     {
         struct kevent events[m_watchedStates];
-        int nevents = KQueue::getEvents(events, m_watchedStates);
+        int nevents = KQueue::getEvents(events, m_watchedStates, m_watchedStates);
 
         for (int i = 0; i < nevents; i++) {
             try {

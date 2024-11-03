@@ -45,3 +45,7 @@ if (!isset($_SESSION['x'])) {
 }
 
 echo "id: " . $_SESSION['x'];
+
+sleep(5000);
+
+echo "idfgd: " . $_SESSION['x'];

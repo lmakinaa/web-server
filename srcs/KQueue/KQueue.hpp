@@ -17,7 +17,8 @@
 # define M_DEBUG 1
 #endif
 
-#define TIMEOUT_SEC 60
+#define CLIENT_TIMEOUT_SEC 30
+#define CGI_TIMEOUT_SEC 10
 
 class KQueue
 {
@@ -28,7 +29,7 @@ public:
     static int getFd() {return m_fd;}
     static int watchState(int fd, t_eventData* evData, int type);
     static void removeWatch(int fd, int type);
-    static int getEvents(struct kevent* buffArray, int size);
+    static int getEvents(struct kevent* buffArray, int size, int& watchedStates);
     static void setFdNonBlock(int fd);
     static void waitForClientToSend(int clientSock, Server* s);
     static int watchChildExited(pid_t pid, t_eventData* evData);
@@ -36,6 +37,7 @@ public:
     static struct kevent m_keventBuff;
     static struct timespec m_timout;
     static std::map<t_eventData*, std::time_t> connectedClients;
+    static std::map<t_eventData*, std::time_t> startedCgis;
 
 private:
     static int m_fd;
