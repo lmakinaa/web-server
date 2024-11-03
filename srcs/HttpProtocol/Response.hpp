@@ -16,7 +16,7 @@ std::string strToLower(std::string s);
 # define M_DEBUG 1
 #endif
 
-class Server;
+class VirtualServer;
 
 class HttpResponse{
     public :
@@ -29,7 +29,7 @@ class HttpResponse{
         int responseFd;
         bool ended;
         size_t iterations;
-        Server* s;
+        VirtualServer* s;
         bool connectionClose;
 
 

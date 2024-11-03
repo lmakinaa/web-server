@@ -30,7 +30,7 @@ public:
     static void removeWatch(int fd, int type);
     static int getEvents(struct kevent* buffArray, int size);
     static void setFdNonBlock(int fd);
-    static void waitForClientToSend(int clientSock, Server* s);
+    static void waitForClientToSend(int clientSock, VirtualServer* s);
     
     static struct kevent m_keventBuff;
     static struct timespec m_timout;

@@ -73,7 +73,7 @@ int KQueue::getEvents(struct kevent* buffArray, int size)
     return res;
 }
 
-void KQueue::waitForClientToSend(int clientSock, Server* s)
+void KQueue::waitForClientToSend(int clientSock, VirtualServer* s)
 {
     HttpRequest *req = new HttpRequest();
     req->s = s;

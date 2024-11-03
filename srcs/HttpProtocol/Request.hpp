@@ -11,7 +11,7 @@
 #include <algorithm>
 #include "Exceptions.hpp"
 
-class Server;
+class VirtualServer;
 
 enum ParseState{
     FirstLine,
@@ -48,7 +48,7 @@ public:
     long long chunkPos;
     std::string TransferEncoding;
     bool skipNextLine;
-    Server* s;
+    VirtualServer* s;
     int clientSocket;
 
 };

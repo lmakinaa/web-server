@@ -43,6 +43,10 @@ void ErrorStatus::setErrorMessage()
             statusMessage = headers + "<html><head><title>404 Not Found</title></head><body><center><h1>404 Not Found</h1></center><hr></body></html>";
             break;
 
+        case 405:
+            statusMessage = headers + "<html><head><title>405 Method Not Allowed</title></head><body><center><h1>405 Method Not Allowed</h1></center><hr></body></html>";
+            break;
+
         case 500:
             statusMessage = headers + "<html><head><title>500 Internal Server Error</title></head><body><center><h1>500 Internal Server Error</h1></center><hr></body></html>";
             break;
@@ -122,10 +126,7 @@ void SuccessStatus::setSuccessMessage()
         case 202:
             statusMessage = headers + "<html><head><title>202 Accepted</title></head><body><center><h1>202 Accepted</h1></center><hr></body></html>";
             break;
-
-        case 204:
-            statusMessage = headers + "<html><head><title>204 No Content</title></head><body><center><h1>204 No Content</h1></center><hr></body></html>";
-            break;
+    
         case 301:
             statusMessage = headers + "<html><head><title>301 Moved Permanently</title></head><body><center><h1>301 Moved Permanently</h1></center><hr><p>The requested resource has been permanently moved to <a href='" + retur->values[0] + "'>" + retur->values[0] + "</a>.</p></body></html>";
             break;
