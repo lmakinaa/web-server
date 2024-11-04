@@ -35,8 +35,8 @@ int CGI::responseCGI(HttpRequest* req, int bodyFd, Location *location) {
     // custom error pages
     Directive *error_page = NULL;
 
-    std::map<std::string, Directive>::iterator eit = req->s->directives.find("error_page");
-    if ( eit != req->s->directives.end())
+    std::map<std::string, Directive>::iterator eit = req->mainServ->directives.find("error_page");
+    if ( eit != req->mainServ->directives.end())
         error_page = &(eit->second);
 
     std::string fileName = generateRandomFileName("/tmp/", "webserv");

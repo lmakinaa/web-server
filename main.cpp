@@ -7,14 +7,13 @@ int main(int ac, char *av[])
 
     int confErr;
     WebServ    main;
+    std::string conf;
 
-    if (ac != 2)
-    {
-        std::cerr << "Invalid Args Number" << std::endl;
-        return (EXIT_FAILURE);
-
-    }
-    confErr = parseConfigFile(static_cast<std::string>(av[1]), main);
+    if (ac == 1)
+        conf = "./configs/default_conf.conf";
+    else
+        conf = static_cast<std::string>(av[1]);
+    confErr = parseConfigFile(conf, main);
     if (confErr == 0)
     {
         std::cerr << "Invalid config file" <<std::endl;

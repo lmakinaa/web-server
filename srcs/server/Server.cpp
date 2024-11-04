@@ -47,5 +47,5 @@ void Server::init()
 
 
     m_sEventData.serverData = &m_sockData;
-    m_sEventData.s = &this->serv[0];
+    m_sEventData.s = &this->serv;
 }

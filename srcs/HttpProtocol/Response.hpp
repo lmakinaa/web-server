@@ -29,7 +29,7 @@ class HttpResponse{
         int responseFd;
         bool ended;
         size_t iterations;
-        VirtualServer* s;
+        std::vector<VirtualServer>* s;
         bool connectionClose;
         pid_t cgiPid;
 

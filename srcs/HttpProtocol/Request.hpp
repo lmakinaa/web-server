@@ -49,7 +49,8 @@ public:
     std::string TransferEncoding;
     bool skipNextLine;
     bool IsCgi;
-    VirtualServer* s;
+    std::vector<VirtualServer>* s;
+    VirtualServer *mainServ;
     int clientSocket;
     pid_t cgiPid;
 

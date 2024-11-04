@@ -11,8 +11,8 @@ static int checkAndOpen(HttpRequest* req)
     Directive *error_page = NULL;
     Location *location = NULL;
 
-    std::map<std::string, Directive>::iterator eit = req->s->directives.find("error_page");
-    if ( eit != req->s->directives.end())
+    std::map<std::string, Directive>::iterator eit = req->mainServ->directives.find("error_page");
+    if ( eit != req->mainServ->directives.end())
         error_page = &(eit->second);
 
     //Replace %20 with " "
@@ -34,7 +34,7 @@ static int checkAndOpen(HttpRequest* req)
     }
     // Rachid gad throws f _GET_DELETE() wcleani ressourses gbal ma throwi
     // We should handle directories and root here
-    req->uri = _GET_DELETE(*req->s, uri, req->method, &location); // this give the path of the file
+    req->uri = _GET_DELETE(*req->mainServ, uri, req->method, &location); // this give the path of the file
     std::string extension = "";
 
     size_t pPos = req->uri.find_last_of(".");
@@ -71,12 +71,6 @@ int WebServ::handleExistedConnection(struct kevent* current)
     // Read and Parse Request
     HttpRequest* req = (HttpRequest*) ((t_eventData*)current->udata)->reqData;
 
-    // custom error pages
-    Directive *error_page = NULL;
-
-    std::map<std::string, Directive>::iterator eit = req->s->directives.find("error_page");
-    if ( eit != req->s->directives.end())
-        error_page = &(eit->second);
 
 
     M_DEBUG && std::cerr << "Reading request\n";
@@ -84,6 +78,34 @@ int WebServ::handleExistedConnection(struct kevent* current)
 
     if(req->isDone == true)
     {
+        // looking for the right server
+        std::string host = req->getHeader("Host");
+        if ((*req->s).size() == 1)
+            req->mainServ = &(*req->s)[0];
+        else
+        {
+            for (size_t i = 0; i < req->s->size(); i++)
+            {
+                if ((*req->s)[i].server_name == host)
+                {
+                    req->mainServ = &(*req->s)[i];
+                    break ;
+                }
+            }
+        }
+
+        if (req->mainServ == NULL)
+            req->mainServ = &(*req->s)[0];
+
+
+        // custom error pages
+        Directive *error_page = NULL;
+
+        std::map<std::string, Directive>::iterator eit = req->mainServ->directives.find("error_page");
+        if ( eit != req->mainServ->directives.end())
+            error_page = &(eit->second);
+
+        
         KQueue::removeWatch(current->ident, EVFILT_READ);
 
 

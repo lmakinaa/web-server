@@ -350,7 +350,8 @@ int checkServerBlock(std::vector<std::string> &conf, WebServ &main)
         {
             for (size_t q = 0; q < main.servers.size(); q++)
             {
-                if (main.servers[q].serv[0].server_name == serv.server_name)
+                if (main.servers[q].serv[0].directives["listen"].values[0] == serv.directives["listen"].values[0]
+                 && main.servers[q].serv[0].directives["host"].values[0] == serv.directives["host"].values[0])
                 {
                     main.servers[q].serv.push_back(serv);
                     break ;

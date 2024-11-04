@@ -80,6 +80,7 @@ HttpRequest::HttpRequest()
     , TransferEncoding("")
     , skipNextLine(false)
     , IsCgi(false)
+    , mainServ(NULL)
 {
         partial_data.reserve(1);
         cgiPid = -1;
