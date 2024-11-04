@@ -42,7 +42,9 @@ std::string WhatContentType(std::string uri) {
     
     if ( uri.rfind(".") == std::string::npos|| uri.substr(uri.rfind(".")) == ".html" || uri == "/" ||
      uri.substr(uri.rfind(".")) == ".php" || uri.substr(uri.rfind(".")) == ".py" || strncmp(uri.substr(uri.rfind(".")).c_str(),".php?",5) == 0 || strncmp(uri.substr(uri.rfind(".")).c_str(),".py?",4) == 0)
+    {
         return "text/html";
+    }
     else if (uri.substr(uri.rfind(".")) == ".css")
         return "text/css";
     else if (uri.substr(uri.rfind(".")) == ".js")
@@ -82,6 +84,7 @@ void HttpResponse::sendingResponse(long buffSize) {
 
     (iterations == 0) && lseek(responseFd, 0, SEEK_SET);
     int r = read(responseFd, bf, buffSize);
+    
     std::cerr << "read bytes: " << r << '\n';
     if (r <= 0) {
         if (r == 0) {

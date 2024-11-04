@@ -51,7 +51,14 @@ static int checkAndOpen(HttpRequest* req)
     size_t pPos = req->uri.find_last_of(".");
     if (pPos != std::string::npos)
         extension = req->uri.substr(pPos);
-    if ((!strcmp(extension.c_str(), ".php") || !strcmp(extension.c_str(), ".py") || !strncmp(extension.c_str(), ".php?", 5) || !strncmp(extension.c_str(), ".py?", 4)) && cgiPathValid(location, extension))
+
+    // check cgi path
+
+    if (cgiPathValid(location, extension) == 0)
+        throw ErrorStatus(404, "cgi path not found", error_page);
+
+
+    if ((!strcmp(extension.c_str(), ".php") || !strcmp(extension.c_str(), ".py") || !strncmp(extension.c_str(), ".php?", 5) || !strncmp(extension.c_str(), ".py?", 4)))
         req->IsCgi = true;
     if (req->IsCgi)
     {
