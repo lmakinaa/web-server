@@ -80,8 +80,16 @@ int WebServ::handleExistedConnection(struct kevent* current)
     {
         // looking for the right server
         std::string host = req->getHeader("Host");
+
+        if (host.back() == '\n')
+            host.pop_back();
+        if (host.back() == '\r')
+            host.pop_back();
+
         if ((*req->s).size() == 1)
+        {
             req->mainServ = &(*req->s)[0];
+        }
         else
         {
             for (size_t i = 0; i < req->s->size(); i++)
@@ -95,8 +103,11 @@ int WebServ::handleExistedConnection(struct kevent* current)
         }
 
         if (req->mainServ == NULL)
+        {
             req->mainServ = &(*req->s)[0];
 
+        }
+       
 
         // custom error pages
         Directive *error_page = NULL;
