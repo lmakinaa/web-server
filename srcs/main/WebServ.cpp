@@ -1,5 +1,16 @@
 #include "WebServ.hpp"
 
+bool    cgiPathValid(Location *location, std::string extension)
+{
+    // !strcmp(extension.c_str(), ".php") || !strcmp(extension.c_str(), ".py") || !strncmp(extension.c_str(), ".php?", 5) || !strncmp(extension.c_str(), ".py?", 4))
+    if ((!strcmp(extension.c_str(), ".php") || !strncmp(extension.c_str(), ".php?", 5)) && (location->directives.find("php-cgi") == location->directives.end() || access(location->directives["php-cgi"].values[0].c_str(), F_OK) != 0))
+        return (0);
+    if ((!strcmp(extension.c_str(), ".py") || !strncmp(extension.c_str(), ".py?", 5)) && (location->directives.find("py-cgi") == location->directives.end() || access(location->directives["py-cgi"].values[0].c_str(), F_OK) != 0))
+        return (0);
+    return (1);
+}
+
+
 static int checkAndOpen(HttpRequest* req)
 {
     int body_fd;
@@ -40,7 +51,7 @@ static int checkAndOpen(HttpRequest* req)
     size_t pPos = req->uri.find_last_of(".");
     if (pPos != std::string::npos)
         extension = req->uri.substr(pPos);
-    if (!strcmp(extension.c_str(), ".php") || !strcmp(extension.c_str(), ".py") || !strncmp(extension.c_str(), ".php?", 5) || !strncmp(extension.c_str(), ".py?", 4))
+    if ((!strcmp(extension.c_str(), ".php") || !strcmp(extension.c_str(), ".py") || !strncmp(extension.c_str(), ".php?", 5) || !strncmp(extension.c_str(), ".py?", 4)) && cgiPathValid(location, extension))
         req->IsCgi = true;
     if (req->IsCgi)
     {
