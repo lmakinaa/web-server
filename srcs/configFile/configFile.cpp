@@ -144,7 +144,7 @@ int checkDirValue(std::vector<std::string> &directive)
             if (directive.size() != 2)
                 return (-1);
         }
-        else if (directive[0] == "return")
+        else if (directive[0] == "return" || directive[0] == "upload_store")
         {
             if (directive.size() != 2)
                 return (-1);

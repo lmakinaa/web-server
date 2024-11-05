@@ -64,6 +64,9 @@ int KQueue::getEvents(struct kevent* buffArray, int size, int& watchedStates)
         std::map<t_eventData*, std::time_t>::iterator e = connectedClients.end();
         for (i = connectedClients.begin(); i != e; ) {
             if (now - i->second >= CLIENT_TIMEOUT_SEC) {
+                ErrorStatus err(i->first->reqData->clientSocket, 408, "Client timeout\n");
+                err.sendError();
+                watchedStates--;
                 removeWatch(i->first->reqData->clientSocket, EVFILT_READ);
                 close(i->first->reqData->clientSocket);
                 delete i->first;

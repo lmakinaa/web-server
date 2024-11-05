@@ -48,3 +48,26 @@ url encoding // done
 localhost->127
 any -> 0
 if (total_read_bytes > std::stoi(*s[0]->directive["client_max_body_size"].values[0]))
+
+
+
+409 for post error
+
+
+
+
+
+folder && POST = bad req
+
+POST:
+   ila kan lfile:
+      wach php wla python:
+            ila kan cgiPath:
+               5lih ykml
+            else:
+                400 bad request
+      else:
+          400 bad request
+    ila makanch lfile:
+          persmission wach kayna
+          creeih

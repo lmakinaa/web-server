@@ -46,6 +46,10 @@ void ErrorStatus::setErrorMessage()
             statusMessage = headers + "<html><head><title>405 Method Not Allowed</title></head><body><center><h1>405 Method Not Allowed</h1></center><hr></body></html>";
             break;
 
+        case 409:
+            statusMessage = headers + "<html><head><title>409 Conflict</title></head><body><center><h1>409 Conflict</h1></center><hr><p>The request could not be processed due to a conflict with the current state of the resource.</p></body></html>";
+            break;
+
         case 500:
             statusMessage = headers + "<html><head><title>500 Internal Server Error</title></head><body><center><h1>500 Internal Server Error</h1></center><hr></body></html>";
             break;

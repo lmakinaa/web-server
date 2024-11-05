@@ -39,9 +39,10 @@ class HttpResponse{
             std::string headers = "HTTP/1.1 200 OK\r\n"
             "Connection: keep-alive\r\n"
             "Transfer-Encoding: chunked\r\n";
-            if (req->uri.find(".php") != std::string::npos || req->uri.find(".py") != std::string::npos)
-                ;
-            else
+            if ((req->uri.find(".php") != std::string::npos || req->uri.find(".py") != std::string::npos)) {
+                if (!req->IsCgi)
+                    headers += "Content-Type: application/octet-stream\r\n\r\n";
+            } else
                 headers += "Content-Type: " + ContentType + "\r\n\r\n";
             send(clientSocket, headers.c_str(), headers.size(), 0);
 

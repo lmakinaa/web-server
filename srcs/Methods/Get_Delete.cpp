@@ -216,6 +216,11 @@ std::string getFileFullPath(VirtualServer &serv, std::map<std::string, Location>
                 // throw 403 Forbidden
                 throw ErrorStatus(403, "Can't delete a folder", error_page);
             }
+            if (_Method == "POST")
+            {
+                // throw 409 Conflict
+                throw ErrorStatus(403, "Can't post a folder", error_page);
+            }
             sec_path = path;
             for (size_t i = 0; i < serv.directives["index"].values.size(); i++)
             {
