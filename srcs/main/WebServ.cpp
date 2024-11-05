@@ -11,6 +11,27 @@ bool    cgiPathValid(Location *location, std::string extension)
 }
 
 
+std::string decode_url(const std::string encoded_url) {
+    std::string decoded_url;
+    for (size_t i = 0; i < encoded_url.length(); ++i) {
+        if (encoded_url[i] == '%' && i + 2 < encoded_url.length() &&
+            std::isxdigit(encoded_url[i + 1]) && std::isxdigit(encoded_url[i + 2])) {
+            // Extract the hex code and convert to character
+            std::string hex_value = encoded_url.substr(i + 1, 2);
+            char decoded_char = static_cast<char>(std::stoi(hex_value, nullptr, 16));
+            decoded_url += decoded_char;
+            i += 2;  // Skip next two characters (they are part of the encoded value)
+        } else if (encoded_url[i] == '+') {
+            // Convert '+' to space (' ')
+            decoded_url += ' ';
+        } else {
+            // Copy non-encoded characters directly
+            decoded_url += encoded_url[i];
+        }
+    }
+    return decoded_url;
+}
+
 static int checkAndOpen(HttpRequest* req)
 {
     int body_fd;
@@ -27,11 +48,13 @@ static int checkAndOpen(HttpRequest* req)
         error_page = &(eit->second);
 
     //Replace %20 with " "
-    size_t p = 0;
-    while ((p = req->uri.find("%20", p)) != std::string::npos) {
-        req->uri.replace(p, 3, " ");
-        p += 1;
-    }
+    req->uri = decode_url(req->uri);
+
+    // size_t p = 0;
+    // while ((p = req->uri.find("%20", p)) != std::string::npos) {
+    //     req->uri.replace(p, 3, " ");
+    //     p += 1;
+    // }
 
 
     // remove querystring to check existance of the file
@@ -112,10 +135,13 @@ int WebServ::handleExistedConnection(struct kevent* current)
         {
             for (size_t i = 0; i < req->s->size(); i++)
             {
-                if ((*req->s)[i].server_name == host)
+                for (size_t t = 0; t < (*req->s)[i].directives["server_name"].values.size(); t++)
                 {
-                    req->mainServ = &(*req->s)[i];
-                    break ;
+                    if ((*req->s)[i].directives["server_name"].values[t] == host)
+                    {
+                        req->mainServ = &(*req->s)[i];
+                        break ;
+                    }
                 }
             }
         }

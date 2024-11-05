@@ -126,6 +126,8 @@ int checkDirValue(std::vector<std::string> &directive)
                 return (-1);
             if (directive[0] == "listen" && directive.size() != 2)
                 return (-1);
+            if (directive[0] == "listen" && (nb < 1 || nb > 65535))
+                return (-1);
         }
         else if (directive[0] == "autoindex")
         {

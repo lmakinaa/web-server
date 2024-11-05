@@ -46,33 +46,104 @@ std::string WhatContentType(std::string uri) {
         return "text/html";
     }
     else if (uri.substr(uri.rfind(".")) == ".css")
-        return "text/css";
-    else if (uri.substr(uri.rfind(".")) == ".js")
-        return "text/javascript";
-    else if (uri.substr(uri.rfind(".")) == ".jpg")
-        return "image/jpeg";
-    else if (uri.substr(uri.rfind(".")) == ".jpeg")
-        return "image/jpeg";
-    else if (uri.substr(uri.rfind(".")) == ".png")
-        return "image/png";
-    else if (uri.substr(uri.rfind(".")) == ".gif")
-        return "image/gif";
-    else if (uri.substr(uri.rfind(".")) == ".bmp")
-        return "image/bmp";
-    else if (uri.substr(uri.rfind(".")) == ".ico")
-        return "image/x-icon";
-    else if (uri.substr(uri.rfind(".")) == ".svg")
-        return "image/svg+xml";
-    else if (uri.substr(uri.rfind(".")) == ".mp3")
-        return "audio/mpeg";
-    else if (uri.substr(uri.rfind(".")) == ".wav")
-        return "audio/wav";
-    else if (uri.substr(uri.rfind(".")) == ".mp4")
-        return "video/mp4";
-    else if (uri.substr(uri.rfind(".")) == ".avi")
-        return "video/x-msvideo";
-    else
-        return "application/octet-stream";
+    return "text/css";
+else if (uri.substr(uri.rfind(".")) == ".js")
+    return "text/javascript";
+else if (uri.substr(uri.rfind(".")) == ".html")
+    return "text/html";
+else if (uri.substr(uri.rfind(".")) == ".txt")
+    return "text/plain";
+else if (uri.substr(uri.rfind(".")) == ".xml")
+    return "application/xml";
+else if (uri.substr(uri.rfind(".")) == ".json")
+    return "application/json";
+else if (uri.substr(uri.rfind(".")) == ".csv")
+    return "text/csv";
+else if (uri.substr(uri.rfind(".")) == ".pdf")
+    return "application/pdf";
+else if (uri.substr(uri.rfind(".")) == ".doc")
+    return "application/msword";
+else if (uri.substr(uri.rfind(".")) == ".docx")
+    return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+else if (uri.substr(uri.rfind(".")) == ".xls")
+    return "application/vnd.ms-excel";
+else if (uri.substr(uri.rfind(".")) == ".xlsx")
+    return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+else if (uri.substr(uri.rfind(".")) == ".ppt")
+    return "application/vnd.ms-powerpoint";
+else if (uri.substr(uri.rfind(".")) == ".pptx")
+    return "application/vnd.openxmlformats-officedocument.presentationml.presentation";
+else if (uri.substr(uri.rfind(".")) == ".jpg")
+    return "image/jpeg";
+else if (uri.substr(uri.rfind(".")) == ".jpeg")
+    return "image/jpeg";
+else if (uri.substr(uri.rfind(".")) == ".png")
+    return "image/png";
+else if (uri.substr(uri.rfind(".")) == ".gif")
+    return "image/gif";
+else if (uri.substr(uri.rfind(".")) == ".bmp")
+    return "image/bmp";
+else if (uri.substr(uri.rfind(".")) == ".ico")
+    return "image/x-icon";
+else if (uri.substr(uri.rfind(".")) == ".svg")
+    return "image/svg+xml";
+else if (uri.substr(uri.rfind(".")) == ".webp")
+    return "image/webp";
+else if (uri.substr(uri.rfind(".")) == ".mp3")
+    return "audio/mpeg";
+else if (uri.substr(uri.rfind(".")) == ".wav")
+    return "audio/wav";
+else if (uri.substr(uri.rfind(".")) == ".ogg")
+    return "audio/ogg";
+else if (uri.substr(uri.rfind(".")) == ".flac")
+    return "audio/flac";
+else if (uri.substr(uri.rfind(".")) == ".mp4")
+    return "video/mp4";
+else if (uri.substr(uri.rfind(".")) == ".avi")
+    return "video/x-msvideo";
+else if (uri.substr(uri.rfind(".")) == ".mov")
+    return "video/quicktime";
+else if (uri.substr(uri.rfind(".")) == ".webm")
+    return "video/webm";
+else if (uri.substr(uri.rfind(".")) == ".mkv")
+    return "video/x-matroska";
+else if (uri.substr(uri.rfind(".")) == ".zip")
+    return "application/zip";
+else if (uri.substr(uri.rfind(".")) == ".tar")
+    return "application/x-tar";
+else if (uri.substr(uri.rfind(".")) == ".gz")
+    return "application/gzip";
+else if (uri.substr(uri.rfind(".")) == ".rar")
+    return "application/x-rar-compressed";
+else if (uri.substr(uri.rfind(".")) == ".7z")
+    return "application/x-7z-compressed";
+else if (uri.substr(uri.rfind(".")) == ".eot")
+    return "application/vnd.ms-fontobject";
+else if (uri.substr(uri.rfind(".")) == ".ttf")
+    return "font/ttf";
+else if (uri.substr(uri.rfind(".")) == ".otf")
+    return "font/otf";
+else if (uri.substr(uri.rfind(".")) == ".woff")
+    return "font/woff";
+else if (uri.substr(uri.rfind(".")) == ".woff2")
+    return "font/woff2";
+else if (uri.substr(uri.rfind(".")) == ".json")
+    return "application/json";
+else if (uri.substr(uri.rfind(".")) == ".apk")
+    return "application/vnd.android.package-archive";
+else if (uri.substr(uri.rfind(".")) == ".exe")
+    return "application/x-msdownload";
+else if (uri.substr(uri.rfind(".")) == ".bin")
+    return "application/octet-stream";
+else if (uri.substr(uri.rfind(".")) == ".xpi")
+    return "application/x-xpinstall";
+else if (uri.substr(uri.rfind(".")) == ".msi")
+    return "application/x-msi";
+else if (uri.substr(uri.rfind(".")) == ".iso")
+    return "application/x-iso9660-image";
+else
+    return "application/octet-stream";
+
 }
 
 

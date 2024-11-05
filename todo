@@ -41,10 +41,10 @@ directive cgi timeout
 
 
 
-multiple server_names
-port range
-mimmetypes
-url encoding
+multiple server_names // Done
+port range // Done
+mimmetypes // done
+url encoding // done
 localhost->127
 any -> 0
 if (total_read_bytes > std::stoi(*s[0]->directive["client_max_body_size"].values[0]))
