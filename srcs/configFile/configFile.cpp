@@ -4,9 +4,9 @@
 
 bool    isAllowedDirectiveServ(std::string direc)
 {
-    std::string arr[10] = {"listen", "server_name", "host", "error_page", "client_max_body_size", "root", "index", "upload_path", "autoindex", "return"};
+    std::string arr[9] = {"listen", "server_name", "host", "error_page", "client_max_body_size", "root", "index", "autoindex", "return"};
 
-    for (int i = 0; i < 10; i++)
+    for (int i = 0; i < 9; i++)
     {
         if (arr[i] == direc)
             return (1);
@@ -17,9 +17,9 @@ bool    isAllowedDirectiveServ(std::string direc)
 
 bool    isAllowedDirectiveloc(std::string direc)
 {
-    std::string arr[7] = {"autoindex", "allow_methods", "return", "php-cgi", "root", "index", "py-cgi"};
+    std::string arr[8] = {"autoindex", "allow_methods", "return", "php-cgi", "root", "index", "py-cgi", "upload_store"};
 
-    for (int i = 0; i < 7; i++)
+    for (int i = 0; i < 8; i++)
     {
         if (arr[i] == direc)
             return (1);
@@ -157,6 +157,11 @@ int checkLocation(std::vector<std::string> &conf, size_t i, Location &loc)
             continue ;
 
         directive = split(conf[i], ' ');
+        if (directive[directive.size() - 1] == ";" && directive.size() - 2 >= 0 && directive[directive.size() - 2].back() != ';')
+        {
+            directive[directive.size() - 2].push_back(';');
+            directive.pop_back();
+        }
 
         if (checkDirValue(directive) == -1)
         {
@@ -221,6 +226,12 @@ int checkDirectives(std::vector<std::string> &conf, size_t i, VirtualServer &ser
             continue ;
 
         directive = split(conf[i], ' ');
+
+        if (directive[directive.size() - 1] == ";" && directive.size() - 2 >= 0 && directive[directive.size() - 2].back() != ';')
+        {
+            directive[directive.size() - 2].push_back(';');
+            directive.pop_back();
+        }
 
         if (checkDirValue(directive) == -1)
         {
