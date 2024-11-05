@@ -144,6 +144,11 @@ int checkDirValue(std::vector<std::string> &directive)
             if (directive.size() != 2)
                 return (-1);
         }
+        else if (directive[0] == "return")
+        {
+            if (directive.size() != 2)
+                return (-1);
+        }
     }
     return (1);
 }

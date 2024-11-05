@@ -1,4 +1,5 @@
 #include "Request.hpp"
+#include "../server/Server.hpp"
 
 static std::string ft_strtrim(std::string& str)
 {
@@ -92,8 +93,51 @@ void HttpRequest::parseRequest(const std::string& request)
 
     if (line == "\r\n" && state == Headers)
     {
+
+        // Get main Server Here
+
+        // looking for the right server
+        std::string host = this->getHeader("Host");
+
+        if (host.back() == '\n')
+            host.pop_back();
+        if (host.back() == '\r')
+            host.pop_back();
+
+        if ((*this->s).size() == 1)
+        {
+            this->mainServ = &(*this->s)[0];
+        }
+        else
+        {
+            for (size_t i = 0; i < this->s->size(); i++)
+            {
+                for (size_t t = 0; t < (*this->s)[i].directives["server_name"].values.size(); t++)
+                {
+                    if ((*this->s)[i].directives["server_name"].values[t] == host)
+                    {
+                        this->mainServ = &(*this->s)[i];
+                        break ;
+                    }
+                }
+            }
+        }
+
+        if (this->mainServ == NULL)
+            this->mainServ = &(*this->s)[0];
+
+
+
         if (method == "POST")
         {
+            // custom error pages
+            Directive *error_page = NULL;
+
+            std::map<std::string, Directive>::iterator eit = this->mainServ->directives.find("error_page");
+            if ( eit != this->mainServ->directives.end())
+                error_page = &(eit->second);
+            if (mainServ->directives.find("client_max_body_size") != mainServ->directives.end() && this->content_length > std::stoi(mainServ->directives["client_max_body_size"].values[0]))
+                throw ErrorStatus(413, "Passed max body size", error_page);
             state = Body;
             generateUniqueFile();
             

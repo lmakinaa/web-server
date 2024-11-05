@@ -127,7 +127,7 @@ void SuccessStatus::setSuccessMessage()
             break;
     
         case 301:
-            statusMessage = headers + "<html><head><title>301 Moved Permanently</title></head><body><center><h1>301 Moved Permanently</h1></center><hr><p>The requested resource has been permanently moved to <a href='" + retur->values[0] + "'>" + retur->values[0] + "</a>.</p></body></html>";
+            statusMessage = headers + "<html><head><title>301 Moved Permanently</title></head><body><center><h1>301 Moved Permanently</h1></center><hr><p>The requested resource has been permanently moved to <a href='" + retur + "'>" + retur + "</a>.</p></body></html>";
             break;
         // Add more status codes
         // ..
@@ -142,17 +142,17 @@ SuccessStatus::SuccessStatus(int successCode, const char* debugMsg)
     : clientSock (-1)
     , successCode (successCode)
     , headers ("HTTP/1.1 " + std::to_string(successCode) + "\r\nContent-Type: text/html\r\nConnection: keep-alive\r\n\r\n")
-    , retur(NULL)
+    , retur("")
 {
     if (M_DEBUG && debugMsg)
         std::cerr << debugMsg << "\n";
     setSuccessMessage();
 }
 
-SuccessStatus::SuccessStatus(int successCode, const char* debugMsg, Directive *retur)
+SuccessStatus::SuccessStatus(int successCode, const char* debugMsg, std::string retur)
     : clientSock (-1)
     , successCode (successCode)
-    , headers ("HTTP/1.1 " + std::to_string(successCode) + "\r\nContent-Type: text/html\r\nLocation: " + retur->values[0] + "\r\nConnection: keep-alive\r\n\r\n")
+    , headers ("HTTP/1.1 " + std::to_string(successCode) + "\r\nContent-Type: text/html\r\nLocation: " + retur + "\r\nConnection: keep-alive\r\n\r\n")
     , retur(retur)
 {
     if (M_DEBUG && debugMsg)
@@ -164,7 +164,7 @@ SuccessStatus::SuccessStatus(int clienSocket, int successCode, const char* debug
     : clientSock (clienSocket)
     , successCode (successCode)
     , headers ("HTTP/1.1 " + std::to_string(successCode) + "\r\nContent-Type: text/html\r\nConnection: keep-alive\r\n\r\n")
-    , retur(NULL)
+    , retur("")
 {
     if (M_DEBUG && debugMsg)
         std::cerr << debugMsg << "\n";

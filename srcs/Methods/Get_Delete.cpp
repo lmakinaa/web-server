@@ -227,7 +227,7 @@ std::string getFileFullPath(VirtualServer &serv, std::map<std::string, Location>
             {
                 // should redirect to ...
                 M_DEBUG && std::cerr << "redirect to " << serv.directives["return"].values[0] << std::endl;
-                throw SuccessStatus(301, NULL, &serv.directives["return"]);
+                throw SuccessStatus(301, NULL, it->second.directives["return"].values[0]);
             }
             else if (serv.directives.find("autoindex") != serv.directives.end()
                         &&  serv.directives["autoindex"].values[0] == "on")
@@ -270,6 +270,12 @@ std::string getFileFullPath(VirtualServer &serv, std::map<std::string, Location>
         }
         else if (val == 1)
         {
+            if (requestPath.back() != '/')
+            {
+                std::string retdir = "";
+                retdir = "http://" + serv.directives["host"].values[0] + ":" + serv.directives["listen"].values[0] + requestPath + "/";
+                throw SuccessStatus(301, NULL, retdir); 
+            }
 
             if (_Method == "DELETE")
             {
@@ -287,7 +293,7 @@ std::string getFileFullPath(VirtualServer &serv, std::map<std::string, Location>
             {
                 // should redirect to ...
                 M_DEBUG && std::cerr << "redirect to " << it->second.directives["return"].values[0] << std::endl;
-                throw SuccessStatus(301, NULL, &it->second.directives["return"]);
+                throw SuccessStatus(301, NULL, it->second.directives["return"].values[0]);
             }
             else if (it->second.directives.find("autoindex") != it->second.directives.end()
                         &&  it->second.directives["autoindex"].values[0] == "on")
@@ -347,7 +353,7 @@ std::string    _GET_DELETE(VirtualServer &serv, std::string requestPath, std::st
     {
         if (stringMaching((*it2).first , requestPath))
         {
-            if ((it == serv.locations.end() || it2->first.size() >= it->first.size()) && (it2->first.size() == requestPath.size() || it2->first.back() == '/'))
+            if ((it == serv.locations.end() || it2->first.size() >= it->first.size()))
                 it = it2;
             
         }

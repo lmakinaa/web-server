@@ -119,39 +119,6 @@ int WebServ::handleExistedConnection(struct kevent* current)
 
     if(req->isDone == true)
     {
-        // looking for the right server
-        std::string host = req->getHeader("Host");
-
-        if (host.back() == '\n')
-            host.pop_back();
-        if (host.back() == '\r')
-            host.pop_back();
-
-        if ((*req->s).size() == 1)
-        {
-            req->mainServ = &(*req->s)[0];
-        }
-        else
-        {
-            for (size_t i = 0; i < req->s->size(); i++)
-            {
-                for (size_t t = 0; t < (*req->s)[i].directives["server_name"].values.size(); t++)
-                {
-                    if ((*req->s)[i].directives["server_name"].values[t] == host)
-                    {
-                        req->mainServ = &(*req->s)[i];
-                        break ;
-                    }
-                }
-            }
-        }
-
-        if (req->mainServ == NULL)
-        {
-            req->mainServ = &(*req->s)[0];
-
-        }
-       
 
         // custom error pages
         Directive *error_page = NULL;
