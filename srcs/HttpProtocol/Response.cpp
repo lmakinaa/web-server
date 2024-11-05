@@ -40,7 +40,7 @@ const std::vector<char>& HttpResponse::GetBody(){
 
 std::string WhatContentType(std::string uri) {
     
-    if ( uri.rfind(".") == std::string::npos|| uri.substr(uri.rfind(".")) == ".html" || uri == "/" ||
+    if ( uri.rfind(".") == std::string::npos|| uri.substr(uri.rfind(".")) == ".html" || uri == "/" || uri.substr(uri.rfind(".")) == ".txt" ||
      uri.substr(uri.rfind(".")) == ".php" || uri.substr(uri.rfind(".")) == ".py" || strncmp(uri.substr(uri.rfind(".")).c_str(),".php?",5) == 0 || strncmp(uri.substr(uri.rfind(".")).c_str(),".py?",4) == 0)
     {
         return "text/html";

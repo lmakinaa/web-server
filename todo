@@ -37,3 +37,14 @@ success exception should not close connection - keep it alive
 
 
 directive cgi timeout
+
+
+
+
+multiple server_names
+port range
+mimmetypes
+url encoding
+localhost->127
+any -> 0
+if (total_read_bytes > std::stoi(*s[0]->directive["client_max_body_size"].values[0]))

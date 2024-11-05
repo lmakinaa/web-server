@@ -200,6 +200,8 @@ void HttpRequest::parseBody(char *line, size_t size)
     }
 
     total_read_bytes += size;
+    // if (total_read_bytes > std::stoi(*s[0]->directive["client_max_body_size"].values[0]))
+    //     throw ErrorStatus( 413, "")
     
     std::ofstream file(bodyFile, std::ios::app | std::ios::binary);
     if (file.is_open())
@@ -242,7 +244,7 @@ void HttpRequest::readRequest(int fd) {
         // Check if we've received all the data
         if (total_read_bytes >= content_length)
         {
-            // isDone = true;
+            isDone = true;
         }
         return;
     }
