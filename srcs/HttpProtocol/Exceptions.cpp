@@ -45,9 +45,17 @@ void ErrorStatus::setErrorMessage()
         case 405:
             statusMessage = headers + "<html><head><title>405 Method Not Allowed</title></head><body><center><h1>405 Method Not Allowed</h1></center><hr></body></html>";
             break;
+        
+        case 408:
+            statusMessage = headers + "<html><head><title>408 Request Timeout</title></head><body><center><h1>408 Request Timeout</h1></center><hr></body></html>";
+            break;
 
         case 409:
             statusMessage = headers + "<html><head><title>409 Conflict</title></head><body><center><h1>409 Conflict</h1></center><hr><p>The request could not be processed due to a conflict with the current state of the resource.</p></body></html>";
+            break;
+
+        case 413:
+            statusMessage = headers + "<html><head><title>413 Request Entity Too Large</title></head><body><center><h1>413 Request Entity Too Large</h1></center><hr></body></html>";
             break;
 
         case 500:

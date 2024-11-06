@@ -12,6 +12,7 @@
 #include "Exceptions.hpp"
 
 class VirtualServer;
+std::string  generateRandomFileName(const std::string path, const std::string extension);
 
 
 enum ParseState{

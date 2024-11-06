@@ -18,7 +18,7 @@ std::string decode_url(const std::string encoded_url) {
             std::isxdigit(encoded_url[i + 1]) && std::isxdigit(encoded_url[i + 2])) {
             // Extract the hex code and convert to character
             std::string hex_value = encoded_url.substr(i + 1, 2);
-            char decoded_char = static_cast<char>(std::stoi(hex_value, nullptr, 16));
+            char decoded_char = static_cast<char>(std::strtol(hex_value.c_str(), NULL, 16));
             decoded_url += decoded_char;
             i += 2;  // Skip next two characters (they are part of the encoded value)
         } else if (encoded_url[i] == '+') {
@@ -100,6 +100,7 @@ static int checkAndOpen(HttpRequest* req)
         if (req->method == "POST")
         {
             std::rename(req->bodyFile.c_str(), req->uri.c_str());
+            unlink(req->bodyFile.c_str());
             throw SuccessStatus(201, "Uploaded file successfully");
         }
         else

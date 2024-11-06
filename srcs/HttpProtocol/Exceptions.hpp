@@ -55,7 +55,7 @@ public:
             M_DEBUG && std::cerr << "Closed connection after sending success response\n";
     }
     void sendSuccess() const throw() {
-        if (clientSock != -1 || successCode == -1)
+        if (clientSock != -1 && successCode != -1)
             send(clientSock, statusMessage.c_str(), statusMessage.size(), 0);
     }
     const char* what() const throw() {return (statusMessage.c_str());}

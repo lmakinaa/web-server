@@ -21,7 +21,8 @@ void HttpRequest::generateUniqueFile(void)
     static int i = 0;
     if (i == INT_MAX)
         i = 0;
-    std::string file_name = "temp_" + std::to_string(i) + ".txt";
+    // std::string file_name = "temp_" + std::to_string(i) + ".txt";
+    std::string file_name = generateRandomFileName("/tmp", "");
     std::ofstream file(file_name);
     if (file.is_open())
     {
