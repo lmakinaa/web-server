@@ -225,7 +225,6 @@ void WebServ::sendResponse(struct kevent* current)
             close(res->clientSocket);
         else {
             KQueue::waitForClientToSend(res->clientSocket, res->s);
-            std::cerr << "entered here\n";
             m_watchedStates++;
         }
 

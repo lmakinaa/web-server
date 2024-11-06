@@ -159,7 +159,9 @@ void HttpResponse::sendingResponse(long buffSize) {
     std::cerr << "read bytes: " << r << '\n';
     if (r <= 0) {
         if (r == 0) {
-            send(clientSocket, "0\r\n\r\n", 5, 0);
+            int s = send(clientSocket, "0\r\n\r\n", 5, 0);
+            if (s == 0 || s == -1)
+                connectionClose = true;
             ended = true;
             M_DEBUG && std::cerr << "The connection is ended\n";
         }
@@ -177,7 +179,12 @@ void HttpResponse::sendingResponse(long buffSize) {
             tmp = tmp.substr(0, p);
             r -= p;
             buff = bf + p;
-            send(clientSocket, tmp.c_str(), tmp.size(), 0);
+            int s = send(clientSocket, tmp.c_str(), tmp.size(), 0);
+            if (s == -1 || s == 0) {
+                connectionClose = true;
+                ended = true;
+                return ;
+            }
         }
     }
 
@@ -187,12 +194,18 @@ void HttpResponse::sendingResponse(long buffSize) {
     std::string chunkLenHex = tmp.str() + "\r\n";
     std::string fullMessage = chunkLenHex + std::string(buff, r) + "\r\n";
 
-    if (send(clientSocket, fullMessage.c_str(), fullMessage.size(), 0) == -1) {
+    int s = send(clientSocket, fullMessage.c_str(), fullMessage.size(), 0);
+    if (s == -1) {
         if (M_DEBUG) {
-            std::cerr << "the client probably disconnected -- ";
+            M_DEBUG && std::cerr << "the client probably disconnected -- ";
             perror("send(2)");
         }
+        connectionClose = true;
         ended = true; // Treat send failure as a connection issue, I wont throw because there is no one to receive the error code
+    }
+    else if (s == 0) {
+        connectionClose = true;
+        ended = true;
     }
 
     iterations++;
