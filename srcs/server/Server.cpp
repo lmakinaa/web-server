@@ -21,11 +21,15 @@ void Server::init()
 
 	int opt = 1;
 	std::memset(m_sockAddress.sin_zero, 0, 8 * sizeof(unsigned char));
-	// m_sockAddress.sin_port = htons(std::stoi(directives["listen"].values[0]));
 	m_sockAddress.sin_port = htons(stoi(serv[0].directives["listen"].values[0]));
 	m_sockAddress.sin_family = AF_INET;
 
 	m_sockLen = sizeof(m_sockAddress);
+
+    if (serv[0].directives["host"].values[0] == "any")
+        serv[0].directives["host"].values[0] = "0.0.0.0";
+    else if (serv[0].directives["host"].values[0] == "localhost")
+        serv[0].directives["host"].values[0] = "127.0.0.1";
 
 	if (inet_pton(AF_INET, serv[0].directives["host"].values[0].c_str(), &m_sockAddress.sin_addr.s_addr) == 0) 
 		throw std::runtime_error("invalide Ip address");
