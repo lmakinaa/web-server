@@ -97,9 +97,17 @@ static int checkAndOpen(HttpRequest* req)
         fd = CGI::responseCGI(req, body_fd, location);
     }
     else {
-        fd = open(req->uri.c_str(), O_RDONLY);
-        if (fd < 0)
-            throw (ErrorStatus(500, "open failed in checkAndOpen", error_page));
+        if (req->method == "POST")
+        {
+            std::rename(req->bodyFile.c_str(), req->uri.c_str());
+            throw SuccessStatus(201, "Uploaded file successfully");
+        }
+        else
+        {
+            fd = open(req->uri.c_str(), O_RDONLY);
+            if (fd < 0)
+                throw (ErrorStatus(500, "open failed in checkAndOpen", error_page));
+        }
     }
 
     return fd;

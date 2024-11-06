@@ -126,7 +126,7 @@ int checkDirValue(std::vector<std::string> &directive)
                 return (-1);
             if (directive[0] == "listen" && directive.size() != 2)
                 return (-1);
-            if (directive[0] == "listen" && (nb < 1 || nb > 65535))
+            if (directive[0] == "listen" && (nb < 1024 || nb > 65535))
                 return (-1);
         }
         else if (directive[0] == "autoindex")
@@ -144,9 +144,14 @@ int checkDirValue(std::vector<std::string> &directive)
             if (directive.size() != 2)
                 return (-1);
         }
-        else if (directive[0] == "return" || directive[0] == "upload_store")
+        else if (directive[0] == "upload_store")
         {
             if (directive.size() != 2)
+                return (-1);
+        }
+        else if (directive[0] == "return")
+        {
+            if (directive.size() != 3 || (directive[1] != "301" && directive[1] != "302"))
                 return (-1);
         }
     }

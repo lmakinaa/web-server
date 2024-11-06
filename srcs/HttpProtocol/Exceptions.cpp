@@ -133,6 +133,11 @@ void SuccessStatus::setSuccessMessage()
         case 301:
             statusMessage = headers + "<html><head><title>301 Moved Permanently</title></head><body><center><h1>301 Moved Permanently</h1></center><hr><p>The requested resource has been permanently moved to <a href='" + retur + "'>" + retur + "</a>.</p></body></html>";
             break;
+
+        case 302:
+            statusMessage = headers + "<html><head><title>302 Found</title></head><body><center><h1>302 Found</h1></center><hr><p>The requested resource has been temporarily moved to <a href='" + retur + "'>" + retur + "</a>.</p></body></html>";
+            break;
+        
         // Add more status codes
         // ..
         default:

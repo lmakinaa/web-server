@@ -1,6 +1,6 @@
 
 #include "Methods.hpp"
-
+#include "../main/WebServ.hpp"
 // std::string sessionIdGen(Server &Serv)
 // {
 //     std::string session_id;
@@ -188,11 +188,58 @@ std::string    listAllfiles(std::string path, VirtualServer &Serv, std::string r
 
 }
 
+std::string _POST(std::map<std::string, Location>::iterator &it, std::string &requestPath, Directive *error_page)
+{
+    std::string root = "", path = "";
+
+    if (it->second.directives.find("upload_store") != it->second.directives.end())
+    {
+        root = it->second.directives["upload_store"].values[0];
+
+        path = requestPath;
+
+        path.replace(0, it->first.size(), root);
+
+        int val = isDirectory(path);
+
+        if (val == 1)
+        {
+            // throw 400 bad req
+            throw ErrorStatus(400, "cant post a floder", error_page);
+        }
+        else if (val == 0)
+        {
+            std::string extension = "";
+            size_t pPos = path.find_last_of(".");
+            if (pPos != std::string::npos)
+                extension = path.substr(pPos);
+
+            // check cgi path
+            if (cgiPathValid(&it->second, extension) == 1)
+                return (path);
+            
+            // throw 400 bad req
+            throw ErrorStatus(400, "file already exist", error_page);
+        }
+        else if (val == -1)
+            return (path);
+    }
+    else
+    {
+        // throw 400 bad req
+        throw ErrorStatus(400, "upload_store doesn't exist", error_page);
+    }
+    return ("");
+}
+
 std::string getFileFullPath(VirtualServer &serv, std::map<std::string, Location>::iterator &it, std::string &requestPath, Directive *error_page, std::string _Method)
 {
     std::string root = "";
     std::string path = "";
     std::string sec_path = "";
+
+    if (_Method == "POST")
+        return (_POST(it, requestPath, error_page));
 
     /* ===== Location doesn't have a root directive ====*/
     if (it->second.directives.find("root") == it->second.directives.end())
@@ -216,11 +263,7 @@ std::string getFileFullPath(VirtualServer &serv, std::map<std::string, Location>
                 // throw 403 Forbidden
                 throw ErrorStatus(403, "Can't delete a folder", error_page);
             }
-            if (_Method == "POST")
-            {
-                // throw 409 Conflict
-                throw ErrorStatus(403, "Can't post a folder", error_page);
-            }
+
             sec_path = path;
             for (size_t i = 0; i < serv.directives["index"].values.size(); i++)
             {
@@ -232,7 +275,10 @@ std::string getFileFullPath(VirtualServer &serv, std::map<std::string, Location>
             {
                 // should redirect to ...
                 M_DEBUG && std::cerr << "redirect to " << serv.directives["return"].values[0] << std::endl;
-                throw SuccessStatus(301, NULL, it->second.directives["return"].values[0]);
+                std::stringstream ss(serv.directives["return"].values[0]);
+                int nb;
+                ss >> nb;
+                throw SuccessStatus(nb, NULL, it->second.directives["return"].values[1]);
             }
             else if (serv.directives.find("autoindex") != serv.directives.end()
                         &&  serv.directives["autoindex"].values[0] == "on")
@@ -298,7 +344,10 @@ std::string getFileFullPath(VirtualServer &serv, std::map<std::string, Location>
             {
                 // should redirect to ...
                 M_DEBUG && std::cerr << "redirect to " << it->second.directives["return"].values[0] << std::endl;
-                throw SuccessStatus(301, NULL, it->second.directives["return"].values[0]);
+                std::stringstream ss(it->second.directives["return"].values[0]);
+                int nb;
+                ss >> nb;
+                throw SuccessStatus(nb, NULL, it->second.directives["return"].values[1]);
             }
             else if (it->second.directives.find("autoindex") != it->second.directives.end()
                         &&  it->second.directives["autoindex"].values[0] == "on")
@@ -398,7 +447,7 @@ std::string    _GET_DELETE(VirtualServer &serv, std::string requestPath, std::st
         }
 
         /* ===== Check Read Permession ===== */
-        if (access(resquestedFile.c_str(), R_OK) != 0)
+        if (_Method != "POST" &&  access(resquestedFile.c_str(), R_OK) != 0)
         {
             // Throw 403 Forbidden
             throw ErrorStatus(403, "file has no permission", error_page);
