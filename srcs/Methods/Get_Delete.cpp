@@ -168,6 +168,28 @@ std::string _POST(std::map<std::string, Location>::iterator &it, std::string &re
 {
     std::string root = "", path = "";
 
+
+    if (it->second.directives.find("root") != it->second.directives.end())
+    {
+        root = it->second.directives["root"].values[0];
+
+        path = requestPath;
+
+        path.replace(0, it->first.size(), root);
+        int val = isDirectory(path);
+        if (val == 0)
+        {
+            std::string extension = "";
+            size_t pPos = path.find_last_of(".");
+            if (pPos != std::string::npos)
+                extension = path.substr(pPos);
+
+            // check cgi path
+            if (cgiPathValid(&it->second, extension) == 1)
+                return (path);
+        }
+    }
+
     if (it->second.directives.find("upload_store") != it->second.directives.end())
     {
         root = it->second.directives["upload_store"].values[0];
@@ -260,7 +282,8 @@ std::string getFileFullPath(VirtualServer &serv, std::map<std::string, Location>
                         &&  serv.directives["autoindex"].values[0] == "on")
             {
                 // should list all files
-                std::cout << "list all files\n";
+                if (M_DEBUG)
+                    std::cout << "list all files\n";
                 return (listAllfiles(sec_path, serv, requestPath));
             }
             else
