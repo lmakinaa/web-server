@@ -101,7 +101,7 @@ static int checkAndOpen(HttpRequest* req)
         {
             std::rename(req->bodyFile.c_str(), req->uri.c_str());
             unlink(req->bodyFile.c_str());
-            throw SuccessStatus(201, "Uploaded file successfully");
+            throw SuccessStatus(201, "Uploaded file successfully", (strToLower(req->getHeader("Connection")) == "close"));
         }
         else
         {
@@ -287,6 +287,8 @@ void WebServ::loop()
                         std::map<t_eventData*, time_t>::iterator it = KQueue::connectedClients.find((t_eventData*)events[i].udata);
                         KQueue::connectedClients.erase(it);
                     }
+                    if (!e.connClose)
+                        KQueue::waitForClientToSend(e.clientSock, ((t_eventData*)events[i].udata)->s);
                     delete (t_eventData*)events[i].udata;
                 }
                 m_watchedStates--;

@@ -9,7 +9,6 @@
 #include <vector>
 #include "../configFile/Directive.hpp"
 
-
 #ifndef M_DEBUG
 # define M_DEBUG 1
 #endif
@@ -45,14 +44,17 @@ public:
 class SuccessStatus {
 public:
     // You can Pass NUll to debugMsg
-    SuccessStatus(int clienSocket, int successCode, const char* debugMsg);
-    SuccessStatus(int successCode, const char* debugMsg);
-    SuccessStatus(int successCode, const char* debugMsg, std::string retur);
+    SuccessStatus(int clienSocket, int successCode, const char* debugMsg, bool connClose);
+    SuccessStatus(int successCode, const char* debugMsg, bool connClose);
+    SuccessStatus(int successCode, const char* debugMsg, std::string retur, bool connClose);
     void setSuccessMessage();
     ~SuccessStatus() {
-        if (clientSock != -1)
-            close(clientSock);
-            M_DEBUG && std::cerr << "Closed connection after sending success response\n";
+        if (clientSock != -1) {
+            if (connClose) {
+                close(clientSock);
+                M_DEBUG && std::cerr << "Closed connection after sending success response\n";
+            }
+        }
     }
     void sendSuccess() const throw() {
         if (clientSock != -1 && successCode != -1)
@@ -64,4 +66,5 @@ public:
     const std::string headers;
     std::string statusMessage;
     std::string retur;
+    bool connClose;
 };

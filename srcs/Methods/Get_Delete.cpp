@@ -278,7 +278,7 @@ std::string getFileFullPath(VirtualServer &serv, std::map<std::string, Location>
                 std::stringstream ss(serv.directives["return"].values[0]);
                 int nb;
                 ss >> nb;
-                throw SuccessStatus(nb, NULL, it->second.directives["return"].values[1]);
+                throw SuccessStatus(nb, NULL, it->second.directives["return"].values[1], false);
             }
             else if (serv.directives.find("autoindex") != serv.directives.end()
                         &&  serv.directives["autoindex"].values[0] == "on")
@@ -325,7 +325,7 @@ std::string getFileFullPath(VirtualServer &serv, std::map<std::string, Location>
             {
                 std::string retdir = "";
                 retdir = "http://" + serv.directives["host"].values[0] + ":" + serv.directives["listen"].values[0] + requestPath + "/";
-                throw SuccessStatus(301, NULL, retdir); 
+                throw SuccessStatus(301, NULL, retdir, false); 
             }
 
             if (_Method == "DELETE")
@@ -347,7 +347,7 @@ std::string getFileFullPath(VirtualServer &serv, std::map<std::string, Location>
                 std::stringstream ss(it->second.directives["return"].values[0]);
                 int nb;
                 ss >> nb;
-                throw SuccessStatus(nb, NULL, it->second.directives["return"].values[1]);
+                throw SuccessStatus(nb, NULL, it->second.directives["return"].values[1], false);
             }
             else if (it->second.directives.find("autoindex") != it->second.directives.end()
                         &&  it->second.directives["autoindex"].values[0] == "on")
@@ -465,7 +465,7 @@ std::string    _GET_DELETE(VirtualServer &serv, std::string requestPath, std::st
         {
             unlink(resquestedFile.c_str());
             // throw 200 Ok
-            throw SuccessStatus(200, NULL);
+            throw SuccessStatus(200, NULL, false);
         }
         else
             throw ErrorStatus(403, "file has no permission", error_page);

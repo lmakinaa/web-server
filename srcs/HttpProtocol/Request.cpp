@@ -269,7 +269,7 @@ void HttpRequest::readRequest(int fd) {
     if (read_bytes <= 0)
     {
         if (read_bytes == 0 && state == FirstLine)
-            throw SuccessStatus(-1, "");
+            throw SuccessStatus(-1, "", (strToLower(getHeader("Connection")) == "close"));
         if (read_bytes == 0)
             isDone = true;
         return;

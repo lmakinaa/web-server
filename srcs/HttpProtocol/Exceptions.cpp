@@ -155,33 +155,36 @@ void SuccessStatus::setSuccessMessage()
     }
 }
 
-SuccessStatus::SuccessStatus(int successCode, const char* debugMsg)
+SuccessStatus::SuccessStatus(int successCode, const char* debugMsg, bool connClose)
     : clientSock (-1)
     , successCode (successCode)
-    , headers ("HTTP/1.1 " + std::to_string(successCode) + "\r\nContent-Type: text/html\r\nConnection: keep-alive\r\n\r\n")
+    , headers ("HTTP/1.1 " + std::to_string(successCode) + "\r\nContent-Type: text/html\r\nConnection: " + (!connClose ? "keep-alive" : "close") +"\r\n\r\n")
     , retur("")
+    , connClose(connClose)
 {
     if (M_DEBUG && debugMsg)
         std::cerr << debugMsg << "\n";
     setSuccessMessage();
 }
 
-SuccessStatus::SuccessStatus(int successCode, const char* debugMsg, std::string retur)
+SuccessStatus::SuccessStatus(int successCode, const char* debugMsg, std::string retur, bool connClose)
     : clientSock (-1)
     , successCode (successCode)
-    , headers ("HTTP/1.1 " + std::to_string(successCode) + "\r\nContent-Type: text/html\r\nLocation: " + retur + "\r\nConnection: keep-alive\r\n\r\n")
+    , headers ("HTTP/1.1 " + std::to_string(successCode) + "\r\nContent-Type: text/html\r\nLocation: " + retur + "\r\nConnection: " + (!connClose ? "keep-alive" : "close") +"\r\n\r\n")
     , retur(retur)
+    , connClose(connClose)
 {
     if (M_DEBUG && debugMsg)
         std::cerr << debugMsg << "\n";
     setSuccessMessage();
 }
 
-SuccessStatus::SuccessStatus(int clienSocket, int successCode, const char* debugMsg)
+SuccessStatus::SuccessStatus(int clienSocket, int successCode, const char* debugMsg, bool connClose)
     : clientSock (clienSocket)
     , successCode (successCode)
-    , headers ("HTTP/1.1 " + std::to_string(successCode) + "\r\nContent-Type: text/html\r\nConnection: keep-alive\r\n\r\n")
+    , headers ("HTTP/1.1 " + std::to_string(successCode) + "\r\nContent-Type: text/html\r\nConnection: " + (!connClose ? "keep-alive" : "close") + "\r\n\r\n")
     , retur("")
+    , connClose(connClose)
 {
     if (M_DEBUG && debugMsg)
         std::cerr << debugMsg << "\n";
