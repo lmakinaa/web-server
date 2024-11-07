@@ -46,7 +46,7 @@ void HttpRequest::parseHeaders(std::string line)
     value = ft_strtrim(value);
 
     if (key == "Content-Length")
-        content_length = std::stod(value);
+        content_length = std::atoi(value.c_str());
     else if (key == "Transfer-Encoding")
         TransferEncoding = value;
     else
@@ -137,7 +137,7 @@ void HttpRequest::parseRequest(const std::string& request)
             std::map<std::string, Directive>::iterator eit = this->mainServ->directives.find("error_page");
             if ( eit != this->mainServ->directives.end())
                 error_page = &(eit->second);
-            if (mainServ->directives.find("client_max_body_size") != mainServ->directives.end() && this->content_length > std::stoi(mainServ->directives["client_max_body_size"].values[0]))
+            if (mainServ->directives.find("client_max_body_size") != mainServ->directives.end() && this->content_length > std::atoi(mainServ->directives["client_max_body_size"].values[0].c_str()))
                 throw ErrorStatus(413, "Passed max body size", error_page);
             state = Body;
             generateUniqueFile();
@@ -186,7 +186,7 @@ void HttpRequest::unchunkBody(char *request, size_t size)
 
                 // Parse the chunk size
                 *endOfSize = '\0'; // Temporarily null-terminate the chunk size string
-                chunk_size = std::stoul(request, NULL, 16);
+                chunk_size = std::strtol(request, NULL, 16);
                 *endOfSize = '\r'; // Restore the original string
 
                 M_DEBUG && std::cerr << "\033[1;32mChunk size: " << chunk_size << "\033[0m" << std::endl;
@@ -245,8 +245,6 @@ void HttpRequest::parseBody(char *line, size_t size)
     }
 
     total_read_bytes += size;
-    // if (total_read_bytes > std::stoi(*s[0]->directive["client_max_body_size"].values[0]))
-    //     throw ErrorStatus( 413, "")
     
     std::ofstream file(bodyFile, std::ios::app | std::ios::binary);
     if (file.is_open())
@@ -295,20 +293,24 @@ void HttpRequest::readRequest(int fd) {
     }
 
     // Process headers line by line
-    std::vector<char>::iterator pos = std::search(partial_data.begin(), partial_data.end(), crlf.begin(), crlf.end());
-    while (pos != partial_data.end() && state != Body)
+    if (state != Body)
     {
-        std::vector<char> line(partial_data.begin(), pos + 2);
-        std::string strLine(line.begin(), line.end());
-        parseRequest(strLine);
-        partial_data.erase(partial_data.begin(), pos + 2);
+        std::vector<char>::iterator pos = std::search(partial_data.begin(), partial_data.end(), crlf.begin(), crlf.end());
+        while (pos != partial_data.end() && state != Body)
+        {
+            std::vector<char> line(partial_data.begin(), pos + 2);
+            std::string strLine(line.begin(), line.end());
+            parseRequest(strLine);
+            partial_data.erase(partial_data.begin(), pos + 2);
 
-        // If we've just transitioned to Body state, break the line processing
-        if (state == Body)
-            break;
+            // If we've just transitioned to Body state, break the line processing
+            if (state == Body)
+                break;
 
-        pos = std::search(partial_data.begin(), partial_data.end(), crlf.begin(), crlf.end());
+            pos = std::search(partial_data.begin(), partial_data.end(), crlf.begin(), crlf.end());
+        }
     }
+
 
     // If we're in Body state and have remaining data
     if (state == Body && !partial_data.empty())
@@ -316,7 +318,7 @@ void HttpRequest::readRequest(int fd) {
         if (TransferEncoding == "chunked\r\n")
         {
             // Process chunked data
-            pos = std::search(partial_data.begin(), partial_data.end(), crlf.begin(), crlf.end());
+            std::vector<char>::iterator pos = std::search(partial_data.begin(), partial_data.end(), crlf.begin(), crlf.end());
             while (pos != partial_data.end())
             {
                 std::vector<char> line(partial_data.begin(), pos + 2);

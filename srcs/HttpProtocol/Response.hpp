@@ -32,20 +32,14 @@ class HttpResponse{
         std::vector<VirtualServer>* s;
         bool connectionClose;
         pid_t cgiPid;
+        std::string reqUri;
+        bool reqIsCgi;
 
 
         HttpResponse(int clientSocket, int fd, HttpRequest* req) : Version("HTTP/1.1"), ResponseCode("200 OK"), ContentType(WhatContentType(req->uri)), Connection("close"), clientSocket(clientSocket), responseFd(fd), ended(false) {
 
-            std::string headers = "HTTP/1.1 200 OK\r\n"
-            "Connection: keep-alive\r\n"
-            "Transfer-Encoding: chunked\r\n";
-            if ((req->uri.find(".php") != std::string::npos || req->uri.find(".py") != std::string::npos)) {
-                if (!req->IsCgi)
-                    headers += "Content-Type: application/octet-stream\r\n\r\n";
-            } else
-                headers += "Content-Type: " + ContentType + "\r\n\r\n";
-            send(clientSocket, headers.c_str(), headers.size(), 0);
-
+            reqUri = req->uri;
+            reqIsCgi = req->IsCgi;
             iterations = 0;
             s = req->s;
             connectionClose = (strToLower(req->getHeader("Connection")) == "close");
@@ -53,6 +47,7 @@ class HttpResponse{
         }
         ~HttpResponse() {close(responseFd);}
         void sendingResponse(long buffSize);
+        void sendHeaders();
 
         std::string GetVersion();
         std::string GetResponseCode();

@@ -1,30 +1,7 @@
 
 #include "Methods.hpp"
 #include "../main/WebServ.hpp"
-// std::string sessionIdGen(Server &Serv)
-// {
-//     std::string session_id;
-//     std::string elems = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 
-//     srand(time(NULL));
-//     while (true)
-//     {
-//         session_id = "";
-
-//         for (int i = 0; i < 20; i++)
-//         {
-//             session_id += elems[rand() % 62];
-//         }
-//         if (Serv.session_ids.find(session_id) == Serv.session_ids.end())
-//         {
-//             Serv.session_ids[session_id] = time(0);
-//             break ;
-//         }
-//     }
-
-//     return (session_id);
-    
-// }
 
 std::string getSessionIdFromRequest(std::string cookies) {
     size_t pos = cookies.find("SESSID=");
@@ -177,7 +154,6 @@ std::string    listAllfiles(std::string path, VirtualServer &Serv, std::string r
         "</body>"
         "</html>";
 
-    // std::ofstream ofs("filelisting.html", std::ios::out | std::ios::trunc);
     unlink("filelisting.html");
     int fd = open("filelisting.html",  O_WRONLY | O_TRUNC | O_CREAT, 0644);
 

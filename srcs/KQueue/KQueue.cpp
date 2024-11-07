@@ -82,7 +82,7 @@ int KQueue::getEvents(struct kevent* buffArray, int size, int& watchedStates)
             if (now - i->second >= CGI_TIMEOUT_SEC) {
                 removeWatch(i->first->resData->cgiPid, EVFILT_PROC);
                 kill(i->first->resData->cgiPid, SIGTERM);
-                ErrorStatus err(i->first->resData->clientSocket, 502, "CGI timeout\n");
+                ErrorStatus err(i->first->resData->clientSocket, 504, "CGI timeout\n");
                 err.sendError();
                 watchedStates--;
                 delete i->first;

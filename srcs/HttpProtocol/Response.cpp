@@ -210,3 +210,16 @@ void HttpResponse::sendingResponse(long buffSize) {
 
     iterations++;
 }
+
+void HttpResponse::sendHeaders()
+{
+    std::string headers = "HTTP/1.1 200 OK\r\n"
+    "Connection: keep-alive\r\n"
+    "Transfer-Encoding: chunked\r\n";
+    if ((reqUri.find(".php") != std::string::npos || reqUri.find(".py") != std::string::npos)) {
+        if (!reqIsCgi)
+            headers += "Content-Type: application/octet-stream\r\n\r\n";
+    } else
+        headers += "Content-Type: " + ContentType + "\r\n\r\n";
+    send(clientSocket, headers.c_str(), headers.size(), 0);
+}

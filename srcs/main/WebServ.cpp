@@ -2,7 +2,6 @@
 
 bool    cgiPathValid(Location *location, std::string extension)
 {
-    // !strcmp(extension.c_str(), ".php") || !strcmp(extension.c_str(), ".py") || !strncmp(extension.c_str(), ".php?", 5) || !strncmp(extension.c_str(), ".py?", 4))
     if ((!strcmp(extension.c_str(), ".php") || !strncmp(extension.c_str(), ".php?", 5)) && (location->directives.find("php-cgi") == location->directives.end() || access(location->directives["php-cgi"].values[0].c_str(), F_OK) != 0))
         return (0);
     if ((!strcmp(extension.c_str(), ".py") || !strncmp(extension.c_str(), ".py?", 5)) && (location->directives.find("py-cgi") == location->directives.end() || access(location->directives["py-cgi"].values[0].c_str(), F_OK) != 0))
@@ -47,14 +46,7 @@ static int checkAndOpen(HttpRequest* req)
     if ( eit != req->mainServ->directives.end())
         error_page = &(eit->second);
 
-    //Replace %20 with " "
     req->uri = decode_url(req->uri);
-
-    // size_t p = 0;
-    // while ((p = req->uri.find("%20", p)) != std::string::npos) {
-    //     req->uri.replace(p, 3, " ");
-    //     p += 1;
-    // }
 
 
     // remove querystring to check existance of the file
@@ -66,7 +58,6 @@ static int checkAndOpen(HttpRequest* req)
         querystr = req->uri.substr(pos);
         uri = req->uri.substr(0, pos);
     }
-    // Rachid gad throws f _GET_DELETE() wcleani ressourses gbal ma throwi
     // We should handle directories and root here
     req->uri = _GET_DELETE(*req->mainServ, uri, req->method, &location); // this give the path of the file
     std::string extension = "";
@@ -152,6 +143,7 @@ int WebServ::handleExistedConnection(struct kevent* current)
             t_eventData* evData = new t_eventData("send response", new HttpResponse(current->ident, fd, req));
             if (KQueue::watchState(current->ident, evData, EVFILT_WRITE) == -1)
                 throw ErrorStatus(503, "watchState in handleExistedConnection(2)", error_page);
+            evData->resData->sendHeaders();
         }
 
         std::map<t_eventData*, time_t>::iterator it = KQueue::connectedClients.find((t_eventData*)current->udata);
@@ -204,10 +196,11 @@ void WebServ::cgiSwitchToSending(struct kevent* current)
         throw ErrorStatus(clientSocket, 500, "in cgiSwitchToSending: cgi failed");
 
     evData->type = "send response";
-    // tal hna 3ad yt7ato lheaders dyal response
 
     if (KQueue::watchState(clientSocket, evData, EVFILT_WRITE) == -1)
         throw ErrorStatus(clientSocket, 503, "watchState in cgiSwitchToSending");
+
+    evData->resData->sendHeaders();
 }
 
 void WebServ::sendResponse(struct kevent* current)
@@ -287,8 +280,11 @@ void WebServ::loop()
                         std::map<t_eventData*, time_t>::iterator it = KQueue::connectedClients.find((t_eventData*)events[i].udata);
                         KQueue::connectedClients.erase(it);
                     }
-                    if (!e.connClose)
-                        KQueue::waitForClientToSend(e.clientSock, ((t_eventData*)events[i].udata)->s);
+                    if (!e.connClose) {
+                        if (e.clientSock > 0)
+                            KQueue::waitForClientToSend(e.clientSock, ((t_eventData*)events[i].udata)->s);
+                        m_watchedStates++;
+                    }
                     delete (t_eventData*)events[i].udata;
                 }
                 m_watchedStates--;

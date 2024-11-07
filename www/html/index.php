@@ -38,7 +38,10 @@
 session_start();
 
 
-
+while (1 == 1)
+{
+    
+}
 
 if (!isset($_SESSION['x'])) {
     $_SESSION['x'] = rand(1, 100);

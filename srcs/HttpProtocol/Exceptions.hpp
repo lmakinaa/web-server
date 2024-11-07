@@ -30,7 +30,7 @@ public:
         }
     }
     void sendError() const throw() {
-        if (clientSock != -1 || errorCode == -1)
+        if (clientSock != -1 && errorCode != -1)
             send(clientSock, statusMessage.c_str(), statusMessage.size(), 0);
     }
     const char* what() const throw() {return (statusMessage.c_str());}
