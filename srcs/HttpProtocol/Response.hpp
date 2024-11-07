@@ -44,7 +44,7 @@ class HttpResponse{
             reqIsCgi = req->IsCgi;
             iterations = 0;
             s = req->s;
-            connectionClose = (strToLower(req->getHeader("Connection")) == "close");
+            connectionClose = (strToLower(req->getHeader("Connection")) == "close\r\n");
             cgiPid = req->cgiPid;
         }
         ~HttpResponse() {close(responseFd);}

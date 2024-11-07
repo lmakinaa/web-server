@@ -91,7 +91,7 @@ static int checkAndOpen(HttpRequest* req)
         {
             std::rename(req->bodyFile.c_str(), req->uri.c_str());
             unlink(req->bodyFile.c_str());
-            throw SuccessStatus(201, "Uploaded file successfully", (strToLower(req->getHeader("Connection")) == "close"));
+            throw SuccessStatus(201, "Uploaded file successfully", true);
         }
         else
         {
