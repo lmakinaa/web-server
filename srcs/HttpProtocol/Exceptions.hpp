@@ -30,8 +30,13 @@ public:
         }
     }
     void sendError() const throw() {
-        if (clientSock != -1 && errorCode != -1)
-            send(clientSock, statusMessage.c_str(), statusMessage.size(), 0);
+        if (clientSock != -1 && errorCode != -1) {
+            int s = send(clientSock, statusMessage.c_str(), statusMessage.size(), 0);
+            if (s == -1) {
+                if (M_DEBUG) perror("send(2)");
+            } else if (s == 0)
+                M_DEBUG && std::cerr << "User closed connection\n";
+        }
     }
     const char* what() const throw() {return (statusMessage.c_str());}
     int clientSock;
@@ -56,9 +61,12 @@ public:
             }
         }
     }
-    void sendSuccess() const throw() {
-        if (clientSock != -1 && successCode != -1)
-            send(clientSock, statusMessage.c_str(), statusMessage.size(), 0);
+    void sendSuccess() {
+        if (clientSock != -1 && successCode != -1) {
+            int s = send(clientSock, statusMessage.c_str(), statusMessage.size(), 0);
+            if (s == 0 || s == -1)
+                connClose = true;
+        }
     }
     const char* what() const throw() {return (statusMessage.c_str());}
     int clientSock;

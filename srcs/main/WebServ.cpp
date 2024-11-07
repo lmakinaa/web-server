@@ -74,7 +74,6 @@ static int checkAndOpen(HttpRequest* req)
 
     if (req->IsCgi)
     {
-        std::cerr << "chikaviww chikaviiw bum chaa chaaa   " << req->uri <<std::endl;
         req->uri += querystr;
         M_DEBUG && std::cerr << "\033[1;31m" << req->bodyFile << "\033[0m" << std::endl;
         if (req->bodyFile.empty())
@@ -267,7 +266,6 @@ void WebServ::loop()
                     delete (t_eventData*)events[i].udata;
                 }
                 m_watchedStates--;
-                // connection will be closed automatically by getting out of the scope of the catch
             }
             catch(SuccessStatus& e) {
                 if (!std::strcmp(static_cast<t_eventData*>(events[i].udata)->type, "client socket")

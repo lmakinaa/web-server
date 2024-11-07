@@ -270,10 +270,12 @@ void HttpRequest::readRequest(int fd) {
             throw SuccessStatus(-1, "", (strToLower(getHeader("Connection")) == "close"));
         if (read_bytes == 0)
             isDone = true;
+        if (read_bytes == -1)
+            throw ErrorStatus(clientSocket, 500, "recv(2) failed in readRequest");
+
         return;
     }
 
-    // M_DEBUG && std::cerr << "raw:\n" << buffer << '\n';
 
     // Add new data to our partial buffer
     partial_data.insert(partial_data.end(), buffer, buffer + read_bytes);

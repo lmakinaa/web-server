@@ -221,5 +221,12 @@ void HttpResponse::sendHeaders()
             headers += "Content-Type: application/octet-stream\r\n\r\n";
     } else
         headers += "Content-Type: " + ContentType + "\r\n\r\n";
-    send(clientSocket, headers.c_str(), headers.size(), 0);
+    int s = send(clientSocket, headers.c_str(), headers.size(), 0);
+    if (s == 0 || s == -1) {
+        KQueue::removeWatch(clientSocket, EVFILT_WRITE);
+        if (s == -1)
+            throw ErrorStatus(clientSocket, 500, "Send failed");
+        throw ErrorStatus(clientSocket, -1, "Client closed connection before sending headers");
+    }
+
 }

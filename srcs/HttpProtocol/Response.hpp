@@ -8,6 +8,8 @@
 #include <string>
 #include <sstream>
 #include "Request.hpp"
+#include "Exceptions.hpp"
+#include "../KQueue/KQueue.hpp"
 
 std::string WhatContentType(std::string uri);
 std::string strToLower(std::string s);
