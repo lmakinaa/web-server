@@ -13,6 +13,8 @@
 #include <map>
 #include "../server/Server.hpp"
 
+typedef struct s_eventData t_eventData;
+
 #ifndef M_DEBUG
 # define M_DEBUG 1
 #endif

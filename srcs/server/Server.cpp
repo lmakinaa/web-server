@@ -1,6 +1,12 @@
 
 #include "Server.hpp"
 
+s_eventData::~s_eventData() throw() {
+	if (resData)
+		delete resData;
+	if (reqData)
+		delete reqData;
+}
 
 Server::Server()
     : m_sockAddress ()
