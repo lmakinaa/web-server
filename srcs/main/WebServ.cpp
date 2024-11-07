@@ -178,7 +178,7 @@ int WebServ::handleNewConnection(struct kevent* current)
 
 void WebServ::cgiSwitchToSending(struct kevent* current)
 {
-
+    KQueue::removeWatch(current->ident, EVFILT_PROC);
     t_eventData* evData = (t_eventData*) current->udata;
 
     std::map<t_eventData*, time_t>::iterator it = KQueue::startedCgis.find(evData);
@@ -279,9 +279,10 @@ void WebServ::loop()
                         KQueue::connectedClients.erase(it);
                     }
                     if (!e.connClose) {
-                        if (e.clientSock > 0)
+                        if (e.clientSock > 0) {
                             KQueue::waitForClientToSend(e.clientSock, ((t_eventData*)events[i].udata)->s);
-                        m_watchedStates++;
+                            m_watchedStates++;
+                        }
                     }
                     delete (t_eventData*)events[i].udata;
                 }

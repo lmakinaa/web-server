@@ -93,7 +93,6 @@ int KQueue::getEvents(struct kevent* buffArray, int size, int& watchedStates)
         }
         return 0;
     }
-
     return res;
 }
 

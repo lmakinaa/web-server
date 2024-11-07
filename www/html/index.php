@@ -37,20 +37,29 @@
 
 session_start();
 
-
-while (1 == 1)
-{
-    
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['msg'])) {
+    $_SESSION['msg'] = $_POST['msg'];
 }
 
-if (!isset($_SESSION['x'])) {
-    $_SESSION['x'] = rand(1, 100);
+if (!isset($_SESSION['msg'])) {
+    $_SESSION['msg'] = rand(1, 100);
 }
+?>
 
-echo "id: " . $_SESSION['x'];
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Session Message</title>
+</head>
+<body>
+    <form method="post" action="index.php">
+        <label for="msg">Enter new message:</label>
+        <input type="text" id="msg" name="msg" value="<?php echo htmlspecialchars($_SESSION['msg']); ?>">
+        <button type="submit">Update Message</button>
+    </form>
 
-echo getcwd();
-
-// sleep(5000);
-
-echo "idfgd: " . $_SESSION['x'];
+    <p>Current message: <?php echo htmlspecialchars($_SESSION['msg']); ?></p>
+</body>
+</html>
