@@ -2,11 +2,10 @@
 
 int main(int ac, char *av[])
 {
-
     signal(SIGPIPE, SIG_IGN);
 
     int confErr;
-    WebServ    main;
+    WebServ main;
     std::string conf;
 
     if (ac == 1)
@@ -23,12 +22,7 @@ int main(int ac, char *av[])
     if (confErr == -1)
         return (EXIT_FAILURE);
 
-
     main.run();
     
-
-
-
-
     return (0);
 }

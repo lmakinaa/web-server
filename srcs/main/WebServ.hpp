@@ -30,6 +30,10 @@ public:
     , m_watchedStates (0)
     {
     }
+    ~WebServ()
+    {
+        KQueue::closeKq();
+    }
     void run();
     void loop();
     int handleNewConnection(struct kevent* current);
