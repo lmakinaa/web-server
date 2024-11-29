@@ -37,6 +37,9 @@ void Server::init()
     else if (serv[0].directives["host"].values[0] == "localhost")
         serv[0].directives["host"].values[0] = "127.0.0.1";
 
+    m_address = serv[0].directives["host"].values[0];
+    m_port = serv[0].directives["listen"].values[0];
+
 	if (inet_pton(AF_INET, serv[0].directives["host"].values[0].c_str(), &m_sockAddress.sin_addr.s_addr) == 0) 
 		throw std::runtime_error("invalide Ip address");
 

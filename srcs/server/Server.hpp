@@ -43,6 +43,9 @@ public:
     struct s_eventData m_sEventData;
 
     std::vector<VirtualServer>   serv;
+    
+    std::string m_port;
+    std::string m_address;
 
 private:
     int m_socket;

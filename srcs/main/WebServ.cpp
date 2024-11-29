@@ -306,6 +306,8 @@ void WebServ::run()
             if (KQueue::watchState(servers[i].getSocket(), &(servers[i].m_sEventData), EVFILT_READ) == -1) // sockets are closed in destructor of servers
                 throw std::runtime_error("There was an error while adding server socket to kqueue");
             m_watchedStates++;
+
+            M_DEBUG && std::cout << "\033[1;32mThe server number " << i+1 << " has started on: " << servers[i].m_address << ":" << servers[i].m_port << "\033[0m" << std::endl;
         }
     } catch(std::runtime_error& e) {
         std::cerr << e.what() << '\n';

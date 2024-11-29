@@ -3,7 +3,9 @@ NAME = webserv
 
 CC = c++
 
-FLAGS = -Wall -Wextra -Werror -std=c++98 -g -fsanitize=address 
+FLAGS = -Wall -Wextra -Werror -std=c++98 #-g -fsanitize=address 
+
+DEBUG_MODE=0
 
 # ============= Files path variable ============ #
 
@@ -28,14 +30,21 @@ O_FILES = $(C_FILES:.cpp=.o)
 HEADERS = $(INCLUDE_PATH)webserv.h  $(SERVER_PATH)Server.hpp $(CONFIG_FILE_PATH)configFile.hpp $(CONFIG_FILE_PATH)Location.hpp $(MAIN_PATH)WebServ.hpp $(CONFIG_FILE_PATH)Directive.hpp\
 	srcs/KQueue/KQueue.hpp srcs/CGI/CGI.hpp srcs/HttpProtocol/Request.hpp  srcs/HttpProtocol/Response.hpp srcs/HttpProtocol/Exceptions.hpp $(RESPONSE_PATH)Methods.hpp $(SERVER_PATH)structs.hpp
 
-all : $(NAME)
+all:
+	@$(MAKE) fclean
+	@$(MAKE) $(NAME)
 
 $(NAME) : $(O_FILES)
 	rm -rf temp*
 	$(CC) $(FLAGS) -o $@ $(O_FILES)
 
+
 %.o : %.cpp $(HEADERS)
-	$(CC) $(FLAGS) -c $< -o $@
+	$(CC) -D M_DEBUG=$(DEBUG_MODE) $(FLAGS) -c $< -o $@
+	
+debug:
+	@$(MAKE) fclean
+	@$(MAKE) DEBUG_MODE=1 $(NAME)
 
 clean :
 	rm -f $(O_FILES)
