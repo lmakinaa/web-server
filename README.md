@@ -29,8 +29,8 @@ Server behavior defined through a flexible configuration file, supporting:
 - CGI script paths
 
 ## Build
-For regular build: ```bash make ```
-For building with debugging mode: ```bash make debug ```
+- For regular build: ```bash make ```
+- For building with debugging mode: ```bash make debug ```
 
 ## Usage
 ```bash ./webserv [configuration_file] ``` or you can use the default provided config file ```bash ./webserv ```
