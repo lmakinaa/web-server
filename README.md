@@ -2,6 +2,7 @@
 
 ## Project Overview
 A robust, single-threaded C++ web server implementation designed for FreeBSD-based operating systems (e.g., macOS), utilizing KQueue for efficient non-blocking I/O and showcasing advanced network programming techniques.
+
 ![HTTP Web Server](./readme/http.webp)
 
 ## Key Features
