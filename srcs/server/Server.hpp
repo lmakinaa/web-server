@@ -4,6 +4,7 @@
 #include <iostream>
 #include <climits>
 #include <fcntl.h>
+#include <netdb.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <map>
