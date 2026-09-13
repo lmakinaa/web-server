@@ -1,4 +1,5 @@
 #include "Response.hpp"
+#include <vector>
 
 std::string strToLower(std::string s)
 {
@@ -151,12 +152,14 @@ void HttpResponse::sendingResponse(long buffSize) {
 
     buffSize *= 0.80; // I wont use the whole available buffSize to decrease the load on it
 
-    char bf[buffSize];
+    // std::vector instead of a VLA. At least one byte so &bf[0] stays valid;
+    // read() still receives buffSize, so a zero/negative size behaves as before.
+    std::vector<char> bf(buffSize > 0 ? buffSize : 1);
 
     (iterations == 0) && lseek(responseFd, 0, SEEK_SET);
-    int r = read(responseFd, bf, buffSize);
+    int r = read(responseFd, &bf[0], buffSize);
     
-    std::cerr << "read bytes: " << r << '\n';
+    M_DEBUG && std::cerr << "read bytes: " << r << '\n';
     if (r <= 0) {
         if (r == 0) {
             int s = send(clientSocket, "0\r\n\r\n", 5, 0);
@@ -170,15 +173,15 @@ void HttpResponse::sendingResponse(long buffSize) {
         return;
     }
 
-    char *buff = bf;
+    char *buff = &bf[0];
     if (iterations == 0) {
-        std::string tmp(bf, buffSize);
+        std::string tmp(&bf[0], buffSize);
         size_t p = tmp.find("\r\n\r\n");
         if (p != std::string::npos) {
             p += 4;
             tmp = tmp.substr(0, p);
             r -= p;
-            buff = bf + p;
+            buff = &bf[0] + p;
             int s = send(clientSocket, tmp.c_str(), tmp.size(), 0);
             if (s == -1 || s == 0) {
                 connectionClose = true;

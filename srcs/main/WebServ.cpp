@@ -1,4 +1,5 @@
 #include "WebServ.hpp"
+#include <vector>
 
 bool    cgiPathValid(Location *location, std::string extension)
 {
@@ -229,8 +230,10 @@ void WebServ::loop()
 {
     while (true)
     {
-        struct kevent events[m_watchedStates];
-        int nevents = KQueue::getEvents(events, m_watchedStates, m_watchedStates);
+        // std::vector instead of a VLA: variable-length arrays are a compiler
+        // extension in C++, rejected under -Werror by modern clang.
+        std::vector<struct kevent> events(m_watchedStates ? m_watchedStates : 1);
+        int nevents = KQueue::getEvents(&events[0], m_watchedStates, m_watchedStates);
 
         for (int i = 0; i < nevents; i++) {
             try {
@@ -318,9 +321,9 @@ void WebServ::run()
     {
         try {
             loop();
-        } catch(std::exception& e) {
-            M_DEBUG && std::cerr << e.what() << '\n';
         } catch(std::out_of_range& e) {
+            M_DEBUG && std::cerr << e.what() << '\n';
+        } catch(std::exception& e) {
             M_DEBUG && std::cerr << e.what() << '\n';
         }
     }
